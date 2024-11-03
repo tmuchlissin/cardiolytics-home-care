@@ -1,0 +1,124 @@
+{% extends "base.html" %} {% block content %}
+
+<div class="p-8">
+  <h1 class="text-2xl font-bold mb-4 text-gray-900">Chatbot</h1>
+
+  <div class="flex justify-center items-center h-[80vh]">
+    <div
+      class="w-full max-w-2xl p-6 bg-gray-200 bg-opacity-90 backdrop-blur-md rounded-3xl shadow-lg"
+    >
+      <!-- Chat Header -->
+      <div
+        class="bg-gradient-to-r from-purple-500 to-indigo-500 p-4 rounded-t-3xl text-white text-center shadow-lg"
+      >
+        <h1 class="text-2xl font-bold">Cardiobot 🤖</h1>
+      </div>
+
+      <!-- Chat History -->
+      <div
+        id="chat-history"
+        class="p-4 h-[65vh] overflow-y-scroll bg-gray-100 border border-gray-300 space-y-4 rounded-b-3xl shadow-inner"
+      >
+        <!-- Sample User Message -->
+        <div class="flex justify-end">
+          <div
+            class="max-w-xs bg-blue-600 text-white p-3 rounded-lg shadow-md transition-transform transform hover:scale-105"
+          >
+            <p><i class="fas fa-user"></i> Hey! 👋</p>
+          </div>
+          <div class="ml-2 text-blue-500 text-2xl">
+            <i class="fas fa-user-circle fa-lg"></i>
+            <!-- Font Awesome user icon -->
+          </div>
+        </div>
+
+        <!-- Sample Bot Message -->
+        <div class="flex justify-start">
+          <div class="mr-2 text-green-500 text-2xl">
+            <i class="fas fa-robot fa-lg"></i>
+
+            <!-- Font Awesome robot icon -->
+          </div>
+          <div
+            class="max-w-xs bg-gray-300 p-3 rounded-lg shadow-md transition-transform transform hover:scale-105"
+          >
+            <p>Hello! Ask me anything about 🤗</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat Input -->
+      <div class="mt-4 flex">
+        <input
+          id="chat-input"
+          type="text"
+          placeholder="Ask me something..."
+          class="w-full p-3 border border-gray-300 rounded-l-3xl focus:outline-none focus:ring-2 focus:ring-blue-600 transition-all duration-200"
+        />
+        <button
+          onclick="sendMessage()"
+          class="bg-blue-600 text-white p-3 rounded-r-3xl hover:bg-blue-700 transition duration-200 focus:outline-none flex items-center justify-center"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M2 12l18-9-6 18-2-6 6-2-18 9z"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Function to handle sending message and updating the chat UI
+  function sendMessage() {
+    const chatInput = document.getElementById("chat-input");
+    const message = chatInput.value.trim();
+    if (message) {
+      const chatHistory = document.getElementById("chat-history");
+
+      // Append user's message
+      const userMessageDiv = document.createElement("div");
+      userMessageDiv.classList.add("flex", "justify-end");
+      userMessageDiv.innerHTML = `
+                    <div class="max-w-xs bg-blue-600 text-white p-3 rounded-lg shadow-md transition-transform transform hover:scale-105">
+                        <p><i class="fas fa-user"></i> ${message}</p>
+                    </div>
+                    <div class="ml-2 text-blue-500 text-2xl">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                `;
+      chatHistory.appendChild(userMessageDiv);
+
+      // Simulate bot response (for now)
+      const botMessageDiv = document.createElement("div");
+      botMessageDiv.classList.add("flex", "justify-start");
+      botMessageDiv.innerHTML = `
+                    <div class="mr-2 text-green-500 text-2xl">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="max-w-xs bg-gray-300 p-3 rounded-lg shadow-md transition-transform transform hover:scale-105">
+                        <p>I'm thinking... 🤖</p>
+                    </div>
+                `;
+      chatHistory.appendChild(botMessageDiv);
+
+      // Scroll chat to bottom
+      chatHistory.scrollTop = chatHistory.scrollHeight;
+
+      // Clear input field
+      chatInput.value = "";
+    }
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,266 @@
+{% extends "base.html" %} {% block content %}
+<div class="p-8 bg-gray-100 min-h-screen">
+  <div class="px-8">
+    <h1 class="text-2xl font-bold mb-8">Dashboard Monitor</h1>
+    <!-- Top Card Section -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <!-- Timestamp Card -->
+      <div
+        class="bg-gradient-to-br from-blue-600 via-blue-500 to-blue-400 text-white p-4 rounded-lg shadow-lg flex flex-col items-center justify-center transform hover:scale-105 transition-transform duration-300"
+      >
+        <i class="fas fa-clock text-4xl mb-2"></i>
+        <h3 class="text-lg font-semibold">Timestamp</h3>
+        <p class="text-base font-semibold">
+          Current Time:
+          <span id="currentDatetime" class="text-xl font-bold"></span>
+        </p>
+        <p class="text-base font-semibold">
+          Last Detected:
+          <span id="lastDetectedDatetime" class="text-xl font-bold"
+            >10 Oct 2024, 19:11:02 WIB</span
+          >
+        </p>
+      </div>
+
+      <!-- Avg Blood Pressure Card -->
+      <div
+        class="bg-gradient-to-br from-yellow-600 via-yellow-500 to-yellow-400 text-white p-4 rounded-lg shadow-lg flex flex-col items-center justify-center transform hover:scale-105 transition-transform duration-300"
+      >
+        <i class="fa-solid fa-hand-holding-droplet text-4xl mb-2"></i>
+        <h3 class="text-lg font-semibold">Avg. Blood Pressure</h3>
+        <p class="text-3xl font-bold">124 / 82 mmHg</p>
+        <p class="text-base font-semibold">
+          Status: <span class="text-red-600 font-bold">At Risk</span>
+        </p>
+      </div>
+
+      <!-- Pulse Card -->
+      <div
+        class="bg-gradient-to-br from-green-600 via-green-500 to-green-400 text-white p-4 rounded-lg shadow-lg flex flex-col items-center justify-center transform hover:scale-105 transition-transform duration-300"
+      >
+        <i class="fas fa-heartbeat text-4xl mb-2"></i>
+        <h3 class="text-lg font-semibold">Pulse</h3>
+        <p class="text-3xl font-bold">50 BPM</p>
+        <p class="text-base font-semibold">
+          Status: <span class="text-blue-600 font-bold">Low</span>
+        </p>
+      </div>
+    </div>
+
+    <!-- Gauge Chart Section -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-8">
+      <div class="bg-white shadow-lg rounded-lg p-4 flex flex-col items-center">
+        <h2 class="text-lg font-bold mb-2">Systolic Pressure</h2>
+        <canvas id="systolicChart" width="200" height="100"></canvas>
+      </div>
+      <div class="bg-white shadow-lg rounded-lg p-4 flex flex-col items-center">
+        <h2 class="text-lg font-bold mb-2">Diastolic Pressure</h2>
+        <canvas id="diastolicChart" width="200" height="100"></canvas>
+      </div>
+      <div class="bg-white shadow-lg rounded-lg p-4 flex flex-col items-center">
+        <h2 class="text-lg font-bold mb-2">Heart Rate</h2>
+        <canvas id="heartRateChart" width="200" height="100"></canvas>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 mt-8">
+      <div class="bg-white shadow-lg rounded-lg p-6 flex flex-col items-center">
+        <h2 class="text-lg font-bold mb-4 text-gray-800">
+          Blood Pressure Check History
+        </h2>
+        <canvas id="bloodPressureChart" width="400" height="200"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
+
+  <script>
+    // Function to update Date and Time
+    function updateDateTime() {
+      const now = new Date();
+      const optionsTime = {
+        hour: "numeric",
+        minute: "numeric",
+        second: "numeric",
+        hour12: false,
+        timeZone: "Asia/Jakarta",
+      };
+      const datetimeString = `${String(now.getDate()).padStart(
+        2,
+        "0"
+      )} ${now.toLocaleString("default", {
+        month: "short",
+      })} ${now.getFullYear()}, ${now.toLocaleTimeString(
+        "en-US",
+        optionsTime
+      )} WIB`;
+      document.getElementById("currentDatetime").innerText = datetimeString;
+    }
+
+    // Run the function every second to update the time
+    setInterval(updateDateTime, 1000);
+    updateDateTime();
+
+    // Needle plugin
+    const gaugeNeedle = {
+      id: "gaugeNeedle",
+      afterDatasetsDraw(chart) {
+        const ctx = chart.ctx;
+        const xCenter = chart.getDatasetMeta(0).data[0].x;
+        const yCenter = chart.getDatasetMeta(0).data[0].y;
+        const outerRadius = chart.getDatasetMeta(0).data[0].outerRadius;
+        const innerRadius = chart.getDatasetMeta(0).data[0].innerRadius;
+        const widthSlice = (outerRadius - innerRadius) / 2;
+        const radius = 10;
+        const needleValue = chart.data.datasets[0].needleValue;
+
+        // Get the total data to calculate the angle for the needle
+        const dataTotal = chart.data.datasets[0].data.reduce(
+          (a, b) => a + b,
+          0
+        );
+        const circumference =
+          (chart.getDatasetMeta(0).data[0].circumference / Math.PI) *
+          (needleValue / dataTotal);
+        const angle = circumference + 1.5;
+
+        ctx.save();
+        ctx.translate(xCenter, yCenter);
+        ctx.rotate(Math.PI * angle);
+        ctx.beginPath();
+        ctx.strokeStyle = "#7b7b7b"; // softer grey
+        ctx.fillStyle = "#7b7b7b";
+        ctx.lineWidth = 1;
+        ctx.moveTo(0 - radius, 0);
+        ctx.lineTo(0, 0 - innerRadius - widthSlice);
+        ctx.lineTo(0 + radius, 0);
+        ctx.closePath();
+        ctx.stroke();
+        ctx.fill();
+        ctx.restore();
+      },
+    };
+
+    // Render charts
+    const renderChart = (chartId, needleValue) => {
+      const data = {
+        labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+        datasets: [
+          {
+            label: "Weekly Sales",
+            data: [18, 12, 6, 9, 12, 3, 9],
+            backgroundColor: [
+              "rgba(255, 183, 197, 0.6)",
+              "rgba(119, 221, 247, 0.6)",
+              "rgba(255, 236, 158, 0.6)",
+              "rgba(174, 255, 190, 0.6)",
+              "rgba(201, 190, 255, 0.6)",
+              "rgba(255, 207, 171, 0.6)",
+              "rgba(200, 200, 200, 0.6)",
+            ],
+            borderColor: [
+              "rgba(255, 183, 197, 1)",
+              "rgba(119, 221, 247, 1)",
+              "rgba(255, 236, 158, 1)",
+              "rgba(174, 255, 190, 1)",
+              "rgba(201, 190, 255, 1)",
+              "rgba(255, 207, 171, 1)",
+              "rgba(200, 200, 200, 1)",
+            ],
+            borderWidth: 1,
+            circumference: 180,
+            needleValue: needleValue,
+            rotation: 270,
+            cutout: "70%",
+          },
+        ],
+      };
+
+      const config = {
+        type: "doughnut",
+        data: data,
+        options: {
+          aspectRatio: 1.6,
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: "rgba(0, 0, 0, 0.7)",
+              titleFont: { family: "'Poppins', sans-serif" },
+              bodyFont: { family: "'Poppins', sans-serif" },
+            },
+          },
+          layout: {
+            padding: { top: 20, bottom: 20 },
+          },
+        },
+        plugins: [gaugeNeedle],
+      };
+
+      return new Chart(document.getElementById(chartId), config);
+    };
+
+    // Render each chart with respective needle values
+    const systolicChart = renderChart("systolicChart", 120);
+    const diastolicChart = renderChart("diastolicChart", 80);
+    const heartRateChart = renderChart("heartRateChart", 60);
+
+    const ctx = document.getElementById("bloodPressureChart").getContext("2d");
+    const bloodPressureChart = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: ["Day 1", "Day 2", "Day 3", "Day 4", "Day 5", "Day 6", "Day 7"],
+        datasets: [
+          {
+            label: "Systolic Pressure",
+            data: [120, 115, 125, 130, 120, 118, 122],
+            borderColor: "rgba(255, 99, 132, 1)",
+            backgroundColor: "rgba(255, 99, 132, 0.2)",
+            fill: true,
+            tension: 0.4,
+            pointRadius: 3,
+          },
+          {
+            label: "Diastolic Pressure",
+            data: [80, 78, 82, 75, 80, 78, 79],
+            borderColor: "rgba(54, 162, 235, 1)",
+            backgroundColor: "rgba(54, 162, 235, 0.2)",
+            fill: true,
+            tension: 0.4,
+            pointRadius: 3,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: true, position: "top" },
+          tooltip: {
+            backgroundColor: "rgba(0, 0, 0, 0.7)",
+            titleFont: { family: "'Poppins', sans-serif" },
+            bodyFont: { family: "'Poppins', sans-serif" },
+          },
+        },
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: "Days",
+              font: { size: 14 },
+            },
+          },
+          y: {
+            title: {
+              display: true,
+              text: "Pressure (mmHg)",
+              font: { size: 14 },
+            },
+            beginAtZero: true,
+          },
+        },
+      },
+    });
+  </script>
+</div>
+{% endblock %}
