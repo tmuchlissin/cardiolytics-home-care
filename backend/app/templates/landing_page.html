@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cardiolytics</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- (Opsional) Font Awesome untuk ikon -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <script
+      src="https://kit.fontawesome.com/yourkitid.js"
+      crossorigin="anonymous"
+    ></script>
+    <style>
+      /* Animasi bubble mengambang */
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-10px);
+        }
+      }
+      .animate-float {
+        animation: float 6s ease-in-out infinite;
+      }
+    </style>
+    <!-- Sertakan Swiper CSS -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/swiper/swiper-bundle.min.css"
+    />
+    <!-- Favicon -->
+    <link
+      rel="icon"
+      type="image/png"
+      href="{{ url_for('static', filename='img/medical-check.png') }}"
+    />
+  </head>
+  <body class="text-gray-800 flex flex-col min-h-screen">
+    <!-- NAVBAR -->
+    <nav class="bg-white shadow-md fixed top-0 w-full z-50">
+      <div
+        class="container mx-auto px-6 py-4 max-w-7xl flex justify-between items-center"
+      >
+        <!-- Logo dengan gambar -->
+        <a href="{{ url_for('auth.landing_page') }}" class="text-xl font-bold">
+          <img
+            src="{{ url_for('static', filename='img/cardiolytics.png') }}"
+            alt="Cardiolytics Logo"
+            class="h-10"
+            draggable="false"
+            oncontextmenu="return false;"
+          />
+        </a>
+        <div
+          class="hidden md:flex items-center space-x-10 justify-end font-semibold"
+        >
+          <a href="#home" class="hover:text-teal-600 transition">Home</a>
+          <a href="#about" class="hover:text-teal-600 transition">About Us</a>
+          <a href="#services" class="hover:text-teal-600 transition"
+            >Services</a
+          >
+          <a href="#testimoni" class="hover:text-teal-600 transition"
+            >Testimoni</a
+          >
+          <a href="#faq" class="hover:text-teal-600 transition">FAQ</a>
+          <a
+            href="{{ url_for('auth.login') }}"
+            class="text-teal-600 font-semibold px-4 py-2 border border-teal-600 rounded-lg hover:bg-teal-600 hover:text-white transition"
+            >Sign In</a
+          >
+        </div>
+      </div>
+    </nav>
+
+    <!-- SECTION 1: HOME (Teal) -->
+    <section
+      id="home"
+      class="relative pt-32 pb-32 bg-gradient-to-r from-teal-700 to-teal-500 text-white overflow-hidden"
+    >
+      <!-- Bubble Dekoratif Acak -->
+      <div
+        class="pointer-events-none absolute"
+        style="
+          top: 10%;
+          left: 5%;
+          width: 30px;
+          height: 30px;
+          background: rgba(255, 255, 255, 0.3);
+          border-radius: 50%;
+          filter: blur(2px);
+          animation: float 6s ease-in-out infinite;
+        "
+      ></div>
+      <div
+        class="pointer-events-none absolute"
+        style="
+          top: 50%;
+          left: 80%;
+          width: 40px;
+          height: 40px;
+          background: rgba(255, 255, 255, 0.3);
+          border-radius: 50%;
+          filter: blur(2px);
+          animation: float 6s ease-in-out infinite;
+          animation-delay: 1s;
+        "
+      ></div>
+      <div
+        class="pointer-events-none absolute"
+        style="
+          top: 70%;
+          left: 20%;
+          width: 25px;
+          height: 25px;
+          background: rgba(255, 255, 255, 0.3);
+          border-radius: 50%;
+          filter: blur(2px);
+          animation: float 6s ease-in-out infinite;
+          animation-delay: 2s;
+        "
+      ></div>
+      <div
+        class="pointer-events-none absolute"
+        style="
+          top: 30%;
+          left: 60%;
+          width: 35px;
+          height: 35px;
+          background: rgba(255, 255, 255, 0.3);
+          border-radius: 50%;
+          filter: blur(2px);
+          animation: float 6s ease-in-out infinite;
+          animation-delay: 3s;
+        "
+      ></div>
+      <!-- Bubble Dekoratif Tambahan -->
+      <div
+        class="pointer-events-none absolute -top-16 -left-16 w-72 h-72 bg-teal-300 opacity-30 rounded-full blur-3xl mix-blend-multiply animate-float"
+      ></div>
+      <div
+        class="pointer-events-none absolute top-1/3 right-0 w-80 h-80 bg-teal-400 opacity-30 rounded-full blur-3xl mix-blend-multiply animate-float"
+        style="animation-delay: 2s"
+      ></div>
+      <div
+        class="pointer-events-none absolute bottom-0 left-1/4 w-64 h-64 bg-teal-600 opacity-30 rounded-full blur-3xl mix-blend-multiply animate-float"
+        style="animation-delay: 4s"
+      ></div>
+
+      <!-- Swirl / Garis Dekoratif Putus-putus -->
+      <div class="pointer-events-none absolute inset-0">
+        <svg
+          class="w-full h-full"
+          preserveAspectRatio="none"
+          fill="none"
+          stroke="rgba(255,255,255,0.2)"
+          stroke-width="2"
+          stroke-dasharray="6 6"
+          viewBox="0 0 1440 600"
+        >
+          <path d="M 0 250 Q 360 150 720 250 T 1440 250" />
+          <path d="M 0 350 Q 360 450 720 350 T 1440 350" />
+          <path d="M 0 450 Q 360 400 720 450 T 1440 450" />
+        </svg>
+      </div>
+
+      <!-- Konten Section: flex agar teks & gambar berdampingan -->
+      <div
+        class="relative z-10 container mx-auto px-6 max-w-7xl flex flex-col md:flex-row items-center"
+      >
+        <!-- Kolom Teks (kiri) -->
+        <div class="md:w-[720px]">
+          <h1 class="text-4xl md:text-5xl font-bold drop-shadow-lg">
+            Welcome to Cardiolytics Home Care
+          </h1>
+          <p class="mt-4 max-w-xl text-lg text-gray-100">
+            Comprehensive cardiovascular analytics and personalized healthcare
+            monitoring from the comfort of your home.
+          </p>
+          <a
+            href="{{ url_for('auth.register') }}"
+            class="inline-block mt-8 bg-white text-teal-600 px-6 py-3 rounded-lg font-semibold hover:bg-teal-50 hover:shadow-lg hover:scale-105 transition-transform duration-300 ease-in-out"
+          >
+            Get Started
+          </a>
+        </div>
+        <!-- Kolom Gambar (kanan) -->
+        <div class="md:w-[720px] mt-8 md:mt-0 flex justify-center">
+          <!-- Contoh gambar PNG transparan -->
+          <img
+            src="{{ url_for('static', filename='img/2.gif') }}"
+            class="w-full"
+            draggable="false"
+            oncontextmenu="return false;"
+            ondragstart="return false;"
+            onmousedown="return false;"
+          />
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2: ABOUT (White) -->
+    <section id="about" class="relative bg-white text-gray-800 pt-16 pb-24">
+      <!-- Bubble Dekoratif Acak (warna teal lembut) -->
+      <div
+        class="pointer-events-none absolute"
+        style="
+          top: 15%;
+          left: 80%;
+          width: 30px;
+          height: 30px;
+          background: rgba(20, 184, 166, 0.2);
+          border-radius: 50%;
+          filter: blur(2px);
+          animation: float 5s ease-in-out infinite;
+        "
+      ></div>
+      <div
+        class="pointer-events-none absolute"
+        style="
+          top: 60%;
+          left: 10%;
+          width: 35px;
+          height: 35px;
+          background: rgba(20, 184, 166, 0.2);
+          border-radius: 50%;
+          filter: blur(2px);
+          animation: float 5s ease-in-out infinite;
+          animation-delay: 1s;
+        "
+      ></div>
+      <div
+        class="pointer-events-none absolute"
+        style="
+          top: 40%;
+          left: 50%;
+          width: 25px;
+          height: 25px;
+          background: rgba(20, 184, 166, 0.2);
+          border-radius: 50%;
+          filter: blur(2px);
+          animation: float 5s ease-in-out infinite;
+          animation-delay: 2s;
+        "
+      ></div>
+
+      <!-- Swirl / Garis Dekoratif Putus-putus -->
+      <div class="pointer-events-none absolute inset-0">
+        <svg
+          class="w-full h-full"
+          preserveAspectRatio="none"
+          fill="none"
+          stroke="rgba(20,184,166,0.3)"
+          stroke-width="2"
+          stroke-dasharray="6 6"
+          viewBox="0 0 1440 600"
+        >
+          <path d="M 0 260 Q 360 160 720 260 T 1440 260" />
+          <path d="M 0 360 Q 360 460 720 360 T 1440 360" />
+          <path d="M 0 460 Q 360 420 720 460 T 1440 460" />
+        </svg>
+      </div>
+
+      <div class="container mx-auto px-6 max-w-7xl relative z-10">
+        <h2 class="text-3xl font-bold text-teal-600 text-center">About Us</h2>
+        <p class="mt-4 max-w-xl mx-auto text-center text-gray-600">
+          Cardiolytics Home Care is dedicated to providing remote cardiovascular
+          monitoring and expert medical insights for better heart health.
+        </p>
+
+        <!-- Container dengan gambar dan teks -->
+        <div
+          class="mt-8 flex flex-col md:flex-row items-center justify-center gap-8"
+        >
+          <!-- Gambar -->
+          <div class="w-full md:w-[480px] flex justify-center">
+            <img
+              src="{{ url_for('static', filename='img/5.png') }}"
+              alt="About Us Image"
+              class="w-3/4 md:w-full rounded-lg shadow-lg"
+              draggable="false"
+              oncontextmenu="return false;"
+              ondragstart="return false;"
+              onmousedown="return false;"
+            />
+          </div>
+
+          <!-- Teks -->
+          <div class="w-full md:w-1/2 text-center md:text-left">
+            <h3 class="text-2xl font-semibold text-teal-600">Our Mission</h3>
+            <p class="mt-2 text-gray-600">
+              We empower individuals to take charge of their cardiac well-being
+              while staying connected to healthcare professionals from anywhere.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3: SERVICES (Teal) -->
+    <section
+      id="services"
+      class="relative pt-16 pb-24 bg-gradient-to-r from-teal-700 to-teal-500 text-white overflow-hidden"
+    >
+      <!-- Bubble Dekoratif Acak -->
+      <div
+        class="pointer-events-none absolute"
+        style="
+          top: 5%;
+          left: 70%;
+          width: 30px;
+          height: 30px;
+          background: rgba(255, 255, 255, 0.3);
+          border-radius: 50%;
+          filter: blur(2px);
+          animation: float 7s ease-in-out infinite;
+        "
+      ></div>
+      <div
+        class="pointer-events-none absolute"
+        style="
+          top: 55%;
+          left: 15%;
+          width: 40px;
+          height: 40px;
+          background: rgba(255, 255, 255, 0.3);
+          border-radius: 50%;
+          filter: blur(2px);
+          animation: float 7s ease-in-out infinite;
+          animation-delay: 1.5s;
+        "
+      ></div>
+      <div
+        class="pointer-events-none absolute"
+        style="
+          top: 80%;
+          left: 50%;
+          width: 25px;
+          height: 25px;
+          background: rgba(255, 255, 255, 0.3);
+          border-radius: 50%;
+          filter: blur(2px);
+          animation: float 7s ease-in-out infinite;
+          animation-delay: 2.5s;
+        "
+      ></div>
+
+      <!-- Swirl / Garis Dekoratif Putus-putus -->
+      <div class="pointer-events-none absolute inset-0">
+        <svg
+          class="w-full h-full"
+          preserveAspectRatio="none"
+          fill="none"
+          stroke="rgba(255,255,255,0.2)"
+          stroke-width="2"
+          stroke-dasharray="6 6"
+          viewBox="0 0 1440 600"
+        >
+          <path d="M 0 240 Q 360 140 720 240 T 1440 240" />
+          <path d="M 0 340 Q 360 440 720 340 T 1440 340" />
+          <path d="M 0 440 Q 360 400 720 440 T 1440 440" />
+        </svg>
+      </div>
+
+      <!-- Konten Section -->
+      <div class="relative z-10 container mx-auto px-6 max-w-7xl">
+        <h2 class="text-3xl font-bold text-white text-center">Our Services</h2>
+        <p class="mt-4 max-w-xl mx-auto text-center text-white">
+          We offer a range of services to help you maintain optimal heart health
+          and stay connected with your healthcare team, anytime and anywhere.
+        </p>
+        <!-- Card Services -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-10">
+          <!-- Card 1 -->
+          <div
+            class="bg-white rounded-xl shadow-lg overflow-hidden transform transition duration-300 hover:scale-105 hover:shadow-2xl"
+          >
+            <div class="p-6">
+              <div class="flex justify-center">
+                <img
+                  src="{{ url_for('static', filename='img/6.png') }}"
+                  alt="Real-time Blood Pressure Monitoring"
+                  class="w-48 h-48 object-cover"
+                />
+              </div>
+              <h3 class="mt-6 text-xl font-semibold text-center text-gray-800">
+                Real-time Blood Pressure Monitoring
+              </h3>
+              <p class="mt-4 text-center text-gray-600">
+                Continuously monitor your blood pressure with our real-time
+                analytics, allowing for early detection of irregularities and
+                prompt medical intervention.
+              </p>
+            </div>
+          </div>
+          <!-- Card 2 -->
+          <div
+            class="bg-white rounded-xl shadow-lg overflow-hidden transform transition duration-300 hover:scale-105 hover:shadow-2xl"
+          >
+            <div class="p-6">
+              <div class="flex justify-center">
+                <img
+                  src="{{ url_for('static', filename='img/7.png') }}"
+                  alt="Cardiovascular Prediction"
+                  class="w-48 h-48 object-cover"
+                />
+              </div>
+              <h3 class="mt-6 text-xl font-semibold text-center text-gray-800">
+                Cardiovascular Prediction
+              </h3>
+              <p class="mt-4 text-center text-gray-600">
+                Utilize our advanced predictive algorithms to assess your
+                cardiovascular risk and receive personalized recommendations
+                from leading experts.
+              </p>
+            </div>
+          </div>
+          <!-- Card 3 -->
+          <div
+            class="bg-white rounded-xl shadow-lg overflow-hidden transform transition duration-300 hover:scale-105 hover:shadow-2xl"
+          >
+            <div class="p-6">
+              <div class="flex justify-center">
+                <img
+                  src="{{ url_for('static', filename='img/8.png') }}"
+                  alt="Cardiobot"
+                  class="w-48 h-48 object-cover"
+                />
+              </div>
+              <h3 class="mt-6 text-xl font-semibold text-center text-gray-800">
+                Cardiobot
+              </h3>
+              <p class="mt-4 text-center text-gray-600">
+                Meet Cardiobot – your AI-powered cardiovascular assistant
+                designed to answer your questions, provide trusted heart health
+                insights, and guide you in making informed decisions.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 4: TESTIMONI (White) -->
+    <section id="testimoni" class="relative bg-white text-gray-800 pt-16 pb-24">
+      <!-- Bubble Dekoratif Acak -->
+      <div
+        class="pointer-events-none absolute"
+        style="
+          top: 20%;
+          left: 70%;
+          width: 30px;
+          height: 30px;
+          background: rgba(20, 184, 166, 0.2);
+          border-radius: 50%;
+          filter: blur(2px);
+          animation: float 6s ease-in-out infinite;
+        "
+      ></div>
+      <div
+        class="pointer-events-none absolute"
+        style="
+          top: 65%;
+          left: 15%;
+          width: 35px;
+          height: 35px;
+          background: rgba(20, 184, 166, 0.2);
+          border-radius: 50%;
+          filter: blur(2px);
+          animation: float 6s ease-in-out infinite;
+          animation-delay: 1s;
+        "
+      ></div>
+
+      <!-- Swirl / Garis Dekoratif Putus-putus -->
+      <div class="pointer-events-none absolute inset-0">
+        <svg
+          class="w-full h-full"
+          preserveAspectRatio="none"
+          fill="none"
+          stroke="rgba(20,184,166,0.3)"
+          stroke-width="2"
+          stroke-dasharray="6 6"
+          viewBox="0 0 1440 600"
+        >
+          <path d="M 0 270 Q 360 170 720 270 T 1440 270" />
+          <path d="M 0 370 Q 360 470 720 370 T 1440 370" />
+          <path d="M 0 470 Q 360 430 720 470 T 1440 470" />
+        </svg>
+      </div>
+      <!-- Testimonials Section -->
+      <div class="relative py-12 overflow-hidden">
+        <!-- Background Decoration Left -->
+        <div
+          class="absolute -top-10 -left-20 w-56 h-56 bg-teal-200 rounded-full opacity-50 z-[-1]"
+        ></div>
+        <!-- Background Decoration Right -->
+        <div
+          class="absolute bottom-0 -right-20 w-56 h-56 bg-teal-100 rounded-full opacity-50 z-[-1]"
+        ></div>
+
+        <div class="container mx-auto px-6 max-w-7xl relative z-10">
+          <h2 class="text-3xl font-bold text-teal-600 text-center">
+            Testimonials
+          </h2>
+          <p class="mt-4 max-w-xl mx-auto text-center text-gray-600">
+            Here are some testimonials from Cardiolytics Home Care users.
+          </p>
+
+          <!-- Swiper Container -->
+          <div class="swiper testimonialSwiper mt-5 overflow-hidden">
+            <div class="swiper-wrapper">
+              <!-- Slide 1 -->
+              <div class="swiper-slide flex justify-center overflow-hidden">
+                <div
+                  class="w-full md:w-3/4 lg:w-2/3 h-60 bg-teal-100 border border-teal-300 rounded-xl p-6 shadow-md flex flex-col items-center justify-center transform transition duration-300 hover:scale-102 hover:shadow-xl overflow-hidden will-change-transform"
+                >
+                  <p class="text-gray-700 italic text-center">
+                    "Since using Cardiolytics, I've been able to monitor my
+                    heart condition anytime. The doctors are very responsive to
+                    all my queries!"
+                  </p>
+                  <div class="mt-10 flex items-center space-x-3">
+                    <img
+                      src="https://i.pravatar.cc/50?img=3"
+                      alt="User"
+                      class="w-10 h-10 rounded-full"
+                    />
+                    <div>
+                      <h4 class="text-sm font-semibold text-teal-600">
+                        John Smith
+                      </h4>
+                      <span class="text-xs text-gray-500">User since 2024</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- Slide 2 -->
+              <div class="swiper-slide flex justify-center overflow-hidden">
+                <div
+                  class="w-full md:w-3/4 lg:w-2/3 h-60 bg-teal-100 border border-teal-300 rounded-xl p-6 shadow-md flex flex-col items-center justify-center transform transition duration-300 hover:scale-102 hover:shadow-xl overflow-hidden will-change-transform"
+                >
+                  <p class="text-gray-700 italic text-center">
+                    "The mobile app is easy to use, the measurements are
+                    accurate, and I feel more at ease knowing I can connect with
+                    a doctor anytime."
+                  </p>
+                  <div class="mt-10 flex items-center space-x-3">
+                    <img
+                      src="https://i.pravatar.cc/50?img=5"
+                      alt="User"
+                      class="w-10 h-10 rounded-full"
+                    />
+                    <div>
+                      <h4 class="text-sm font-semibold text-teal-600">
+                        Jane Doe
+                      </h4>
+                      <span class="text-xs text-gray-500">User since 2025</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- Slide 3 -->
+              <div class="swiper-slide flex justify-center overflow-hidden">
+                <div
+                  class="w-full md:w-3/4 lg:w-2/3 h-60 bg-teal-100 border border-teal-300 rounded-xl p-6 shadow-md flex flex-col items-center justify-center transform transition duration-300 hover:scale-102 hover:shadow-xl overflow-hidden will-change-transform"
+                >
+                  <p class="text-gray-700 italic text-center">
+                    "The cardiologists here are extremely professional. I
+                    received the right advice to maintain my heart health."
+                  </p>
+                  <div class="mt-10 flex items-center space-x-3">
+                    <img
+                      src="https://i.pravatar.cc/50?img=8"
+                      alt="User"
+                      class="w-10 h-10 rounded-full"
+                    />
+                    <div>
+                      <h4 class="text-sm font-semibold text-teal-600">
+                        Emily Johnson
+                      </h4>
+                      <span class="text-xs text-gray-500">User since 2025</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- Slide 4 -->
+              <div class="swiper-slide flex justify-center overflow-hidden">
+                <div
+                  class="w-full md:w-3/4 lg:w-2/3 h-60 bg-teal-100 border border-teal-300 rounded-xl p-6 shadow-md flex flex-col items-center justify-center transform transition duration-300 hover:scale-102 hover:shadow-xl overflow-hidden will-change-transform"
+                >
+                  <p class="text-gray-700 italic text-center">
+                    "Cardiolytics has completely changed the way I manage my
+                    heart condition. The constant monitoring gives me peace of
+                    mind."
+                  </p>
+                  <div class="mt-10 flex items-center space-x-3">
+                    <img
+                      src="https://i.pravatar.cc/50?img=12"
+                      alt="User"
+                      class="w-10 h-10 rounded-full"
+                    />
+                    <div>
+                      <h4 class="text-sm font-semibold text-teal-600">
+                        Michael Brown
+                      </h4>
+                      <span class="text-xs text-gray-500">User since 2023</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- Slide 5 -->
+              <div class="swiper-slide flex justify-center overflow-hidden">
+                <div
+                  class="w-full md:w-3/4 lg:w-2/3 h-60 bg-teal-100 border border-teal-300 rounded-xl p-6 shadow-md flex flex-col items-center justify-center transform transition duration-300 hover:scale-102 hover:shadow-xl overflow-hidden will-change-transform"
+                >
+                  <p class="text-gray-700 italic text-center">
+                    "The user-friendly interface and real-time updates have made
+                    it easier for me to stay informed about my heart's
+                    performance. Highly recommended!"
+                  </p>
+                  <div class="mt-10 flex items-center space-x-3">
+                    <img
+                      src="https://i.pravatar.cc/50?img=15"
+                      alt="User"
+                      class="w-10 h-10 rounded-full"
+                    />
+                    <div>
+                      <h4 class="text-sm font-semibold text-teal-600">
+                        Sarah Williams
+                      </h4>
+                      <span class="text-xs text-gray-500">User since 2022</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="swiper-pagination mt-4"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 5: FAQ (Teal) -->
+    <section
+      id="faq"
+      class="relative pt-16 pb-24 bg-gradient-to-r from-teal-700 to-teal-500 text-white overflow-hidden"
+    >
+      <!-- Bubble Dekoratif Acak -->
+      <div
+        class="pointer-events-none absolute"
+        style="
+          top: 12%;
+          left: 10%;
+          width: 30px;
+          height: 30px;
+          background: rgba(255, 255, 255, 0.3);
+          border-radius: 50%;
+          filter: blur(2px);
+          animation: float 6s ease-in-out infinite;
+        "
+      ></div>
+      <div
+        class="pointer-events-none absolute"
+        style="
+          top: 50%;
+          left: 75%;
+          width: 35px;
+          height: 35px;
+          background: rgba(255, 255, 255, 0.3);
+          border-radius: 50%;
+          filter: blur(2px);
+          animation: float 6s ease-in-out infinite;
+          animation-delay: 1.2s;
+        "
+      ></div>
+      <div
+        class="pointer-events-none absolute"
+        style="
+          top: 80%;
+          left: 30%;
+          width: 25px;
+          height: 25px;
+          background: rgba(255, 255, 255, 0.3);
+          border-radius: 50%;
+          filter: blur(2px);
+          animation: float 6s ease-in-out infinite;
+          animation-delay: 2s;
+        "
+      ></div>
+
+      <!-- Swirl / Garis Dekoratif Putus-putus -->
+      <div class="pointer-events-none absolute inset-0">
+        <svg
+          class="w-full h-full"
+          preserveAspectRatio="none"
+          fill="none"
+          stroke="rgba(255,255,255,0.2)"
+          stroke-width="2"
+          stroke-dasharray="6 6"
+          viewBox="0 0 1440 600"
+        >
+          <path d="M 0 230 Q 360 130 720 230 T 1440 230" />
+          <path d="M 0 330 Q 360 430 720 330 T 1440 330" />
+          <path d="M 0 430 Q 360 380 720 430 T 1440 430" />
+        </svg>
+      </div>
+
+      <!-- FAQ Section -->
+      <div class="relative z-10 container mx-auto px-6 max-w-7xl">
+        <h2 class="text-3xl font-bold text-center">FAQ</h2>
+        <p class="mt-4 max-w-xl mx-auto text-center text-gray-100">
+          Frequently asked questions about our services.
+        </p>
+        <!-- FAQ Items -->
+        <div class="mt-8 space-y-6">
+          <!-- FAQ 1 -->
+          <details class="bg-white text-gray-800 rounded-lg p-4">
+            <summary class="cursor-pointer font-semibold text-teal-600">
+              How do I get started with Cardiolytics services?
+            </summary>
+            <p class="mt-2 text-gray-700">
+              You can sign up via our mobile app or website. Once registered,
+              you'll be asked to provide initial health data and then start
+              monitoring your heart condition using our supported devices.
+            </p>
+          </details>
+          <!-- FAQ 2 -->
+          <details class="bg-white text-gray-800 rounded-lg p-4">
+            <summary class="cursor-pointer font-semibold text-teal-600">
+              Is this service suitable for all ages?
+            </summary>
+            <p class="mt-2 text-gray-700">
+              Cardiolytics services are designed for users of all ages,
+              especially for those who wish to monitor their heart health
+              regularly.
+            </p>
+          </details>
+          <!-- FAQ 3 -->
+          <details class="bg-white text-gray-800 rounded-lg p-4">
+            <summary class="cursor-pointer font-semibold text-teal-600">
+              What about the cost of doctor consultations?
+            </summary>
+            <p class="mt-2 text-gray-700">
+              Consultation fees vary depending on your subscription plan.
+              Detailed pricing and payment methods are available on our app and
+              website.
+            </p>
+          </details>
+          <!-- FAQ 4 -->
+          <details class="bg-white text-gray-800 rounded-lg p-4">
+            <summary class="cursor-pointer font-semibold text-teal-600">
+              How secure is my health data?
+            </summary>
+            <p class="mt-2 text-gray-700">
+              We use state-of-the-art encryption and adhere to strict privacy
+              protocols to ensure your health data remains secure and
+              confidential.
+            </p>
+          </details>
+          <!-- FAQ 5 -->
+          <details class="bg-white text-gray-800 rounded-lg p-4">
+            <summary class="cursor-pointer font-semibold text-teal-600">
+              Can I use the service internationally?
+            </summary>
+            <p class="mt-2 text-gray-700">
+              Yes, Cardiolytics is accessible worldwide, allowing you to monitor
+              your heart health no matter where you are.
+            </p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- Office Section -->
+    <section id="office" class="relative bg-white text-gray-800 pt-16 pb-24">
+      <!-- Bubble Decorative Elements -->
+      <div
+        class="pointer-events-none absolute"
+        style="
+          top: 20%;
+          left: 70%;
+          width: 30px;
+          height: 30px;
+          background: rgba(20, 184, 166, 0.2);
+          border-radius: 50%;
+          filter: blur(2px);
+          animation: float 6s ease-in-out infinite;
+        "
+      ></div>
+      <div
+        class="pointer-events-none absolute"
+        style="
+          top: 65%;
+          left: 15%;
+          width: 35px;
+          height: 35px;
+          background: rgba(20, 184, 166, 0.2);
+          border-radius: 50%;
+          filter: blur(2px);
+          animation: float 6s ease-in-out infinite;
+          animation-delay: 1s;
+        "
+      ></div>
+
+      <!-- Swirl / Decorative Dashed Lines -->
+      <div class="pointer-events-none absolute inset-0">
+        <svg
+          class="w-full h-full"
+          preserveAspectRatio="none"
+          fill="none"
+          stroke="rgba(20,184,166,0.3)"
+          stroke-width="2"
+          stroke-dasharray="6 6"
+          viewBox="0 0 1440 600"
+        >
+          <path d="M 0 270 Q 360 170 720 270 T 1440 270" />
+          <path d="M 0 370 Q 360 470 720 370 T 1440 370" />
+          <path d="M 0 470 Q 360 430 720 470 T 1440 470" />
+        </svg>
+      </div>
+
+      <div class="container mx-auto px-6 max-w-7xl relative z-10">
+        <h2 class="text-3xl font-bold text-teal-600 text-center">
+          More Information
+        </h2>
+
+        <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+          <!-- Left Column: Map & Title -->
+          <div>
+            <iframe
+              class="w-full h-64 rounded-lg"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d909.2430041751471!2d112.79360754554914!3d-7.276433980140686!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2dd7fa10ebfbf931%3A0x2eb0a9059e0c4559!2sPusat%20Unggulan%20Teknologi%20PENS!5e1!3m2!1sid!2sid!4v1740657095439!5m2!1sid!2sid"
+              style="border: 0"
+              allowfullscreen=""
+              loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade"
+            ></iframe>
+          </div>
+
+          <!-- Top Row: Office Address, Our Services, Others -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Office Address -->
+            <div>
+              <h3 class="text-lg font-semibold mb-2 text-teal-600">
+                Office Address
+              </h3>
+              <p class="text-sm text-gray-700">
+                Surabaya - Jl. Raya ITS, Keputih, Kec. Sukolilo, Surabaya, Jawa
+                Timur 60111
+              </p>
+            </div>
+            <!-- Our Services -->
+            <div>
+              <h3 class="text-lg font-semibold mb-2 text-teal-600">
+                Our Services
+              </h3>
+              <ul class="space-y-1 text-sm">
+                <li class="text-gray-700">
+                  Real-time Blood Pressure Monitoring
+                </li>
+                <li class="text-gray-700">Cardiovascular Prediction</li>
+                <li class="text-gray-700">Cardiobot</li>
+              </ul>
+            </div>
+            <!-- Others -->
+            <div>
+              <h3 class="text-lg font-semibold mb-2 text-teal-600">Others</h3>
+              <ul class="space-y-1 text-sm">
+                <li class="text-gray-700">About Us</li>
+                <li class="text-gray-700">Testimoni</li>
+                <li class="text-gray-700">FAQ</li>
+              </ul>
+            </div>
+            <!-- Contact Us -->
+            <div>
+              <h3 class="text-lg font-semibold mb-2 text-teal-600">
+                Contact Us
+              </h3>
+              <ul class="space-y-1 text-sm">
+                <li class="text-gray-700">081233585500 - CS</li>
+                <li class="text-gray-700">Cardiolytics</li>
+                <li class="text-gray-700">info@cardiolytics.com</li>
+              </ul>
+            </div>
+            <!-- Media -->
+            <div>
+              <h3 class="text-lg font-semibold mb-2 text-teal-600">Media</h3>
+              <div class="flex space-x-4">
+                <a href="#" class="text-gray-600 hover:text-gray-800">
+                  <i class="fab fa-facebook-f"></i>
+                </a>
+                <a href="#" class="text-gray-600 hover:text-gray-800">
+                  <i class="fab fa-instagram"></i>
+                </a>
+                <a href="#" class="text-gray-600 hover:text-gray-800">
+                  <i class="fab fa-twitter"></i>
+                </a>
+                <a href="#" class="text-gray-600 hover:text-gray-800">
+                  <i class="fab fa-linkedin-in"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <hr />
+    <!-- Footer -->
+    <footer class="bg-white text-center py-3">
+      <div class="container mx-auto max-w-4xl px-6">
+        <p class="text-gray-700">
+          &copy; 2025 Cardiolytics. All Rights Reserved.
+        </p>
+      </div>
+    </footer>
+
+    <!-- Sertakan Swiper JS (CDN) di bagian paling bawah sebelum penutup </body> -->
+    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+    <script>
+      var swiper = new Swiper(".testimonialSwiper", {
+        loop: true,
+        effect: "fade", // Efek fade untuk transisi yang halus
+        autoplay: {
+          delay: 3000,
+          disableOnInteraction: false,
+        },
+        pagination: {
+          el: ".swiper-pagination",
+          clickable: true,
+        },
+        navigation: {
+          nextEl: ".swiper-button-next",
+          prevEl: ".swiper-button-prev",
+        },
+      });
+    </script>
+  </body>
+</html>

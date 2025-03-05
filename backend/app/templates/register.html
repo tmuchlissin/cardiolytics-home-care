@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Register</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Link to External CSS -->
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/styles.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      href="{{ url_for('static', filename='img/medical-check.png') }}"
+    />
+    <style>
+      #register-btn:disabled:hover #tooltip {
+        display: block;
+      }
+    </style>
+  </head>
+  <body
+    class="bg-gray-200 flex flex-col items-center justify-center min-h-screen"
+  >
+    <!-- 🔹 Flash Messages - Appear Above the Registration Container -->
+    {% with messages = get_flashed_messages(with_categories=true) %} {% if
+    messages %}
+    <div class="absolute top-5 w-11/12 max-w-lg">
+      {% for category, message in messages %}
+      <div
+        class="flash-message p-3 rounded-lg text-white text-center font-semibold {% if category == 'success' %} bg-green-500 {% elif category == 'warning' %} bg-yellow-500 {% elif category == 'danger' %} bg-red-500 {% endif %}"
+      >
+        {{ message }}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %} {% endwith %}
+
+    <div class="bg-white shadow-lg rounded-lg w-full max-w-lg p-8">
+      <!-- Logo (Clickable) -->
+      <a href="{{ url_for('auth.landing_page') }}">
+        <img
+          src="{{ url_for('static', filename='img/cardiolytics.png') }}"
+          class="w-48 h-auto mb-4 mx-auto"
+          draggable="false"
+          oncontextmenu="return false;"
+          ondragstart="return false;"
+          onmousedown="return false;"
+          alt="Cardiolytics Logo"
+        />
+      </a>
+      <h2 class="text-2xl font-bold text-teal-600 text-center">
+        Create an Account
+      </h2>
+      <p class="text-gray-600 mt-2 mb-3 text-center">
+        Fill in the details to create your account.
+      </p>
+
+      <form method="POST" action="{{ url_for('auth.register') }}">
+        {{ form.hidden_tag() }}
+        <!-- CSRF Protection -->
+
+        <!-- Patient ID -->
+        <div class="mb-2">
+          <label for="patient_id" class="block text-gray-700">Patient ID</label>
+          <input
+            type="text"
+            name="patient_id"
+            id="patient_id"
+            placeholder="Enter your 10-digit Patient ID"
+            pattern="^\d{10}$"
+            maxlength="10"
+            title="Patient ID must be exactly 10 digits"
+            required
+            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+          />
+        </div>
+
+        <!-- Full Name -->
+        <div class="mb-2">
+          <label for="fullname" class="block text-gray-700">Full Name</label>
+          <input
+            type="text"
+            name="full_name"
+            id="full_name"
+            placeholder="Enter your full name"
+            required
+            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+          />
+        </div>
+
+        <!-- Nickname -->
+        <div class="mb-2">
+          <label for="nickname" class="block text-gray-700">Nickname</label>
+          <input
+            type="text"
+            name="nickname"
+            id="nickname"
+            placeholder="Enter your nickname"
+            required
+            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+          />
+        </div>
+
+        <!-- Email -->
+        <div class="mb-2">
+          <label for="email" class="block text-gray-700">Email</label>
+          <input
+            type="email"
+            name="email"
+            id="email"
+            placeholder="you@example.com"
+            required
+            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+          />
+        </div>
+
+        <!-- Phone Number -->
+        <div class="mb-2">
+          <label for="phone_number" class="block text-gray-700"
+            >Phone Number</label
+          >
+          <input
+            type="text"
+            name="phone_number"
+            id="phone_number"
+            placeholder="Enter your phone number"
+            pattern="^\d{10,13}$"
+            maxlength="13"
+            title="Phone number must be between 10-13 digits."
+            required
+            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+          />
+        </div>
+
+        <!-- Password Label with Info Icon -->
+        <label for="password" class="block text-gray-700 flex items-center">
+          Password
+          <span class="ml-2 relative group">
+            <i class="fa-solid fa-circle-info text-gray-500 cursor-pointer"></i>
+            <span
+              class="absolute left-0 bottom-5 hidden group-hover:block bg-black text-white text-xs px-4 py-2 rounded-lg w-60 shadow-lg"
+            >
+              ✅ Minimum 8 characters<br />
+              ✅ At least one uppercase letter (A-Z)<br />
+              ✅ At least one lowercase letter (a-z)<br />
+              ✅ At least one number (0-9)<br />
+              ✅ At least one special character (@$!%*?&)
+            </span>
+          </span>
+        </label>
+
+        <!-- Password Input with Strength Indicator -->
+        <div class="mb-2 relative">
+          <div class="relative">
+            <input
+              type="password"
+              name="password"
+              id="password"
+              placeholder="Your password"
+              required
+              class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300 pr-10"
+              onkeyup="checkPasswordStrength()"
+            />
+            <button
+              type="button"
+              id="togglePassword"
+              class="absolute inset-y-0 right-3 flex items-center"
+            >
+              <i id="eyeIconPassword" class="fa-solid fa-eye text-gray-500"></i>
+            </button>
+          </div>
+          <p id="password-strength" class="mt-1 text-xs"></p>
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="mb-4 relative">
+          <label for="confirm_password" class="block text-gray-700"
+            >Confirm Password</label
+          >
+          <div class="relative">
+            <input
+              type="password"
+              name="confirm_password"
+              id="confirm_password"
+              placeholder="Re-type password"
+              required
+              class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300 pr-10"
+              onkeyup="checkPasswordMatch()"
+            />
+            <button
+              type="button"
+              id="toggleConfirmPassword"
+              class="absolute inset-y-0 right-3 flex items-center"
+            >
+              <i
+                id="eyeIconConfirmPassword"
+                class="fa-solid fa-eye text-gray-500"
+              ></i>
+            </button>
+          </div>
+          <p id="confirm-password-message" class="mt-1 text-xs"></p>
+        </div>
+
+        <!-- Register Button (Disabled Initially) -->
+        <button
+          type="submit"
+          id="register-btn"
+          class="w-full bg-teal-400 text-white py-2 rounded-lg transition opacity-50 cursor-not-allowed relative"
+          disabled
+        >
+          Register
+        </button>
+      </form>
+
+      <p class="mt-3 text-center text-gray-500">
+        Already have an account?
+        <a
+          href="{{ url_for('auth.login') }}"
+          class="text-blue-500 hover:underline"
+          >Sign in</a
+        >
+      </p>
+    </div>
+
+    <!-- JavaScript for Password Toggle -->
+    <script>
+      // Flag global untuk menandai status password
+      let isPasswordStrong = false;
+      let doPasswordsMatch = false;
+
+      function checkPasswordStrength() {
+        const password = document.getElementById("password").value;
+        const strengthBar = document.getElementById("password-strength");
+        // Regex: minimal 8 karakter, mengandung huruf besar, huruf kecil, angka, dan simbol
+        const strongPassword = new RegExp(
+          "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&]).{8,}$"
+        );
+
+        // Cek panjang minimum
+        if (password.length < 8) {
+          strengthBar.innerHTML = "❌ Too short (minimum 8 characters)";
+          strengthBar.className = "text-red-500";
+          isPasswordStrong = false;
+        }
+        // Cek apakah mengandung uppercase, lowercase, digit, dan simbol
+        else if (!strongPassword.test(password)) {
+          strengthBar.innerHTML =
+            "⚠ Weak password (must include uppercase, lowercase, number, and special character)";
+          strengthBar.className = "text-yellow-500";
+          isPasswordStrong = false;
+        }
+        // Jika lolos
+        else {
+          strengthBar.innerHTML = "✅ Strong password!";
+          strengthBar.className = "text-green-500";
+          isPasswordStrong = true;
+        }
+
+        // Setelah cek kekuatan password, evaluasi lagi form-nya
+        checkFormCompletion();
+      }
+
+      function checkPasswordMatch() {
+        const password = document.getElementById("password").value;
+        const confirmPassword =
+          document.getElementById("confirm_password").value;
+        const message = document.getElementById("confirm-password-message");
+
+        if (confirmPassword === "") {
+          // Jika kosong, anggap belum cocok
+          message.innerHTML = "";
+          doPasswordsMatch = false;
+        } else if (password !== confirmPassword) {
+          message.innerHTML = "❌ Passwords do not match!";
+          message.className = "text-red-500";
+          doPasswordsMatch = false;
+        } else {
+          message.innerHTML = "✅ Passwords match!";
+          message.className = "text-green-500";
+          doPasswordsMatch = true;
+        }
+
+        // Setelah cek kecocokan password, evaluasi lagi form-nya
+        checkFormCompletion();
+      }
+
+      // Pastikan semua syarat dipenuhi sebelum mengaktifkan tombol
+      function checkFormCompletion() {
+        const formInputs = document.querySelectorAll("form input[required]");
+        const registerBtn = document.getElementById("register-btn");
+
+        // Cek apakah semua input required terisi
+        let allFilled = true;
+        formInputs.forEach((input) => {
+          if (!input.value.trim()) {
+            allFilled = false;
+          }
+        });
+
+        // Tombol aktif hanya jika:
+        // 1) semua field terisi, 2) password kuat, 3) password cocok
+        if (allFilled && isPasswordStrong && doPasswordsMatch) {
+          registerBtn.disabled = false;
+          registerBtn.classList.remove("opacity-50", "cursor-not-allowed");
+        } else {
+          registerBtn.disabled = true;
+          registerBtn.classList.add("opacity-50", "cursor-not-allowed");
+        }
+      }
+
+      // Toggle Visibility for Password Field
+      function togglePasswordVisibility(passwordId, eyeIconId) {
+        const passwordInput = document.getElementById(passwordId);
+        const eyeIcon = document.getElementById(eyeIconId);
+
+        if (passwordInput.type === "password") {
+          passwordInput.type = "text";
+          eyeIcon.classList.remove("fa-eye");
+          eyeIcon.classList.add("fa-eye-slash");
+        } else {
+          passwordInput.type = "password";
+          eyeIcon.classList.remove("fa-eye-slash");
+          eyeIcon.classList.add("fa-eye");
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        // Ambil tombol register dan input form
+        const registerBtn = document.getElementById("register-btn");
+        const formInputs = document.querySelectorAll("form input[required]");
+
+        // Panggil checkFormCompletion setiap kali ada perubahan di field required
+        formInputs.forEach((input) => {
+          input.addEventListener("input", checkFormCompletion);
+        });
+
+        // Panggil checkPasswordStrength setiap kali password berubah
+        document
+          .getElementById("password")
+          .addEventListener("input", checkPasswordStrength);
+
+        // Panggil checkPasswordMatch setiap kali confirm_password berubah
+        document
+          .getElementById("confirm_password")
+          .addEventListener("input", checkPasswordMatch);
+
+        // Password Visibility Toggle Event Listeners
+        document
+          .getElementById("togglePassword")
+          .addEventListener("click", function () {
+            togglePasswordVisibility("password", "eyeIconPassword");
+          });
+
+        document
+          .getElementById("toggleConfirmPassword")
+          .addEventListener("click", function () {
+            togglePasswordVisibility(
+              "confirm_password",
+              "eyeIconConfirmPassword"
+            );
+          });
+
+        // Pengecekan awal (kalau ada field yg sudah terisi)
+        checkFormCompletion();
+
+        // Optional: Hide flash messages after 2 seconds
+        setTimeout(function () {
+          let flashMessages = document.querySelectorAll(".flash-message");
+          flashMessages.forEach(function (msg) {
+            msg.style.transition = "opacity 0.5s";
+            msg.style.opacity = "0";
+            setTimeout(() => msg.remove(), 500);
+          });
+        }, 2000);
+      });
+    </script>
+  </body>
+</html>

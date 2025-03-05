@@ -1,0 +1,226 @@
+{% extends "base.html" %} {% block content %}
+<div class="p-2 h-[75vh] flex flex-col items-start">
+  <h1 class="text-2xl font-bold mb-4 text-gray-900 text-left w-full">
+    Dashboard Monitor
+  </h1>
+
+  <!-- Main Flex Layout -->
+  <div class="flex flex-col md:flex-row gap-8 w-full max-w-10xl">
+    <!-- Left Column with Cards and Gauges -->
+    <div class="flex flex-col space-y-8 w-full max-w-10xl">
+      <!-- Health Status Overview Section -->
+      <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
+        <!-- Timestamp Section -->
+        <div
+          class="relative bg-blue-400 rounded-3xl shadow-lg p-6 text-white flex flex-col items-center justify-center"
+        >
+          <i class="fas fa-clock text-4xl mb-4 opacity-90"></i>
+          <h3 class="text-lg font-semibold mb-1">Timestamp</h3>
+          <p class="text-2xl font-extrabold mt-1 text-center">
+            <span id="currentDatetime"></span>
+          </p>
+        </div>
+
+        <!-- Avg Blood Pressure Section -->
+        <div
+          class="relative bg-yellow-400 rounded-3xl shadow-lg p-6 text-white flex flex-col items-center justify-center"
+        >
+          <i
+            class="fa-solid fa-hand-holding-droplet text-4xl mb-4 opacity-90"
+          ></i>
+          <h3 class="text-lg text-center font-semibold mb-1">
+            Average Blood Pressure
+          </h3>
+          <p class="text-2xl font-extrabold mt-1">124 / 82 mmHg</p>
+          <p class="text-xl font-extrabold mt-1">Status: Normal</p>
+        </div>
+
+        <!-- Heart Rate Section -->
+        <div
+          class="relative bg-green-400 rounded-3xl shadow-lg p-6 text-white flex flex-col items-center justify-center"
+        >
+          <i class="fas fa-heartbeat text-4xl mb-4 opacity-90"></i>
+          <h3 class="text-lg font-semibold mb-1">Heart Rate</h3>
+          <p class="text-2xl font-extrabold mt-1">72 BPM</p>
+          <p class="text-xl font-extrabold mt-1">Status: Normal</p>
+        </div>
+
+        <!-- Pulse Pressure Section -->
+        <div
+          class="relative bg-red-400 rounded-3xl shadow-lg p-6 text-white flex flex-col items-center justify-center"
+        >
+          <i class="fas fa-heart text-4xl mb-4 opacity-90"></i>
+          <h3 class="text-lg font-semibold mb-1">Pulse Pressure</h3>
+          <p class="text-2xl font-extrabold mt-1">42 mmHg</p>
+        </div>
+
+        <!-- Mean Arterial Pressure Section -->
+        <div
+          class="relative bg-purple-400 rounded-3xl shadow-lg p-6 text-white flex flex-col items-center justify-center"
+        >
+          <i class="fas fa-tachometer-alt text-4xl mb-4 opacity-90"></i>
+          <h3 class="text-lg font-semibold mb-1">Mean Arterial Pressure</h3>
+          <p class="text-2xl font-extrabold mt-1">96 mmHg</p>
+        </div>
+
+        <!-- Systolic to Diastolic Ratio Section -->
+        <div
+          class="relative bg-teal-400 rounded-3xl shadow-lg p-6 text-white flex flex-col items-center justify-center"
+        >
+          <i class="fas fa-balance-scale text-4xl mb-4 opacity-90"></i>
+          <h3 class="text-lg font-semibold mb-1">Systolic/Diastolic Ratio</h3>
+          <p class="text-2xl font-extrabold mt-1">1.5</p>
+        </div>
+      </div>
+
+      <!-- Gauge Charts Section -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div
+          class="bg-white shadow-lg rounded-xl p-4 flex flex-col items-center"
+        >
+          <h2 class="text-md font-bold mb-3 text-gray-800">
+            Systolic Pressure
+          </h2>
+          <canvas id="systolicChart" width="140" height="80"></canvas>
+        </div>
+        <div
+          class="bg-white shadow-lg rounded-xl p-4 flex flex-col items-center"
+        >
+          <h2 class="text-md font-bold mb-3 text-gray-800">
+            Diastolic Pressure
+          </h2>
+          <canvas id="diastolicChart" width="140" height="80"></canvas>
+        </div>
+        <div
+          class="bg-white shadow-lg rounded-xl p-4 flex flex-col items-center"
+        >
+          <h2 class="text-md font-bold mb-3 text-gray-800">Heart Rate</h2>
+          <canvas id="heartRateChart" width="140" height="80"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Include Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
+
+  <script>
+    // Update DateTime
+    function updateDateTime() {
+      const now = new Date();
+      const optionsTime = {
+        hour: "numeric",
+        minute: "numeric",
+        second: "numeric",
+        hour12: false,
+        timeZone: "Asia/Jakarta",
+      };
+      const datetimeString = `${String(now.getDate()).padStart(
+        2,
+        "0"
+      )} ${now.toLocaleString("default", {
+        month: "short",
+      })} ${now.getFullYear()}, ${now.toLocaleTimeString(
+        "en-US",
+        optionsTime
+      )} WIB`;
+      document.getElementById("currentDatetime").innerText = datetimeString;
+    }
+    setInterval(updateDateTime, 1000);
+    updateDateTime();
+
+    // Needle plugin
+    const gaugeNeedle = {
+      id: "gaugeNeedle",
+      afterDatasetsDraw(chart) {
+        const ctx = chart.ctx;
+        const xCenter = chart.getDatasetMeta(0).data[0].x;
+        const yCenter = chart.getDatasetMeta(0).data[0].y;
+        const outerRadius = chart.getDatasetMeta(0).data[0].outerRadius;
+        const innerRadius = chart.getDatasetMeta(0).data[0].innerRadius;
+        const widthSlice = (outerRadius - innerRadius) / 2;
+        const radius = 10;
+        const needleValue = chart.data.datasets[0].needleValue;
+
+        // Get the total data to calculate the angle for the needle
+        const dataTotal = chart.data.datasets[0].data.reduce(
+          (a, b) => a + b,
+          0
+        );
+        const circumference =
+          (chart.getDatasetMeta(0).data[0].circumference / Math.PI) *
+          (needleValue / dataTotal);
+        const angle = circumference + 1.8;
+
+        ctx.save();
+        ctx.translate(xCenter, yCenter);
+        ctx.rotate(Math.PI * angle);
+        ctx.beginPath();
+        ctx.strokeStyle = "#7b7b7b"; // softer grey
+        ctx.fillStyle = "#7b7b7b";
+        ctx.lineWidth = 1;
+        ctx.moveTo(0 - radius, 0);
+        ctx.lineTo(0, 0 - innerRadius - widthSlice);
+        ctx.lineTo(0 + radius, 0);
+        ctx.closePath();
+        ctx.stroke();
+        ctx.fill();
+        ctx.restore();
+      },
+    };
+    // Render Chart Function
+    const renderChart = (chartId, needleValue, type) => {
+      const data = {
+        labels:
+          type === "Heart Rate"
+            ? ["Bradycardia", "Normal", "Tachycardia"]
+            : ["Hypotension", "Normal", "Prehypertension", "Hypertension"],
+        datasets: [
+          {
+            label: type,
+            data:
+              type === "Heart Rate"
+                ? [50, 60, 100] // Rentang Heart Rate
+                : type === "Systolic"
+                ? [90, 110, 120, 140] // Rentang Systolic
+                : [60, 70, 80, 90], // Rentang Diastolic
+            backgroundColor:
+              type === "Heart Rate"
+                ? [
+                    "rgba(54, 162, 235, 0.6)", // Bradycardia
+                    "rgba(75, 192, 192, 0.6)", // Normal
+                    "rgba(255, 99, 132, 0.6)", // Tachycardia
+                  ]
+                : [
+                    "rgba(54, 162, 235, 0.6)", // Hypotension
+                    "rgba(75, 192, 192, 0.6)", // Normal
+                    "rgba(255, 159, 64, 0.6)", // Prehypertension
+                    "rgba(255, 99, 132, 0.6)", // Hypertension
+                  ],
+            needleValue: needleValue, // Nilai jarum
+            circumference: 180,
+            rotation: 270,
+            cutout: "70%",
+          },
+        ],
+      };
+
+      const config = {
+        type: "doughnut",
+        data: data,
+        options: {
+          aspectRatio: 1.6,
+          plugins: { legend: { display: true, position: "bottom" } },
+        },
+        plugins: [gaugeNeedle],
+      };
+
+      return new Chart(document.getElementById(chartId), config);
+    };
+    // Render each chart with different needle values
+    renderChart("systolicChart", 120, "Systolic"); // Posisi jarum untuk Systolic
+    renderChart("diastolicChart", 75, "Diastolic"); // Posisi jarum untuk Diastolic
+    renderChart("heartRateChart", 85, "Heart Rate"); // Posisi jarum untuk Heart Rate
+  </script>
+</div>
+{% endblock %}

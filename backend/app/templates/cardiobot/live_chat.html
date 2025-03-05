@@ -1,0 +1,184 @@
+{% extends "base.html" %} {% block content %}
+<style>
+  .message-content {
+    text-align: justify;
+    line-height: 1.6;
+    word-break: break-word;
+  }
+</style>
+
+<script type="text/javascript">
+  // Mengambil URL endpoint dari Flask menggunakan url_for
+  const chatEndpoint = "{{ url_for('cardiobot.chat') }}";
+</script>
+
+<div class="p-2">
+  <h1 class="text-2xl font-bold mb-4 text-gray-900">Chatbot Assistant</h1>
+
+  <div class="flex justify-center items-center h-[75vh]">
+    <div
+      class="w-full max-w-3xl p-6 bg-gray-200 bg-opacity-90 backdrop-blur-md rounded-3xl shadow-lg"
+    >
+      <!-- Chat Header -->
+      <div
+        class="bg-gradient-to-r from-purple-500 to-indigo-500 p-4 rounded-t-3xl text-white text-center shadow-lg"
+      >
+        <h1 class="text-2xl font-bold">Cardiobot 🤖</h1>
+      </div>
+
+      <!-- Chat History -->
+      <div
+        id="chat-history"
+        class="p-2 h-[65vh] overflow-y-scroll bg-gray-100 border border-gray-300 space-y-4 rounded-b-3xl shadow-inner"
+      >
+        <!-- Welcome Message from Bot -->
+        <div class="flex items-center space-x-2">
+          <div class="mr-2 text-green-500 text-2xl">
+            <i class="fas fa-robot"></i>
+          </div>
+          <div
+            class="max-w-xs bg-gray-300 p-3 rounded-lg shadow-md transition-transform transform hover:scale-105"
+            style="text-align: justify"
+          >
+            <p>
+              Halo! Saya adalah Cardiobot. Saya hanya akan menjawab pertanyaan
+              seputar kardiovaskular.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat Input -->
+      <div class="mt-4 flex">
+        <input
+          id="chat-input"
+          type="text"
+          placeholder="Ketik pertanyaan Anda..."
+          class="w-full p-3 border border-gray-300 rounded-l-3xl focus:outline-none focus:ring-2 focus:ring-blue-600 transition-all duration-200"
+        />
+        <button
+          onclick="sendMessage()"
+          class="bg-blue-600 text-white p-3 rounded-r-3xl hover:bg-blue-700 transition duration-200 focus:outline-none flex items-center justify-center"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M2 12l18-9-6 18-2-6 6-2-18 9z"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document
+    .getElementById("chat-input")
+    .addEventListener("keydown", function (event) {
+      if (event.key === "Enter") {
+        sendMessage();
+      }
+    });
+
+  function addMessageToChat(content, isBot = false, isError = false) {
+    const chatHistory = document.getElementById("chat-history");
+    const messageDiv = document.createElement("div");
+    messageDiv.classList.add("flex", isBot ? "justify-start" : "justify-end");
+
+    // Memformat konten untuk memisahkan daftar langkah-langkah
+    const formattedContent = content.replace(
+      /(\d+\.\s)/g,
+      "<br><strong>$1</strong>"
+    );
+
+    let messageContent = `
+      <div class="flex items-center space-x-2">
+          <div class="${isBot ? "text-green-500" : "text-blue-500"} text-2xl">
+              <i class="fas ${isBot ? "fa-robot" : "fa-user"}"></i>
+          </div>
+          <div class="max-w-xs ${
+            isBot ? "bg-gray-300" : "bg-blue-600 text-white"
+          } p-3 rounded-lg shadow-md transition-transform transform hover:scale-105 ${
+      isError ? "bg-red-200 text-red-800" : ""
+    }">
+              <p class="message-content">${formattedContent}</p>
+          </div>
+      </div>
+  `;
+
+    messageDiv.innerHTML = messageContent;
+    chatHistory.appendChild(messageDiv);
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+  }
+
+  function showTypingIndicator() {
+    addMessageToChat("Cardiobot sedang mengetik...", true, false);
+  }
+
+  async function sendMessage() {
+    const chatInput = document.getElementById("chat-input");
+    const message = chatInput.value.trim();
+    console.log("Sending message:", message);
+
+    if (message) {
+      addMessageToChat(message, false); // Tampilkan pesan pengguna
+      chatInput.value = ""; // Kosongkan input
+
+      // Tampilkan indikator "sedang mengetik"
+      showTypingIndicator();
+      chatInput.disabled = true;
+
+      try {
+        const response = await fetch(chatEndpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: message }),
+        });
+
+        // Pastikan untuk menghapus indikator "sedang mengetik"
+        const chatHistory = document.getElementById("chat-history");
+        chatHistory.removeChild(chatHistory.lastChild);
+
+        // Periksa status respons
+        console.log("Response status:", response.status);
+
+        if (!response.ok) {
+          // Jika ada error, ambil respons teks dan log
+          const errorText = await response.text();
+          console.log("Full error response:", errorText);
+          throw new Error("Server error: " + response.status);
+        }
+
+        // Ambil respons JSON dengan aman
+        const data = await response.json();
+
+        // Tampilkan jawaban dari bot atau pesan error
+        if (data && data.answer) {
+          addMessageToChat(data.answer, true);
+        } else {
+          addMessageToChat(
+            "Maaf, terjadi kesalahan dalam mendapatkan jawaban.",
+            true,
+            true
+          );
+        }
+      } catch (error) {
+        console.error("Fetch error:", error);
+        addMessageToChat(`Kesalahan: ${error.message}`, true, true);
+      } finally {
+        chatInput.disabled = false;
+      }
+    }
+  }
+</script>
+
+{% endblock %}

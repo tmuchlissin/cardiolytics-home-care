@@ -1,4 +1,8 @@
 .venv
+.venv_el
 .env
-migrations/
-__pycache__
+**/migrations/
+**/__pycache__/
+**/chroma_db/
+**/catboost_info
+.codegpt

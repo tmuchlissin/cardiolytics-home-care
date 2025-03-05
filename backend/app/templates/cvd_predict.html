@@ -1,0 +1,142 @@
+{% extends 'base.html' %} {% block content %}
+<div class="p-2">
+  <h1 class="text-2xl font-bold mb-4 text-gray-900">Upload Patient Data</h1>
+
+  <div class="flex justify-center">
+    <form
+      method="POST"
+      class="w-full max-w-10xl bg-white shadow-xl rounded-2xl p-10 border border-gray-200 h-[65vh]"
+      novalidate
+    >
+      {{ form.hidden_tag() }}
+
+      <!-- Four Column Grid Layout for Features -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-40">
+        <!-- Objective Feature Section -->
+        <div>
+          <h2 class="text-xl font-semibold mb-8 text-gray-700 border-b pb-1">
+            I. Objective Feature
+          </h2>
+          <div class="space-y-8">
+            <div class="flex flex-col">
+              <label class="text-base font-medium text-gray-500 mb-3"
+                >{{ form.age.label }}</label
+              >
+              {{ form.age(class="bg-gray-200 border-none p-3 rounded-lg
+              shadow-inner focus:ring-2 focus:ring-indigo-300 transition-all
+              duration-200 w-full") }}
+            </div>
+            <div class="flex flex-col">
+              <label class="text-base font-medium text-gray-500 mb-3"
+                >{{ form.gender.label }}</label
+              >
+              {{ form.gender(class="bg-gray-200 border-none p-3 rounded-lg
+              shadow-inner focus:ring-2 focus:ring-indigo-300 transition-all
+              duration-200 w-full") }}
+            </div>
+            <div class="flex flex-col">
+              <label class="text-base font-medium text-gray-500 mb-3"
+                >{{ form.height.label }}</label
+              >
+              {{ form.height(class="bg-gray-200 border-none p-3 rounded-lg
+              shadow-inner focus:ring-2 focus:ring-indigo-300 transition-all
+              duration-200 w-full") }}
+            </div>
+            <div class="flex flex-col">
+              <label class="text-base font-medium text-gray-500 mb-3"
+                >{{ form.weight.label }}</label
+              >
+              {{ form.weight(class="bg-gray-200 border-none p-3 rounded-lg
+              shadow-inner focus:ring-2 focus:ring-indigo-300 transition-all
+              duration-200 w-full") }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Examination Feature Section -->
+        <div>
+          <h2 class="text-xl font-semibold mb-8 text-gray-700 border-b pb-1">
+            II. Examination Feature
+          </h2>
+          <div class="space-y-8">
+            <div class="flex flex-col">
+              <label class="text-base font-medium text-gray-500 mb-3"
+                >{{ form.ap_hi.label }}</label
+              >
+              {{ form.ap_hi(class="bg-gray-200 border-none p-3 rounded-lg
+              shadow-inner focus:ring-2 focus:ring-indigo-300 transition-all
+              duration-200 w-full") }}
+            </div>
+            <div class="flex flex-col">
+              <label class="text-base font-medium text-gray-500 mb-3"
+                >{{ form.ap_lo.label }}</label
+              >
+              {{ form.ap_lo(class="bg-gray-200 border-none p-3 rounded-lg
+              shadow-inner focus:ring-2 focus:ring-indigo-300 transition-all
+              duration-200 w-full") }}
+            </div>
+            <div class="flex flex-col">
+              <label class="text-base font-medium text-gray-500 mb-3"
+                >{{ form.cholesterol.label }}</label
+              >
+              {{ form.cholesterol(class="bg-gray-200 border-none p-3 rounded-lg
+              shadow-inner focus:ring-2 focus:ring-indigo-300 transition-all
+              duration-200 w-full") }}
+            </div>
+            <div class="flex flex-col">
+              <label class="text-base font-medium text-gray-500 mb-3"
+                >{{ form.gluc.label }}</label
+              >
+              {{ form.gluc(class="bg-gray-200 border-none p-3 rounded-lg
+              shadow-inner focus:ring-2 focus:ring-indigo-300 transition-all
+              duration-200 w-full") }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Subjective Feature Section -->
+        <div>
+          <h2 class="text-xl font-semibold mb-8 text-gray-700 border-b pb-1">
+            III. Subjective Feature
+          </h2>
+          <div class="space-y-8">
+            <div class="flex flex-col">
+              <label class="text-base font-medium text-gray-500 mb-3"
+                >{{ form.smoke.label }}</label
+              >
+              {{ form.smoke(class="bg-gray-200 border-none p-3 rounded-lg
+              shadow-inner focus:ring-2 focus:ring-indigo-300 transition-all
+              duration-200 w-full") }}
+            </div>
+            <div class="flex flex-col">
+              <label class="text-base font-medium text-gray-500 mb-3"
+                >{{ form.alco.label }}</label
+              >
+              {{ form.alco(class="bg-gray-200 border-none p-3 rounded-lg
+              shadow-inner focus:ring-2 focus:ring-indigo-300 transition-all
+              duration-200 w-full") }}
+            </div>
+            <div class="flex flex-col">
+              <label class="text-base font-medium text-gray-500 mb-3"
+                >{{ form.active.label }}</label
+              >
+              {{ form.active(class="bg-gray-200 border-none p-3 rounded-lg
+              shadow-inner focus:ring-2 focus:ring-indigo-300 transition-all
+              duration-200 w-full") }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-center mt-10">
+        <button
+          type="submit"
+          class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold py-3 px-8 rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-transform duration-300 ease-out"
+        >
+          Submit
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
