@@ -75,6 +75,7 @@ class EditUserForm(FlaskForm):
             ("rejected", "Rejected")
         ]
     )
+    device_id = SelectField("Device ID", choices=[], coerce=str)
     submit = SubmitField("Update")
 
     
@@ -100,3 +101,14 @@ class ModelForm(FlaskForm):
         FileAllowed(['pkl'], 'Invalid file format!')
     ])
     submit = SubmitField('Add Model')
+
+class DeviceForm(FlaskForm):
+    device_id = StringField(
+        'Device ID',
+        validators=[DataRequired(message="Device ID harus diisi"), Length(max=36)]
+    )
+    model = StringField(
+        'Model',
+        validators=[DataRequired(message="Model harus diisi"), Length(max=50)]
+    )
+    submit = SubmitField('Upload Device')

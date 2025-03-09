@@ -32,7 +32,8 @@ class Device(db.Model):
     id = db.Column(db.String(36), primary_key=True)  
     model = db.Column(db.String(50), nullable=False) 
     registered_at = db.Column(db.DateTime, default=datetime.utcnow)  
-    
+    updated_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
+     
     user = db.relationship('User', back_populates='device', uselist=False)  
     blood_pressure_records = db.relationship('BloodPressureRecord', back_populates='device', lazy=True)  
 
@@ -73,7 +74,6 @@ class PatientData(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.String(10), db.ForeignKey('user.id'), nullable=False)
     user = db.relationship('User', backref='patient_data')
-
     age = db.Column(db.Integer, nullable=False)  
     height = db.Column(db.Integer, nullable=False)  
     weight = db.Column(db.Float, nullable=False)  
@@ -86,7 +86,8 @@ class PatientData(db.Model):
     alco = db.Column(db.Boolean, nullable=False) 
     active = db.Column(db.Boolean, nullable=False)  
     cardio = db.Column(db.Boolean, nullable=False) 
-
+    submitted_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp())
+    
     def __repr__(self):
         return f"<PatientData(id={self.id}, age={self.age}, gender={self.gender}, cardio={self.cardio})>"
     
