@@ -1,8 +1,6 @@
 {% extends "base.html" %} {% block content %}
-<div class="p-2 h-[75vh] flex flex-col items-start">
-  <h1 class="text-2xl font-bold mb-4 text-gray-900 text-left w-full">
-    Dashboard Monitor
-  </h1>
+<div class="px-5 py-1">
+  <h1 class="text-2xl font-bold mb-4">Dashboard Monitor</h1>
 
   <!-- Main Flex Layout -->
   <div class="flex flex-col md:flex-row gap-8 w-full max-w-10xl">
@@ -12,18 +10,19 @@
       <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
         <!-- Timestamp Section -->
         <div
-          class="relative bg-blue-400 rounded-3xl shadow-lg p-6 text-white flex flex-col items-center justify-center"
+          class="relative bg-blue-400 hover:bg-blue-500 transition-colors duration-300 rounded-3xl shadow-lg p-6 text-white flex flex-col items-center justify-center"
         >
           <i class="fas fa-clock text-4xl mb-4 opacity-90"></i>
           <h3 class="text-lg font-semibold mb-1">Timestamp</h3>
-          <p class="text-2xl font-extrabold mt-1 text-center">
-            <span id="currentDatetime"></span>
-          </p>
+          <p
+            class="text-2xl font-extrabold mt-1 text-center"
+            id="currentDatetime"
+          ></p>
         </div>
 
         <!-- Avg Blood Pressure Section -->
         <div
-          class="relative bg-yellow-400 rounded-3xl shadow-lg p-6 text-white flex flex-col items-center justify-center"
+          class="relative bg-yellow-400 hover:bg-yellow-500 transition-colors duration-300 rounded-3xl shadow-lg p-6 text-white flex flex-col items-center justify-center"
         >
           <i
             class="fa-solid fa-hand-holding-droplet text-4xl mb-4 opacity-90"
@@ -37,7 +36,7 @@
 
         <!-- Heart Rate Section -->
         <div
-          class="relative bg-green-400 rounded-3xl shadow-lg p-6 text-white flex flex-col items-center justify-center"
+          class="relative bg-green-400 hover:bg-green-500 transition-colors duration-300 rounded-3xl shadow-lg p-6 text-white flex flex-col items-center justify-center"
         >
           <i class="fas fa-heartbeat text-4xl mb-4 opacity-90"></i>
           <h3 class="text-lg font-semibold mb-1">Heart Rate</h3>
@@ -47,7 +46,7 @@
 
         <!-- Pulse Pressure Section -->
         <div
-          class="relative bg-red-400 rounded-3xl shadow-lg p-6 text-white flex flex-col items-center justify-center"
+          class="relative bg-red-400 hover:bg-red-500 transition-colors duration-300 rounded-3xl shadow-lg p-6 text-white flex flex-col items-center justify-center"
         >
           <i class="fas fa-heart text-4xl mb-4 opacity-90"></i>
           <h3 class="text-lg font-semibold mb-1">Pulse Pressure</h3>
@@ -56,19 +55,23 @@
 
         <!-- Mean Arterial Pressure Section -->
         <div
-          class="relative bg-purple-400 rounded-3xl shadow-lg p-6 text-white flex flex-col items-center justify-center"
+          class="relative bg-purple-400 hover:bg-purple-500 transition-colors duration-300 rounded-3xl shadow-lg p-6 text-white flex flex-col items-center justify-center"
         >
           <i class="fas fa-tachometer-alt text-4xl mb-4 opacity-90"></i>
-          <h3 class="text-lg font-semibold mb-1">Mean Arterial Pressure</h3>
+          <h3 class="text-lg text-center font-semibold mb-1">
+            Mean Arterial Pressure
+          </h3>
           <p class="text-2xl font-extrabold mt-1">96 mmHg</p>
         </div>
 
         <!-- Systolic to Diastolic Ratio Section -->
         <div
-          class="relative bg-teal-400 rounded-3xl shadow-lg p-6 text-white flex flex-col items-center justify-center"
+          class="relative bg-teal-400 hover:bg-teal-500 transition-colors duration-300 rounded-3xl shadow-lg p-6 text-white flex flex-col items-center justify-center"
         >
           <i class="fas fa-balance-scale text-4xl mb-4 opacity-90"></i>
-          <h3 class="text-lg font-semibold mb-1">Systolic/Diastolic Ratio</h3>
+          <h3 class="text-lg text-center font-semibold mb-1">
+            Systolic/Diastolic Ratio
+          </h3>
           <p class="text-2xl font-extrabold mt-1">1.5</p>
         </div>
       </div>
@@ -76,7 +79,7 @@
       <!-- Gauge Charts Section -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div
-          class="bg-white shadow-lg rounded-xl p-4 flex flex-col items-center"
+          class="bg-white hover:shadow-xl transition-shadow duration-300 rounded-xl p-4 flex flex-col items-center"
         >
           <h2 class="text-md font-bold mb-3 text-gray-800">
             Systolic Pressure
@@ -84,7 +87,7 @@
           <canvas id="systolicChart" width="140" height="80"></canvas>
         </div>
         <div
-          class="bg-white shadow-lg rounded-xl p-4 flex flex-col items-center"
+          class="bg-white hover:shadow-xl transition-shadow duration-300 rounded-xl p-4 flex flex-col items-center"
         >
           <h2 class="text-md font-bold mb-3 text-gray-800">
             Diastolic Pressure
@@ -92,7 +95,7 @@
           <canvas id="diastolicChart" width="140" height="80"></canvas>
         </div>
         <div
-          class="bg-white shadow-lg rounded-xl p-4 flex flex-col items-center"
+          class="bg-white hover:shadow-xl transition-shadow duration-300 rounded-xl p-4 flex flex-col items-center"
         >
           <h2 class="text-md font-bold mb-3 text-gray-800">Heart Rate</h2>
           <canvas id="heartRateChart" width="140" height="80"></canvas>
@@ -168,6 +171,7 @@
         ctx.restore();
       },
     };
+
     // Render Chart Function
     const renderChart = (chartId, needleValue, type) => {
       const data = {
@@ -217,6 +221,7 @@
 
       return new Chart(document.getElementById(chartId), config);
     };
+
     // Render each chart with different needle values
     renderChart("systolicChart", 120, "Systolic"); // Posisi jarum untuk Systolic
     renderChart("diastolicChart", 75, "Diastolic"); // Posisi jarum untuk Diastolic

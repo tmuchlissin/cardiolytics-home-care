@@ -1,11 +1,21 @@
 from functools import wraps
-from flask import Blueprint, render_template, redirect, url_for, flash, abort, request,jsonify
+from flask import Blueprint, render_template, redirect, url_for, flash, abort, request, current_app, send_file
 from flask_login import login_user, logout_user, current_user, login_required
-from app.models import UserRole, User, Models, Device
+from app.models import UserRole, User, Models, Device, PatientData
 from app.extensions import db, mail 
 from app.forms import EditUserForm, ModelForm, DeviceForm
 from sqlalchemy import or_
 from werkzeug.utils import secure_filename
+from io import BytesIO
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Image, Spacer
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY
+from reportlab.lib.units import inch
+from reportlab.platypus import KeepInFrame
+from sqlalchemy.orm import joinedload
+import os
 
 admin = Blueprint('admin', __name__)
 
@@ -23,7 +33,6 @@ def admin_required(f):
 
 @admin.route('/admin/logout')
 @login_required
-@admin_required
 def logout():
     logout_user() 
     flash("✅ You have been logged out.", "success")
@@ -43,7 +52,6 @@ def user_approval():
 
 @admin.route('/admin/approve-user/<user_id>', methods=['POST'])
 @login_required
-@admin_required
 def approve_user(user_id):
     user = User.query.get(user_id)
     if user:
@@ -58,6 +66,7 @@ def approve_user(user_id):
 ##################### MANAGE USER #########################
 @admin.route('/admin/user-management')
 @login_required
+@admin_required
 def user_management():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
@@ -93,7 +102,7 @@ def user_management():
         navbar_title="Manage Users",
         users=users,
         devices=devices,
-        form=form,  # pastikan form dikirim
+        form=form, 
         pagination=pagination,
         entries_per_page=per_page,
         search_query=search_query  
@@ -177,7 +186,6 @@ def edit_user(user_id):
 
 @admin.route("/admin/user-management/delete-user/<string:user_id>", methods=["POST"])
 @login_required
-@admin_required
 def delete_user(user_id):
     user = User.query.get(user_id)
     
@@ -196,12 +204,293 @@ def delete_user(user_id):
 ###########################################################
 ####################### PATIENT DATA ######################
 ###########################################################
-@admin.route('/admin/log-cvd-predict')
+@admin.route('/admin/patient-data')
 @login_required
-@admin_required
-def log_cvd_predict():
-    return render_template('log_cvd_predict.html', navbar_title="Log Patient Data")
+def patient_data():
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+    search_query = request.args.get('search', '')
+    
+    query = PatientData.query.order_by(PatientData.submitted_at.desc())
+    if search_query:
+        query = query.filter(PatientData.user_id.contains(search_query))
+    
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    patient_data_list = pagination.items
+    
+    return render_template(
+        'patient_data.html', 
+        navbar_title="Patient Data", 
+        patient_data=patient_data_list, 
+        pagination=pagination,
+        entries_per_page=per_page,
+        search_query=search_query
+    )
 
+
+# @admin.route('/admin/patient-data/delete-data/<int:patient_id>', methods=['POST'])
+# @login_required
+# def delete_patient(patient_id):
+#     patient = PatientData.query.get_or_404(patient_id)
+#     try:
+#         db.session.delete(patient)
+#         db.session.commit()
+#         flash('Patient data deleted successfully.', 'success')
+#     except Exception as e:
+#         db.session.rollback()
+#         flash(f'Error deleting patient data: {str(e)}', 'danger')
+    
+#     return redirect(url_for(
+#         'admin.patient_data'
+#     ))
+
+def generate_observations(patient):
+    """
+    Menghasilkan kalimat observasi dinamis berdasarkan data medis pasien
+    dan menyertakan nama lengkap serta patient_id di awal.
+    """
+    # Awal kalimat dengan identitas pasien
+    observations = f"Observations for {patient.user.full_name} (ID : {patient.user_id}), "
+
+    # Tekanan darah
+    if patient.systolic >= 160 or patient.diastolic >= 100:
+        observations += "The patient exhibits significantly high blood pressure, indicating Stage 2 Hypertension. "
+    elif patient.systolic >= 140 or patient.diastolic >= 90:
+        observations += "The patient shows signs of Stage 1 Hypertension. "
+    elif patient.systolic >= 120 or patient.diastolic >= 80:
+        observations += "There is a mild elevation in blood pressure (prehypertension). "
+    else:
+        observations += "Patient shows stable vital signs. "
+
+    # Kolesterol
+    if patient.cholesterol == 2:
+        observations += "Cholesterol levels are well above normal. "
+    elif patient.cholesterol == 1:
+        observations += "Cholesterol levels are above normal. "
+    else:
+        observations += "Cholesterol levels are within normal range. "
+
+    # Glukosa
+    if patient.gluc == 2:
+        observations += "Glucose levels are well above normal. "
+    elif patient.gluc == 1:
+        observations += "Glucose levels are above normal. "
+    else:
+        observations += "Glucose levels are within normal range. "
+
+    # Kebiasaan merokok
+    if patient.smoke:
+        observations += "Patient is a smoker. "
+    else:
+        observations += "Patient does not smoke. "
+
+    # Konsumsi alkohol
+    if patient.alco:
+        observations += "Alcohol consumption is noted. "
+    else:
+        observations += "No alcohol consumption is reported. "
+
+    # Aktivitas fisik
+    if patient.active:
+        observations += "Patient is physically active. "
+    else:
+        observations += "Patient has low physical activity. "
+
+    # Risiko kardiovaskular
+    if patient.cardio:
+        observations += "Overall, the patient is at risk of cardiovascular disease."
+    else:
+        observations += "Overall, cardiovascular risk is low."
+
+    # Rekomendasi umum
+    observations += ("Cardio risk is monitored regularly. Recommended to maintain a healthy diet, "
+                    "engage in regular exercise, and follow up with the cardiologist every 6 months.")
+
+    return observations
+
+@admin.route('/download_patient_pdf/<int:patient_id>', methods=['GET'])
+@login_required
+def download_patient_data(patient_id):
+    patient = PatientData.query.options(joinedload(PatientData.user)).get_or_404(patient_id)
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=letter,
+        rightMargin=30,
+        leftMargin=30,
+        topMargin=30,
+        bottomMargin=30
+    )
+    doc.allowSplitting = False 
+
+    styles = getSampleStyleSheet()
+    styles['Normal'].alignment = TA_JUSTIFY
+    styles['Title'].alignment = TA_CENTER
+    styles['Heading2'].alignment = TA_LEFT
+
+    elements = []
+
+    # ---------------------------------------------------------
+    # 1. HEADER (LOGO + ALAMAT) dalam satu baris
+    # ---------------------------------------------------------
+    logo_path = os.path.join(current_app.root_path, 'static', 'img', 'cardiolytics.png')
+    try:
+        logo = Image(logo_path, width=145, height=40)
+    except Exception:
+        logo = Paragraph("<b>Cardiolytics</b>", styles['Title'])
+
+    header_data = [
+        [
+            logo,
+            Paragraph(
+                """
+                <para align="RIGHT">
+                <b>Cardiolytics Home Care</b><br/>
+                Politeknik Elektronika Negeri Surabaya, Jl. Raya ITS, Keputih, Kec. Sukolilo, Surabaya, Jawa Timur 60111<br/>
+                Telp: (021) 555-1234
+                </para>
+                """,
+                styles['Normal']
+            )
+        ]
+    ]
+    header_table = Table(header_data, colWidths=[4*inch, 3.8*inch])
+    header_table.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+    ]))
+    elements.append(header_table)
+    elements.append(Spacer(1, 10))
+
+    title_paragraph = Paragraph("<b>Medical Report</b>", styles['Title'])
+    elements.append(title_paragraph)
+    elements.append(Spacer(1, 6))
+
+    # ---------------------------------------------------------
+    # 2. INFORMASI PASIEN
+    # ---------------------------------------------------------
+    patient_info_data = [
+        ["Patient ID", patient.user_id],
+        ["Full Name", patient.user.full_name],
+        ["Email", patient.user.email],
+        ["Phone Number", patient.user.phone_number],
+    ]
+    patient_info_table = Table(patient_info_data, colWidths=[250, 290])
+    patient_info_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+    ]))
+    elements.append(Paragraph("<b>Patient Information</b>", styles['Heading2']))
+    elements.append(patient_info_table)
+    elements.append(Spacer(1, 6))
+
+    # ---------------------------------------------------------
+    # 3. DATA MEDIS 
+    # ---------------------------------------------------------
+    def categorize_level(value):
+        categories = {0: "Normal", 1: "Above Normal", 2: "Well Above Normal"}
+        return categories.get(value, "Unknown")
+
+    medical_data_data = [
+        ["Age", patient.age],
+        ["Gender", "Male" if patient.gender else "Female"],
+        ["Height (cm)", f"{patient.height}"],
+        ["Weight (kg)", f"{int(patient.weight)}"],
+        ["Blood Pressure (mmHg)", f"{patient.systolic}/{patient.diastolic}"],
+        ["Cholesterol", categorize_level(patient.cholesterol)],
+        ["Glucose", categorize_level(patient.gluc)],
+        ["Smoke", "Yes" if patient.smoke else "No"],
+        ["Alcohol", "Yes" if patient.alco else "No"],
+        ["Physical Activity", "Yes" if patient.active else "No"],
+        ["Cardio Risk", "At Risk" if patient.cardio else "Healthy"],
+    ]
+    medical_data_table = Table(medical_data_data, colWidths=[250, 290])
+    medical_data_table.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+    ]))
+    elements.append(Paragraph("<b>Medical Data</b>", styles['Heading2']))
+    elements.append(medical_data_table)
+    elements.append(Spacer(1, 6))
+
+    # ---------------------------------------------------------
+    # 4. OBSERVATIONS / RECOMMENDATIONS, FOOTER & SIGNATURE 
+    # ---------------------------------------------------------
+    observations_style = styles['Normal'].clone('observations_small')
+    observations_style.fontSize = 10
+    observations_style.leading = 12
+
+    auto_observations = generate_observations(patient)
+    observations_text = f"""
+    <b>Observations :</b><br/>
+    {auto_observations}
+    """
+    observations_para = Paragraph(observations_text, observations_style)
+
+    footer_text = Paragraph(f'''<b>Disclaimer :</b><br/>
+                            This medical record is generated automatically. For official use, please consult your healthcare provider.
+                            ''',styles['Normal']
+    )
+
+    signature_label = Paragraph(
+        """<para align="center"><b>Physician</b></para>""",
+        styles['Normal']
+    )
+
+    signature_path = os.path.join(current_app.root_path, 'static', 'img', 'signature.png')
+    try:
+        signature_img = Image(signature_path, width=120, height=50)
+    except Exception:
+        signature_img = Paragraph("<b>No Signature Found</b>", styles['Normal'])
+
+    signature_table_inner = Table([
+        [signature_label],
+        [signature_img]
+    ], colWidths=[250])  
+
+    signature_table_inner.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('GRID', (0, 0), (-1, -1), 0, colors.white),
+    ]))
+
+    footer_table_data = [
+        [observations_para],
+        [footer_text, signature_table_inner]
+    ]
+    footer_table = Table(footer_table_data, colWidths=[250, 290])  
+    footer_table.setStyle(TableStyle([
+        ('SPAN', (0, 0), (-1, 0)),  
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('INNERGRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        ('BOX', (0, 0), (-1, -1), 0.5, colors.grey),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+    ]))
+
+    report_generated = Paragraph(
+        f"Report Generated : {patient.submitted_at.strftime('%Y-%m-%d %H:%M')}<br/><br/>")
+    
+    elements.append(Spacer(1, 12))
+    elements.append(footer_table)
+    elements.append(Spacer(1, 12))  
+    elements.append(report_generated)
+    
+    # ---------------------------------------------------------
+    # Bangun dokumen & kembalikan file PDF
+    # ---------------------------------------------------------
+    doc.build(elements)
+    buffer.seek(0)
+
+    return send_file(
+        buffer,
+        mimetype='application/pdf',
+        as_attachment=True,
+        download_name=f"{patient.user_id}_record.pdf"
+    )
 
 ###########################################################
 ######################### SETTINGS ########################
@@ -254,6 +543,11 @@ def delete_model(model_id):
     flash('✅ Model deleted successfully!', 'success')
     return redirect(url_for('admin.settings'))
 
+ALLOWED_EXTENSIONS = {'pkl', 'joblib', 'h5'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 @admin.route('/upload_model', methods=['GET', 'POST'])
 @login_required
 def upload_model():
@@ -269,7 +563,7 @@ def upload_model():
     form = ModelForm()
     if form.validate_on_submit():
         file_data = form.filename.data  
-        if file_data:
+        if file_data and allowed_file(file_data.filename):
             model_binary = file_data.read()
             new_filename = secure_filename(file_data.filename)
             new_model = Models(
@@ -284,7 +578,7 @@ def upload_model():
             flash('✅ Model uploaded successfully!', 'success')
             return redirect(url_for('admin.settings'))
         else:
-            flash('No file selected.', 'warning')
+            flash('No file selected or file type is not allowed.', 'warning')
             return redirect(url_for('admin.settings', tab='models'))
     
     return render_template('admin_settings.html', tab='models', model=None, form=form, navbar_title="Settings")

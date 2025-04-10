@@ -83,22 +83,32 @@ class PatientDataForm(FlaskForm):
     age = IntegerField('Age', validators=[DataRequired()])
     height = IntegerField('Height (cm)', validators=[DataRequired()])
     weight = FloatField('Weight (kg)', validators=[DataRequired()])
-    gender = SelectField('Gender', choices=[('1', 'Male'), ('2', 'Female')], validators=[DataRequired()])
-    ap_hi = IntegerField('Systolic BP (mm/Hg)', validators=[DataRequired()])
-    ap_lo = IntegerField('Diastolic BP (mm/Hg)', validators=[DataRequired()])
-    cholesterol = SelectField('Cholesterol', choices=[('1', 'Normal'), ('2', 'Above normal'), ('3', 'Well above normal')], validators=[DataRequired()])
-    gluc = SelectField('Glucose', choices=[('1', 'Normal'), ('2', 'Above normal'), ('3', 'Well above normal')], validators=[DataRequired()])
-    
-    smoke = SelectField('Smoking', choices=[('0', 'No'), ('1', 'Yes')], validators=[DataRequired()])
-    alco = SelectField('Alcohol intake', choices=[('0', 'No'), ('1', 'Yes')], validators=[DataRequired()])
-    active = SelectField('Physical activity', choices=[('0', 'No'), ('1', 'Yes')], validators=[DataRequired()])
-
+    gender = SelectField('Gender', 
+                         choices=[('', 'None'), ('0', 'Female'), ('1', 'Male')],
+                         validators=[DataRequired()])
+    systolic = IntegerField('Systolic BP (mm/Hg)', validators=[DataRequired()])
+    diastolic = IntegerField('Diastolic BP (mm/Hg)', validators=[DataRequired()])
+    cholesterol = SelectField('Cholesterol', 
+                              choices=[('', 'None'), ('0', 'Normal'), ('1', 'Above normal'), ('2', 'Well above normal')],
+                              validators=[DataRequired()])
+    gluc = SelectField('Glucose', 
+                       choices=[('', 'None'), ('0', 'Normal'), ('1', 'Above normal'), ('2', 'Well above normal')],
+                       validators=[DataRequired()])
+    smoke = SelectField('Smoking', 
+                        choices=[('', 'None'), ('0', 'No'), ('1', 'Yes')],
+                        validators=[DataRequired()])
+    alco = SelectField('Alcohol intake', 
+                       choices=[('', 'None'), ('0', 'No'), ('1', 'Yes')],
+                       validators=[DataRequired()])
+    active = SelectField('Physical activity', 
+                         choices=[('', 'None'), ('0', 'No'), ('1', 'Yes')],
+                         validators=[DataRequired()])
     submit = SubmitField('Predict CVD')
     
 class ModelForm(FlaskForm):
     name = StringField('Name', validators=[DataRequired()])
     filename = FileField('Filename', validators=[
-        FileAllowed(['pkl'], 'Invalid file format!')
+        FileAllowed(['pkl', 'joblib', 'h5'], 'Invalid file format!')
     ])
     submit = SubmitField('Add Model')
 

@@ -28,7 +28,7 @@ def login():
         if user and check_password_hash(user.password, form.password.data):
             # Periksa apakah user sudah di-approve oleh admin
             if user.approved is not True:
-                flash("❕ Your account is pending approval. Please wait for admin approval.", "attention")
+                flash("⏳ Your account is pending approval. Please wait for admin approval.", "attention")
                 return redirect(url_for('auth.login'))
             # Jika sudah di-approve, login user
             login_user(user)

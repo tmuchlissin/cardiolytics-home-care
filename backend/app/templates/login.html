@@ -20,6 +20,14 @@
       type="image/png"
       href="{{ url_for('static', filename='img/medical-check.png') }}"
     />
+    <style>
+      /* Import font Poppins */
+      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap");
+
+      body {
+        font-family: "Poppins", sans-serif;
+      }
+    </style>
   </head>
   <!-- Buat wrapper jadi flex-col agar flash message & container berada dalam flow normal -->
   <body
@@ -33,7 +41,7 @@
       <div class="mb-4">
         {% for category, message in messages %}
         <div
-          class="flash-message p-3 rounded-lg text-white text-center font-semibold {% if category == 'success' %} bg-green-500 {% elif category == 'danger' %} bg-red-500 {% elif category == 'warning' %} bg-yellow-500 {% elif category == 'attention' %} bg-gray-500 {% endif %}"
+          class="flash-message p-3 rounded-lg text-center font-semibold {% if category == 'success' %} bg-green-100 border border-green-400 text-green-700 {% elif category == 'warning' %} bg-yellow-100 border border-yellow-400 text-yellow-700 {% elif category == 'danger' %} bg-red-100 border border-red-400 text-red-700 {% elif category == 'attention' %} bg-gray-100 border border-gray-400 text-gray-700 {% endif %}"
         >
           {{ message }}
         </div>
@@ -59,7 +67,7 @@
           </a>
 
           <h2 class="text-3xl font-bold text-teal-600">Sign in</h2>
-          <p class="text-gray-500 mt-2">
+          <p class="text-gray-500 text-sm mt-2">
             Welcome back! Please login to your account.
           </p>
 

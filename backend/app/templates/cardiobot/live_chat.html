@@ -12,32 +12,41 @@
   const chatEndpoint = "{{ url_for('cardiobot.chat') }}";
 </script>
 
-<div class="p-2">
-  <h1 class="text-2xl font-bold mb-4 text-gray-900">Chatbot Assistant</h1>
+<div class="px-5 py-1">
+  <!-- Judul Global di Atas Kontainer -->
+  <h1 class="text-2xl font-bold text-gray-900 mb-4">Chatbot Assistant</h1>
 
+  <!-- Kontainer Cardiobot -->
   <div class="flex justify-center items-center h-[75vh]">
     <div
-      class="w-full max-w-3xl p-6 bg-gray-200 bg-opacity-90 backdrop-blur-md rounded-3xl shadow-lg"
+      class="w-full max-w-3xl p-8 bg-white bg-opacity-10 backdrop-filter backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-100"
     >
-      <!-- Chat Header -->
+      <!-- Header Chat -->
       <div
-        class="bg-gradient-to-r from-purple-500 to-indigo-500 p-4 rounded-t-3xl text-white text-center shadow-lg"
+        class="relative bg-gradient-to-r from-purple-600 to-indigo-600 p-5 rounded-t-3xl text-white text-center shadow-md"
       >
-        <h1 class="text-2xl font-bold">Cardiobot 🤖</h1>
+        <h1 class="text-2xl font-extrabold">Cardiobot 🤖</h1>
+        <button
+          onclick="clearChatHistory()"
+          class="absolute top-1/2 right-5 transform -translate-y-1/2 text-white transition-transform duration-200 ease-in-out hover:scale-110 hover:shadow-lg focus:outline-none"
+          title="Clear Chat"
+        >
+          <i class="fas fa-trash-alt text-2xl"></i>
+        </button>
       </div>
 
-      <!-- Chat History -->
+      <!-- Chat History (dengan background berbeda) -->
       <div
         id="chat-history"
-        class="p-2 h-[65vh] overflow-y-scroll bg-gray-100 border border-gray-300 space-y-4 rounded-b-3xl shadow-inner"
+        class="p-6 h-[65vh] overflow-y-auto space-y-4 rounded-b-3xl shadow-inner bg-white border-t border-gray-200"
       >
         <!-- Welcome Message from Bot -->
-        <div class="flex items-center space-x-2">
+        <div class="flex items-center space-x-4">
           <div class="mr-2 text-green-500 text-2xl">
             <i class="fas fa-robot"></i>
           </div>
           <div
-            class="max-w-xs bg-gray-300 p-3 rounded-lg shadow-md transition-transform transform hover:scale-105"
+            class="max-w-xs bg-gray-300 p-5 rounded-lg shadow-md transition-transform transform hover:scale-105"
             style="text-align: justify"
           >
             <p>
@@ -49,16 +58,16 @@
       </div>
 
       <!-- Chat Input -->
-      <div class="mt-4 flex">
+      <div class="mt-6 flex">
         <input
           id="chat-input"
           type="text"
           placeholder="Ketik pertanyaan Anda..."
-          class="w-full p-3 border border-gray-300 rounded-l-3xl focus:outline-none focus:ring-2 focus:ring-blue-600 transition-all duration-200"
+          class="w-full p-4 border border-gray-300 rounded-l-3xl focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200"
         />
         <button
           onclick="sendMessage()"
-          class="bg-blue-600 text-white p-3 rounded-r-3xl hover:bg-blue-700 transition duration-200 focus:outline-none flex items-center justify-center"
+          class="bg-blue-600 text-white p-4 rounded-r-3xl hover:bg-blue-700 transition duration-200 focus:outline-none flex items-center justify-center"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -81,6 +90,31 @@
 </div>
 
 <script>
+  // Saat halaman selesai dimuat, ambil chat history yang tersimpan
+  document.addEventListener("DOMContentLoaded", function () {
+    const savedChat = localStorage.getItem("chatHistory");
+    if (savedChat) {
+      document.getElementById("chat-history").innerHTML = savedChat;
+    }
+  });
+
+  // Simpan chat history ke localStorage
+  function saveChatHistory() {
+    const chatHistory = document.getElementById("chat-history");
+    localStorage.setItem("chatHistory", chatHistory.innerHTML);
+  }
+
+  // Hapus chat history dari tampilan dan localStorage
+  function clearChatHistory() {
+    localStorage.removeItem("chatHistory");
+    document.getElementById("chat-history").innerHTML = "";
+    // Opsional: tambahkan pesan selamat datang kembali setelah clear chat
+    addMessageToChat(
+      "Halo! Saya adalah Cardiobot. Saya hanya akan menjawab pertanyaan seputar kardiovaskular.",
+      true
+    );
+  }
+
   document
     .getElementById("chat-input")
     .addEventListener("keydown", function (event) {
@@ -113,11 +147,12 @@
               <p class="message-content">${formattedContent}</p>
           </div>
       </div>
-  `;
+    `;
 
     messageDiv.innerHTML = messageContent;
     chatHistory.appendChild(messageDiv);
     chatHistory.scrollTop = chatHistory.scrollHeight;
+    saveChatHistory(); // Simpan setiap perubahan chat history
   }
 
   function showTypingIndicator() {
@@ -144,24 +179,20 @@
           body: JSON.stringify({ message: message }),
         });
 
-        // Pastikan untuk menghapus indikator "sedang mengetik"
+        // Hapus indikator "sedang mengetik"
         const chatHistory = document.getElementById("chat-history");
         chatHistory.removeChild(chatHistory.lastChild);
 
-        // Periksa status respons
         console.log("Response status:", response.status);
 
         if (!response.ok) {
-          // Jika ada error, ambil respons teks dan log
           const errorText = await response.text();
           console.log("Full error response:", errorText);
           throw new Error("Server error: " + response.status);
         }
 
-        // Ambil respons JSON dengan aman
         const data = await response.json();
 
-        // Tampilkan jawaban dari bot atau pesan error
         if (data && data.answer) {
           addMessageToChat(data.answer, true);
         } else {
@@ -180,5 +211,4 @@
     }
   }
 </script>
-
 {% endblock %}
