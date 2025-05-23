@@ -182,7 +182,7 @@
       const headerEmoji = emojis[Math.floor(Math.random() * emojis.length)];
 
       // 1) Ambil semua token halaman
-      const pageRe = /Sumber:\s*Halaman\s*([IVXLCDM\d, ]+)/gi;
+      const pageRe = /Halaman\s*([IVXLCDM\d, ]+)/gi;
       const pages = new Set();
       let m;
       while ((m = pageRe.exec(content)) !== null) {
