@@ -44,14 +44,13 @@ def menu():
 def upload_menu():
     form = PatientDataForm()
     if form.validate_on_submit():
-        # Ambil data dari form
+
         age = form.age.data
         height = form.height.data
         weight = form.weight.data
         systolic = form.systolic.data
         diastolic = form.diastolic.data
-        
-        # Konversi data kategori (menggunakan nilai yang sudah di-encode sebagai string kemudian diubah ke integer)
+
         encoded_gender = int(form.gender.data)
         encoded_chol   = int(form.cholesterol.data)
         encoded_gluc   = int(form.gluc.data)
@@ -59,12 +58,10 @@ def upload_menu():
         encoded_alco   = int(form.alco.data)
         encoded_active = int(form.active.data)
         
-        # Hitung fitur tambahan: bmi, map, pulse_pressure
         bmi = round(weight / ((height / 100) ** 2), 2)
         map_value = round((systolic + 2 * diastolic) / 3, 2)
         pulse_pressure = systolic - diastolic
-        
-        # Buat array fitur sesuai urutan yang digunakan saat training
+
         features_arr = np.array([[
             age, 
             height,
@@ -82,33 +79,29 @@ def upload_menu():
             encoded_active
         ]])
         
-        # Definisikan urutan nama kolom yang sesuai dengan data training
         feature_columns = [
             'age', 'height', 'weight', 'systolic', 'diastolic',
             'bmi', 'map', 'pulse_pressure',
             'gender', 'cholesterol', 'gluc', 'smoke', 'alco', 'active'
         ]
-        # Konversi array ke DataFrame agar ColumnTransformer pada pipeline dapat memilih kolom berdasarkan nama
+
         features_df = pd.DataFrame(features_arr, columns=feature_columns)
         print("Input Features DataFrame:")
         print(features_df.head())
         
-        # Muat full pipeline (yang sudah menggabungkan preprocessor dan classifier) dari database
         full_pipeline = load_active_model()
         if not full_pipeline:
-            flash('Model is not available. Please contact the admin.', 'warning')
+            flash('⚠️ Model is not available. Please contact the admin.', 'warning')
             return redirect(url_for('cvd_predict.menu', tab='predict'))
         
-        # Lakukan prediksi langsung dengan full pipeline
+        
         y_pred = full_pipeline.predict(features_df)[0]
         y_proba = full_pipeline.predict_proba(features_df)
         print("Predicted Value:", y_pred)
         print("Predicted Probabilities:", y_proba)
         
-        # Hasil prediksi diinterpretasikan sebagai boolean: True jika at risk, False jika healthy
         cardio_result = bool(y_pred)
         
-        # Tampilkan pesan sesuai hasil prediksi
         history_url = url_for('cvd_predict.menu', tab='history')
         if cardio_result:
             message = Markup(
@@ -123,7 +116,6 @@ def upload_menu():
             )
             flash(message, 'success')
         
-        # Simpan data pasien ke database sebagai history
         new_patient = PatientData(
             user_id=current_user.id,
             age=age,
@@ -319,28 +311,36 @@ def download_patient_pdf(patient_id):
         categories = {0: "Normal", 1: "Above Normal", 2: "Well Above Normal"}
         return categories.get(value, "Unknown")
 
+    bmi_value = round(patient.weight / ((patient.height/100)**2), 2)
+    pp_value  = patient.systolic - patient.diastolic
+    map_value = round((patient.systolic + 2*patient.diastolic) / 3, 2)
+
     medical_data_data = [
-        ["Age", patient.age],
-        ["Gender", "Male" if patient.gender else "Female"],
-        ["Height (cm)", f"{patient.height}"],
-        ["Weight (kg)", f"{int(patient.weight)}"],
-        ["Blood Pressure (mmHg)", f"{patient.systolic}/{patient.diastolic}"],
-        ["Cholesterol", categorize_level(patient.cholesterol)],
-        ["Glucose", categorize_level(patient.gluc)],
-        ["Smoke", "Yes" if patient.smoke else "No"],
-        ["Alcohol", "Yes" if patient.alco else "No"],
-        ["Physical Activity", "Yes" if patient.active else "No"],
-        ["Cardio Risk", "At Risk" if patient.cardio else "Healthy"],
+        ["Age",                          str(patient.age)],
+        ["Gender",                       "Male" if patient.gender else "Female"],
+        ["Height (cm)",                  str(patient.height)],
+        ["Weight (kg)",                  str(int(patient.weight))],
+        ["BMI (kg/m²)",                  f"{bmi_value:.2f}"],
+        ["Blood Pressure (mmHg)",        f"{patient.systolic}/{patient.diastolic}"],
+        ["Pulse Pressure (mmHg)",        str(pp_value)],
+        ["Mean Arterial Pressure (mmHg)", f"{map_value:.2f}"],
+        ["Cholesterol",                  categorize_level(patient.cholesterol)],
+        ["Glucose",                      categorize_level(patient.gluc)],
+        ["Smoke",                        "Yes" if patient.smoke else "No"],
+        ["Alcohol",                      "Yes" if patient.alco else "No"],
+        ["Physical Activity",            "Yes" if patient.active else "No"],
+        ["Cardio Risk",                  "At Risk" if patient.cardio else "Healthy"],
     ]
-    medical_data_table = Table(medical_data_data, colWidths=[250, 290])
+
+    medical_data_table = Table(medical_data_data, colWidths=[200,240])
     medical_data_table.setStyle(TableStyle([
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('ALIGN',       (0, 0), (-1, -1), 'LEFT'),
+        ('GRID',        (0, 0), (-1, -1), 0.5, colors.grey),
+        ('BOTTOMPADDING',(0, 0), (-1, -1), 6),
     ]))
     elements.append(Paragraph("<b>Medical Data</b>", styles['Heading2']))
     elements.append(medical_data_table)
-    elements.append(Spacer(1, 4))
+    elements.append(Spacer(1, 12))
 
    # ---------------------------------------------------------
     # 4. OBSERVATIONS / RECOMMENDATIONS, FOOTER & SIGNATURE 

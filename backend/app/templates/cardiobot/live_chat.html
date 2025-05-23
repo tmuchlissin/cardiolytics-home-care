@@ -5,23 +5,55 @@
     line-height: 1.6;
     word-break: break-word;
   }
+
+  .typing-dots {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .typing-dots span {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background-color: #4b5563; /* gray-700 */
+    border-radius: 50%;
+    animation: dotBounce 1s infinite ease-in-out;
+  }
+  .typing-dots span:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+  .typing-dots span:nth-child(3) {
+    animation-delay: 0.4s;
+  }
+
+  @keyframes dotBounce {
+    0%,
+    80%,
+    100% {
+      transform: translateY(0);
+    }
+    40% {
+      transform: translateY(-6px);
+    }
+  }
+
+  /* Styling untuk teks "Thinking" */
+  .typing-text {
+    font-size: 0.99rem; /* text-sm */
+    font-weight: 500; /* medium */
+    color: #374151; /* gray-700 */
+    margin-right: 4px;
+    white-space: nowrap;
+  }
 </style>
 
-<script type="text/javascript">
-  // Mengambil URL endpoint dari Flask menggunakan url_for
-  const chatEndpoint = "{{ url_for('cardiobot.chat') }}";
-</script>
-
 <div class="px-5 py-1">
-  <!-- Judul Global di Atas Kontainer -->
   <h1 class="text-2xl font-bold text-gray-900 mb-4">Chatbot Assistant</h1>
 
-  <!-- Kontainer Cardiobot -->
   <div class="flex justify-center items-center h-[75vh]">
     <div
-      class="w-full max-w-3xl p-8 bg-white bg-opacity-10 backdrop-filter backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-100"
+      class="w-full max-w-4xl p-8 bg-white bg-opacity-10 backdrop-filter backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-100"
     >
-      <!-- Header Chat -->
       <div
         class="relative bg-gradient-to-r from-purple-600 to-indigo-600 p-5 rounded-t-3xl text-white text-center shadow-md"
       >
@@ -35,29 +67,11 @@
         </button>
       </div>
 
-      <!-- Chat History (dengan background berbeda) -->
       <div
         id="chat-history"
         class="p-6 h-[65vh] overflow-y-auto space-y-4 rounded-b-3xl shadow-inner bg-white border-t border-gray-200"
-      >
-        <!-- Welcome Message from Bot -->
-        <div class="flex items-center space-x-4">
-          <div class="mr-2 text-green-500 text-2xl">
-            <i class="fas fa-robot"></i>
-          </div>
-          <div
-            class="max-w-xs bg-gray-300 p-5 rounded-lg shadow-md transition-transform transform hover:scale-105"
-            style="text-align: justify"
-          >
-            <p>
-              Halo! Saya adalah Cardiobot. Saya hanya akan menjawab pertanyaan
-              seputar kardiovaskular.
-            </p>
-          </div>
-        </div>
-      </div>
+      ></div>
 
-      <!-- Chat Input -->
       <div class="mt-6 flex">
         <input
           id="chat-input"
@@ -90,73 +104,218 @@
 </div>
 
 <script>
-  // Saat halaman selesai dimuat, ambil chat history yang tersimpan
-  document.addEventListener("DOMContentLoaded", function () {
-    const savedChat = localStorage.getItem("chatHistory");
-    if (savedChat) {
-      document.getElementById("chat-history").innerHTML = savedChat;
+    const chatEndpoint = "{{ url_for('cardiobot.chat') }}";
+
+    function showWelcomeBubble() {
+      const chatHistory = document.getElementById("chat-history");
+      const welcomeHTML = `
+      <div class="flex items-center space-x-3">
+        <div class="text-green-500 text-2xl">
+          <i class="fas fa-robot"></i>
+        </div>
+        <div class="
+            inline-block
+            max-w-xs
+            bg-gray-200
+            p-4
+            rounded-lg
+            shadow
+            transition-transform transform hover:scale-105
+            text-left
+            whitespace-normal
+          ">
+          <p class="m-0 leading-relaxed">
+            Halo! Saya adalah Cardiobot. Saya hanya akan menjawab pertanyaan seputar kardiovaskular.
+          </p>
+        </div>
+      </div>`;
+
+      chatHistory.innerHTML = welcomeHTML;
+      saveChatHistory();
     }
-  });
 
-  // Simpan chat history ke localStorage
-  function saveChatHistory() {
-    const chatHistory = document.getElementById("chat-history");
-    localStorage.setItem("chatHistory", chatHistory.innerHTML);
-  }
-
-  // Hapus chat history dari tampilan dan localStorage
-  function clearChatHistory() {
-    localStorage.removeItem("chatHistory");
-    document.getElementById("chat-history").innerHTML = "";
-    // Opsional: tambahkan pesan selamat datang kembali setelah clear chat
-    addMessageToChat(
-      "Halo! Saya adalah Cardiobot. Saya hanya akan menjawab pertanyaan seputar kardiovaskular.",
-      true
-    );
-  }
-
-  document
-    .getElementById("chat-input")
-    .addEventListener("keydown", function (event) {
-      if (event.key === "Enter") {
-        sendMessage();
+    document.addEventListener("DOMContentLoaded", () => {
+      const saved = sessionStorage.getItem("chatHistory");
+      if (saved) {
+        document.getElementById("chat-history").innerHTML = saved;
+      } else {
+        showWelcomeBubble();
       }
     });
 
-  function addMessageToChat(content, isBot = false, isError = false) {
-    const chatHistory = document.getElementById("chat-history");
-    const messageDiv = document.createElement("div");
-    messageDiv.classList.add("flex", isBot ? "justify-start" : "justify-end");
+    function saveChatHistory() {
+      const html = document.getElementById("chat-history").innerHTML;
+      sessionStorage.setItem("chatHistory", html);
+    }
 
-    // Memformat konten untuk memisahkan daftar langkah-langkah
-    const formattedContent = content.replace(
-      /(\d+\.\s)/g,
-      "<br><strong>$1</strong>"
+    function clearChatHistory() {
+      sessionStorage.removeItem("chatHistory");
+      showWelcomeBubble();
+
+      fetch("{{ url_for('cardiobot.clear_cache') }}", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      })
+        .then((res) => {
+          if (!res.ok) console.warn("Gagal clear chat_cache di server");
+          else console.log("chat_cache cleared server-side");
+        })
+        .catch((err) => console.error("Error clearing cache:", err));
+    }
+
+    document
+      .getElementById("chat-input")
+      .addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+          sendMessage();
+        }
+      });
+
+    function addMessageToChat(content, isBot = false, isError = false) {
+      const documentTitle = {{ document.title_file|tojson }};
+      const previewUrl = {{ url_for('cardiobot.preview_file', file_id=document.id)|tojson }};
+      const chatHistory = document.getElementById("chat-history");
+      const messageDiv = document.createElement("div");
+      messageDiv.classList.add("flex", isBot ? "justify-start" : "justify-end");
+
+      const emojis = ["🎉", "🚀", "✨", "📝", "📌", "📖", "🔖"];
+      const headerEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+
+      // 1) Ambil semua token halaman
+      const pageRe = /Sumber:\s*Halaman\s*([IVXLCDM\d, ]+)/gi;
+      const pages = new Set();
+      let m;
+      while ((m = pageRe.exec(content)) !== null) {
+        m[1]
+          .split(",")
+          .map((p) => p.trim())
+          .forEach((n) => pages.add(n));
+      }
+
+      // 1a) Helper: konversi Romawi -> Integer
+      function romanToInt(r) {
+        const map = { I: 1, V: 5, X: 10, L: 50, C: 100, D: 500, M: 1000 };
+        let s = r.toUpperCase(),
+          total = 0;
+        for (let i = 0; i < s.length; i++) {
+          const curr = map[s[i]] || 0;
+          const next = map[s[i + 1]] || 0;
+          if (next > curr) {
+            total += next - curr;
+            i++;
+          } else total += curr;
+        }
+        return total;
+      }
+
+      // 1b) Sort tokens: romawi dulu (ascending), lalu numerik (ascending)
+      function sortPages(tokens) {
+        const romans = [],
+          nums = [];
+        tokens.forEach((orig) => {
+          if (/^[ivxlcdm]+$/i.test(orig)) romans.push(orig);
+          else nums.push(orig);
+        });
+        romans.sort((a, b) => romanToInt(a) - romanToInt(b));
+        nums.sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
+        return [...romans, ...nums];
+      }
+
+    // 2) Bersihkan semua fragment Sumber lama
+    let cleaned = content
+      .replace(/^\s*\*?\s*Sumber:.*$/gim, "")
+      .replace(/\(Sumber:.*?\)/gi, "")
+      .trim();
+
+    // --- 3) Rakit HTML "Sumber" DENGAN LINK ---
+    let sourceLine = "";
+    if (pages.size) {
+      const ordered = sortPages([...pages]);
+      sourceLine =
+        "<br><br>" +
+        '<div class="border-t border-gray-400 mt-2 pt-2 text-sm text-gray-700">' +
+          "<strong>Sumber Referensi:</strong>\n" +
+          `<a href="${previewUrl}" target="_blank" class="italic underline hover:text-blue-800">` +
+            documentTitle +
+          "</a>" +
+          `, Halaman ${ordered.join(", ")}` +
+        "</div>";
+    }
+
+
+    // 4) Gabungkan kembali
+    let full = cleaned + sourceLine;
+
+    // 5) Emoji & bold untuk header “# …”
+    full = full.replace(
+      /^#\s*(.+)$/gm,
+      (_match, h) => `<strong>${headerEmoji} ${h.trim()}</strong>`
     );
 
-    let messageContent = `
-      <div class="flex items-center space-x-2">
-          <div class="${isBot ? "text-green-500" : "text-blue-500"} text-2xl">
-              <i class="fas ${isBot ? "fa-robot" : "fa-user"}"></i>
-          </div>
-          <div class="max-w-xs ${
-            isBot ? "bg-gray-300" : "bg-blue-600 text-white"
-          } p-3 rounded-lg shadow-md transition-transform transform hover:scale-105 ${
+    // 6) Convert markdown → HTML
+    const html = full
+      .replace(/^(\d+\.\s[^:]+:)/gm, "<strong>$1</strong>")
+      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+      .replace(/\n/g, "<br>");
+
+    // 7) Render bubble
+    const messageContent = `
+    <div class="flex items-center space-x-2">
+      <div class="${isBot ? "text-green-500" : "text-blue-500"} text-2xl">
+        <i class="fas ${isBot ? "fa-robot" : "fa-user"}"></i>
+      </div>
+      <div class="max-w-xs ${
+        isBot ? "bg-gray-200" : "bg-blue-600 text-white"
+      } p-3 rounded-lg shadow-md transform hover:scale-105 ${
       isError ? "bg-red-200 text-red-800" : ""
     }">
-              <p class="message-content">${formattedContent}</p>
-          </div>
+        <p class="message-content">${html}</p>
       </div>
-    `;
+    </div>`;
 
     messageDiv.innerHTML = messageContent;
     chatHistory.appendChild(messageDiv);
     chatHistory.scrollTop = chatHistory.scrollHeight;
-    saveChatHistory(); // Simpan setiap perubahan chat history
+    saveChatHistory();
   }
 
+
   function showTypingIndicator() {
-    addMessageToChat("Cardiobot sedang mengetik...", true, false);
+    const chatHistory = document.getElementById("chat-history");
+    if (document.getElementById("typing-indicator")) return;
+
+    const wrapper = document.createElement("div");
+    wrapper.id = "typing-indicator";
+    wrapper.classList.add("flex", "justify-start", "mb-2");
+
+    const icon = document.createElement("div");
+    icon.className = "text-green-500 text-2xl mr-2";
+    icon.innerHTML = '<i class="fas fa-robot"></i>';
+
+    const bubble = document.createElement("div");
+    bubble.className = "bg-gray-200 p-3 rounded-lg shadow-md inline-flex items-center";
+
+    // Teks "Thinking" dengan styling
+    const thinkingSpan = document.createElement("span");
+    thinkingSpan.className = "typing-text";
+    thinkingSpan.textContent = "Thinking";
+
+    // Container dot-bounce
+    const dotsContainer = document.createElement("div");
+    dotsContainer.className = "typing-dots";
+
+    // Tambahkan tiga dot
+    for (let i = 0; i < 3; i++) {
+      const dot = document.createElement("span");
+      dotsContainer.appendChild(dot);
+    }
+
+    bubble.appendChild(thinkingSpan);
+    bubble.appendChild(dotsContainer);
+    wrapper.appendChild(icon);
+    wrapper.appendChild(bubble);
+    chatHistory.appendChild(wrapper);
+    chatHistory.scrollTop = chatHistory.scrollHeight;
   }
 
   async function sendMessage() {
@@ -165,10 +324,9 @@
     console.log("Sending message:", message);
 
     if (message) {
-      addMessageToChat(message, false); // Tampilkan pesan pengguna
-      chatInput.value = ""; // Kosongkan input
+      addMessageToChat(message, false);
+      chatInput.value = "";
 
-      // Tampilkan indikator "sedang mengetik"
       showTypingIndicator();
       chatInput.disabled = true;
 
@@ -179,7 +337,6 @@
           body: JSON.stringify({ message: message }),
         });
 
-        // Hapus indikator "sedang mengetik"
         const chatHistory = document.getElementById("chat-history");
         chatHistory.removeChild(chatHistory.lastChild);
 
@@ -194,6 +351,10 @@
         const data = await response.json();
 
         if (data && data.answer) {
+          // hapus typing indicator sebelum menampilkan jawaban
+          const typ = document.getElementById("typing-indicator");
+          if (typ) typ.remove();
+
           addMessageToChat(data.answer, true);
         } else {
           addMessageToChat(

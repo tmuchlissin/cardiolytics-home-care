@@ -106,8 +106,8 @@ def reset_password(token):
 def register():
     form = RegistrationForm()
 
-    print("🚀 register() function triggered")
-    print(f"Form Data Received: {form.data}")  # Debugging
+    #print("🚀 register() function triggered")
+    #print(f"Form Data Received: {form.data}")  # Debugging
 
     if form.validate_on_submit():
         print("✅ Form validation successful!")
@@ -156,7 +156,7 @@ def register():
             flash('❌ An error occurred while registering. Please try again.', 'danger')
 
     else:
-        print("❌ Form validation failed!")  # Debugging
+        # print("❌ Form validation failed!")  # Debugging
         for field, errors in form.errors.items():
             for error in errors:
                 print(f"❌ Error in {field}: {error}")  # Debugging
@@ -166,8 +166,12 @@ def register():
 @auth.route('/logout')
 @login_required
 def logout():
-    logout_user()  # Menghapus sesi pengguna
-    return redirect(url_for('auth.login'))  # Redirect ke halaman login
+
+    if current_user.role == UserRole.user:
+        from app.cardiobot.views import clear_cache
+        clear_cache()
+    logout_user()
+    return redirect(url_for('auth.login'))
 
 @auth.route('/check-patient-id/<patient_id>', methods=['GET'])
 def check_patient_id(patient_id):

@@ -4,6 +4,7 @@ from datetime import datetime
 import enum
 from flask_login import UserMixin
 from sqlalchemy.dialects.mysql import LONGBLOB
+from sqlalchemy import LargeBinary
 
 class UserRole(enum.Enum):
     user = 'user'
@@ -58,7 +59,7 @@ class Models(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), index=True, nullable=False)
     filename = db.Column(db.String(120))
-    file = db.Column(LONGBLOB, nullable=False)  
+    file = db.Column(LargeBinary, nullable=False)  
     is_active = db.Column(db.Boolean, default=False)
     user_id = db.Column(db.String(64), db.ForeignKey('user.id'), nullable=False)  
     user = db.relationship('User', backref=db.backref('models', lazy=True))

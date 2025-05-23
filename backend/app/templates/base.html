@@ -144,7 +144,7 @@
               <span>Cardiobot</span>
             </a>
             <!-- <a
-          href="{{ url_for('cardiobot.documents') }}"
+          href="{{ url_for('cardiobot.upload_documents') }}"
           class="block py-2 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center text-base font-medium"
         >
           <i class="fas fa-sticky-note mr-2 text-xl"></i> 
@@ -195,7 +195,8 @@
             <!-- Tombol Logout -->
             <a
               href="{{ url_for('auth.logout') }}"
-              class="bg-red-500 text-white px-4 py-2 rounded-lg transition duration-300 ease-in-out hover:bg-red-600 hover:shadow-lg flex items-center"
+              onclick="sessionStorage.removeItem('chatHistory')"
+              class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 flex items-center"
             >
               <i class="fas fa-sign-out-alt mr-2"></i> Logout
             </a>

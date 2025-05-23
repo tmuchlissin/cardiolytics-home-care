@@ -11,6 +11,15 @@ load_dotenv()
 class Config:
     SECRET_KEY = os.getenv('SECRET_KEY')
     SQLALCHEMY_DATABASE_URI = os.getenv('DB_URI')
+    # SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
+    # SQLALCHEMY_ENGINE_OPTIONS = {
+    #     "pool_pre_ping": True,      # cek koneksi dulu sebelum reuse
+    #     "pool_recycle": 1800,       # recycle koneksi setiap 30 menit
+    #     "connect_args": {
+    #         "connect_timeout": 10,
+    #         "sslmode": "require"    # paksa SSL
+    #     }
+    # }
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     MAIL_SERVER = 'smtp.gmail.com' 
     MAIL_PORT = 587 

@@ -7,32 +7,58 @@ from app.models import User, UserRole
 fake = Faker()
 
 def generate_indonesian_phone():
-    # Membuat nomor telepon dengan format "08" diikuti 9 digit acak
     return "628" + "".join(random.choices("0123456789", k=9))
 
 def generate_user_id():
-    # ID 10 digit yang selalu diawali dengan "12345" dan diikuti 5 digit acak
-    random_digits = "".join(random.choices("0123456789", k=5))
-    return "12345" + random_digits
+    return "12345" + "".join(random.choices("0123456789", k=5))
 
-def seed_random_users(num=7):
-    for i in range(num):
+def seed_custom_users(num=50):
+    funny_javanese_names = [
+        "Triman Santoso", "Wagini Rahayu", "Sutrisno Mulya", "Parjo Lestari", "Karti Wibowo",
+        "Mulyono Wasis", "Sarinem Ayu", "Wagiyo Setya", "Painem Sekar", "Bernardo Yuyiya",
+        "Kasinem Sri", "Paidi Waras", "Ximon Yeyayi", "Sutarmi Cahya", "Sumarno Arif",
+        "Juminten Lintang", "Sarwono Bagus", "Paiman Surya"
+    ]
+    
+    football_players = [
+        "Lionel Messi", "Cristiano Ronaldo", "Erling Haaland", "Neymar Jr", "Kylian Mbappé",
+        "Mohamed Salah", "Karim Benzema", "Luka Modric", "Kevin De Bruyne", "Zlatan Ibrahimovic",
+        "Harry Kane", "Luis Suárez", "Robert Lewandowski", "Sadio Mané", "Antoine Griezmann"
+    ]
+    
+    wwe_wrestlers = [
+        "John Cena", "The Undertaker", "Roman Reigns", "The Rock", "Rey Mysterio",
+        "Brock Lesnar", "Triple H", "Kurt Angle", "Shawn Michaels", "Edge",
+        "Randy Orton", "CM Punk", "Batista", "Seth Rollins", "AJ Styles"
+    ]
+    
+    naruto_characters = [
+        "Naruto Uzumaki", "Sasuke Uchiha", "Kakashi Hatake", "Itachi Uchiha", "Hinata Hyuga",
+        "Sakura Haruno", "Shikamaru Nara", "Rock Lee", "Might Guy", "Gaara",
+        "Tsunade Senju", "Jiraiya", "Madara Uchiha", "Obito Uchiha", "Minato Namikaze"
+    ]
+
+    all_names = funny_javanese_names + football_players + wwe_wrestlers + naruto_characters
+    used_names = random.sample(all_names, k=num) if num <= len(all_names) else random.choices(all_names, k=num)
+
+    for name in used_names:
         user = User(
             id=generate_user_id(),
-            full_name=fake.name(),
+            full_name=name,
             user_name=fake.user_name(),
             password=generate_password_hash("User123!"),
             email=fake.email(),
             phone_number=generate_indonesian_phone(),
-            role=random.choice([UserRole.user]),
+            role=UserRole.user,
             approved=random.choice([False, None]),
             device_id=None
         )
         db.session.add(user)
+
     db.session.commit()
-    print(f"{num} random users seeded successfully.")
+    print(f"{num} themed users seeded successfully.")
 
 app = create_app()
 
 with app.app_context():
-    seed_random_users(7)
+    seed_custom_users(50)

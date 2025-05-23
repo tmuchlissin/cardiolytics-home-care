@@ -1,7 +1,7 @@
 from functools import wraps
 from flask import Blueprint, render_template, redirect, url_for, flash, abort, request, current_app, send_file
 from flask_login import login_user, logout_user, current_user, login_required
-from app.models import UserRole, User, Models, Device, PatientData
+from app.models import UserRole, User, Models, Device, PatientData, Document
 from app.extensions import db, mail 
 from app.forms import EditUserForm, ModelForm, DeviceForm
 from sqlalchemy import or_
@@ -316,10 +316,10 @@ def download_patient_data(patient_id):
     doc = SimpleDocTemplate(
         buffer,
         pagesize=letter,
-        rightMargin=30,
-        leftMargin=30,
-        topMargin=30,
-        bottomMargin=30
+        rightMargin=25,
+        leftMargin=25,
+        topMargin=20,
+        bottomMargin=20
     )
     doc.allowSplitting = False 
 
@@ -374,14 +374,14 @@ def download_patient_data(patient_id):
         ["Email", patient.user.email],
         ["Phone Number", patient.user.phone_number],
     ]
-    patient_info_table = Table(patient_info_data, colWidths=[250, 290])
+    patient_info_table = Table(patient_info_data, colWidths=[250, 300])
     patient_info_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
         ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 5),
     ]))
     elements.append(Paragraph("<b>Patient Information</b>", styles['Heading2']))
     elements.append(patient_info_table)
@@ -394,28 +394,36 @@ def download_patient_data(patient_id):
         categories = {0: "Normal", 1: "Above Normal", 2: "Well Above Normal"}
         return categories.get(value, "Unknown")
 
+    bmi_value = round(patient.weight / ((patient.height/100)**2), 2)
+    pp_value  = patient.systolic - patient.diastolic
+    map_value = round((patient.systolic + 2*patient.diastolic) / 3, 2)
+
     medical_data_data = [
-        ["Age", patient.age],
-        ["Gender", "Male" if patient.gender else "Female"],
-        ["Height (cm)", f"{patient.height}"],
-        ["Weight (kg)", f"{int(patient.weight)}"],
-        ["Blood Pressure (mmHg)", f"{patient.systolic}/{patient.diastolic}"],
-        ["Cholesterol", categorize_level(patient.cholesterol)],
-        ["Glucose", categorize_level(patient.gluc)],
-        ["Smoke", "Yes" if patient.smoke else "No"],
-        ["Alcohol", "Yes" if patient.alco else "No"],
-        ["Physical Activity", "Yes" if patient.active else "No"],
-        ["Cardio Risk", "At Risk" if patient.cardio else "Healthy"],
+        ["Age",                          str(patient.age)],
+        ["Gender",                       "Male" if patient.gender else "Female"],
+        ["Height (cm)",                  str(patient.height)],
+        ["Weight (kg)",                  str(int(patient.weight))],
+        ["BMI (kg/m²)",                  f"{bmi_value:.2f}"],
+        ["Blood Pressure (mmHg)",        f"{patient.systolic}/{patient.diastolic}"],
+        ["Pulse Pressure (mmHg)",        str(pp_value)],
+        ["Mean Arterial Pressure (mmHg)", f"{map_value:.2f}"],
+        ["Cholesterol",                  categorize_level(patient.cholesterol)],
+        ["Glucose",                      categorize_level(patient.gluc)],
+        ["Smoke",                        "Yes" if patient.smoke else "No"],
+        ["Alcohol",                      "Yes" if patient.alco else "No"],
+        ["Physical Activity",            "Yes" if patient.active else "No"],
+        ["Cardio Risk",                  "At Risk" if patient.cardio else "Healthy"],
     ]
-    medical_data_table = Table(medical_data_data, colWidths=[250, 290])
+
+    medical_data_table = Table(medical_data_data, colWidths=[250,300])
     medical_data_table.setStyle(TableStyle([
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('ALIGN',       (0, 0), (-1, -1), 'LEFT'),
+        ('GRID',        (0, 0), (-1, -1), 0.5, colors.grey),
+        ('BOTTOMPADDING',(0, 0), (-1, -1), 5),
     ]))
     elements.append(Paragraph("<b>Medical Data</b>", styles['Heading2']))
     elements.append(medical_data_table)
-    elements.append(Spacer(1, 6))
+    elements.append(Spacer(1, 10))
 
     # ---------------------------------------------------------
     # 4. OBSERVATIONS / RECOMMENDATIONS, FOOTER & SIGNATURE 
@@ -443,7 +451,7 @@ def download_patient_data(patient_id):
 
     signature_path = os.path.join(current_app.root_path, 'static', 'img', 'signature.png')
     try:
-        signature_img = Image(signature_path, width=120, height=50)
+        signature_img = Image(signature_path, width=100, height=30)
     except Exception:
         signature_img = Paragraph("<b>No Signature Found</b>", styles['Normal'])
 
@@ -462,13 +470,13 @@ def download_patient_data(patient_id):
         [observations_para],
         [footer_text, signature_table_inner]
     ]
-    footer_table = Table(footer_table_data, colWidths=[250, 290])  
+    footer_table = Table(footer_table_data, colWidths=[250, 300])  
     footer_table.setStyle(TableStyle([
         ('SPAN', (0, 0), (-1, 0)),  
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('INNERGRID', (0, 0), (-1, -1), 0.5, colors.grey),
         ('BOX', (0, 0), (-1, -1), 0.5, colors.grey),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
     ]))
 
     report_generated = Paragraph(
@@ -508,6 +516,11 @@ def settings():
     
     device_query = Device.query
     
+     # Kirim dokumen hanya kalau tab = docs
+    documents = None
+    if active_tab == "docs":
+        documents = Document.query.paginate(page=page, per_page=10)
+        
     if search_query:
         device_query = device_query.filter(
             or_(
@@ -526,6 +539,7 @@ def settings():
         devices=devices,
         device_pagination=device_pagination,
         form=form,
+        documents=documents,
         search_query=search_query,
         navbar_title="Settings",
         active_tab=active_tab

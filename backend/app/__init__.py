@@ -5,6 +5,8 @@ from app.admin.views import admin
 from app.bp_monitor.views import bp_monitor
 from app.cvd_predict.views import cvd_predict
 from app.cardiobot.views import cardiobot
+from types import SimpleNamespace
+from app.cardiobot.views import initialize
 from app.extensions import db, migrate,  csrf, login_manager, mail
 from app.models import User, PatientData, Models, Document
 from config import Config
@@ -34,4 +36,7 @@ def create_app():
     app.register_blueprint(cvd_predict)
     app.register_blueprint(cardiobot)
 
+    with app.app_context():
+        initialize(SimpleNamespace(app=app))
+    
     return app

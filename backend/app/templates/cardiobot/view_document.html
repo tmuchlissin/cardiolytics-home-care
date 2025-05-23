@@ -1,5 +1,5 @@
 {% extends "base.html" %} {% block content %}
-<div class="p-8">
+<div class="px-5 py-1">
   <h1 class="text-2xl font-bold mb-4">Document View</h1>
 
   <!-- Tampilkan informasi dokumen -->
@@ -29,7 +29,7 @@
     <!-- PDF Preview -->
     <iframe
       src="{{ preview_url }}"
-      class="w-full h-[700px]"
+      class="w-full h-[650px]"
       frameborder="0"
     ></iframe>
     {% else %}
@@ -47,10 +47,26 @@
 
   <!-- Tombol kembali ke halaman Documents -->
   <a
-    href="{{ url_for('cardiobot.documents') }}"
-    class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+    href="{{ url_for('cardiobot.upload_documents') }}"
+    class="inline-flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium px-3 py-1.5 rounded shadow transition duration-150"
+    title="Back to Documents"
   >
-    Back to Documents
+    <!-- Icon: Arrow Left -->
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      class="h-4 w-4"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M15 19l-7-7 7-7"
+      />
+    </svg>
+    Back
   </a>
 </div>
 {% endblock %}
