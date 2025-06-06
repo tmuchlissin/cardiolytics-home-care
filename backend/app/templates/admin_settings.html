@@ -1,4 +1,22 @@
 {% extends "base.html" %} {% block content %}
+<!-- Flash Messages Container -->
+<div class="w-full max-w-3xl mx-auto px-4">
+  {% with messages = get_flashed_messages(with_categories=true,
+  category_filter=['success', 'warning', 'error', 'attention']) %} {% if
+  messages %}
+  <div class="mb-4">
+    {% for category, message in messages %}
+    <div
+      class="flash-message p-3 rounded-lg text-center font-semibold {% if category == 'success' %} bg-green-100 border border-green-400 text-green-700 {% elif category == 'warning' %} bg-yellow-100 border border-yellow-400 text-yellow-700 {% elif category == 'error' %} bg-red-100 border border-red-400 text-red-700 {% elif category == 'attention' %} bg-gray-100 border border-gray-400 text-gray-700 {% endif %}"
+      role="alert"
+    >
+      <span class="block sm:inline">{{ message }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %} {% endwith %}
+</div>
+
 <div class="px-5 py-1">
   <h1 class="text-2xl font-bold mb-4">Settings</h1>
 </div>
@@ -84,38 +102,45 @@
   </div>
 </nav>
 
-<!-- Konten untuk masing-masing tab -->
 <div class="px-5 py-2">
   <!-- Models Content -->
   <div
     id="models-content"
     class="tab-content {% if active_tab == 'models' %}block{% else %}hidden{% endif %}"
   >
-    <!-- Header Info -->
+    <!-- Model Setting Section -->
     <div class="mb-6">
-      <div class="border border-gray-300 p-4 rounded-lg bg-gray-100 w-fit">
+      <div
+        class="text-sm text-gray-700 border border-gray-300 p-4 rounded-lg bg-gray-100 w-fit"
+      >
         <p class="text-sm text-gray-800 mb-2"><strong>Model Setting</strong></p>
         <p class="text-sm text-gray-700" style="text-align: justify">
-          This tab is for admin to update predictive models for cardiovascular
-          patients.
-          <br /><br />
-          <strong>Instructions :</strong> Use this section to upload a new
-          predictive model. If no model is currently uploaded, click the
-          <strong>"+"</strong>
-          button to open the upload form. Once a model is uploaded, it will
-          automatically be set as active. Only one model can be active at a
-          time. To replace the current model, please delete it first by clicking
-          the <strong>"Delete"</strong> button in the Actions column, then
-          upload a new model.
+          Manage and update predictive models for cardiovascular patients.
         </p>
+        <div style="text-align: justify" class="mt-3">
+          <strong>Instructions:</strong>
+          <ul class="list-disc list-inside ml-4 mt-1">
+            <li>
+              Click <strong>+</strong> to upload a new model if none exists.
+            </li>
+            <li>The uploaded model becomes active automatically.</li>
+            <li>Only one model can be active at a time.</li>
+            <li>
+              To replace, click <strong>Delete</strong> in the Actions column
+              first.
+            </li>
+            <li>Then click <strong>+</strong> to upload the new model.</li>
+          </ul>
+        </div>
       </div>
     </div>
+
     {% if not model %}
     <div class="text-center py-8">
       <p class="text-gray-600 mb-4">No model uploaded</p>
       <button
         id="openModalModelsBtn"
-        class="bg-blue-500 text-white px-3 py-1 rounded-md text-xl font-semibold"
+        class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md text-xl font-semibold"
       >
         +
       </button>
@@ -201,7 +226,6 @@
               <form
                 method="POST"
                 action="{{ url_for('admin.delete_model', model_id=model.id) }}"
-                onsubmit="return confirm('Are you sure you want to delete the current model?');"
               >
                 <button
                   type="submit"
@@ -237,32 +261,33 @@
     id="devices-content"
     class="tab-content {% if active_tab == 'devices' %}block{% else %}hidden{% endif %}"
   >
-    <!-- Bagian judul dan deskripsi -->
+    <!-- Devices Setting Section -->
     <div class="mb-6">
-      <div class="border border-gray-300 p-4 rounded-lg bg-gray-100 w-fit">
+      <div
+        class="text-sm text-gray-700 border border-gray-300 p-4 rounded-lg bg-gray-100 w-fit"
+      >
         <p class="text-sm text-gray-800 mb-1">
           <strong>Devices Setting</strong>
         </p>
         <p class="text-sm text-gray-700" style="text-align: justify">
-          This tab is for admin to manage IoT devices used for patient
-          monitoring.
-          <br /><br />
-          <strong>Instructions :</strong> Use this section to add, search, and
-          manage devices. To add a new device, click the
-          <strong>"+"</strong> button to open the registration form. Once
-          registered, each device will be displayed in the table below along
-          with its registration details. You can search for devices by entering
-          the Device ID or Model in the search bar. To update a device's
-          information, click the <strong>"Edit"</strong> button; to remove a
-          device, click the <strong>"Delete"</strong> button. Please ensure that
-          each device is uniquely identified by its Device ID to avoid
-          conflicts.
+          Manage IoT devices for patient monitoring.
         </p>
+        <div style="text-align: justify" class="mt-3">
+          <strong>Instructions:</strong>
+          <ul class="list-disc list-inside ml-4 mt-1">
+            <li>Click <strong>+</strong> to add a device.</li>
+            <li>View devices and details in the table below.</li>
+            <li>Search by <strong>ID</strong> or <strong>Model</strong>.</li>
+            <li>
+              Use <strong>Edit</strong> or <strong>Delete</strong> on each row.
+            </li>
+            <li>Keep <strong>ID</strong> unique.</li>
+          </ul>
+        </div>
       </div>
     </div>
 
     {% if not devices or devices|length == 0 %}
-    <!-- Jika BELUM ada device -->
     <div class="flex flex-col items-center justify-center py-8 space-y-4">
       <p class="text-gray-600 text-base">No device uploaded</p>
       <button
@@ -273,8 +298,6 @@
       </button>
     </div>
     {% else %}
-    <!-- Jika SUDAH ada device -->
-    <!-- Header + Tombol “+” di kanan -->
     <div class="flex items-center justify-between mb-2">
       <div class="flex items-center mb-2">
         <h2 class="text-lg font-semibold">Uploaded Devices</h2>
@@ -396,7 +419,6 @@
               <form
                 method="POST"
                 action="{{ url_for('admin.delete_device', device_id=dev.id) }}"
-                onsubmit="return confirm('Are you sure you want to delete the current device?');"
                 class="inline-block ml-2"
               >
                 <button
@@ -512,6 +534,7 @@
               <strong>Upload Folder</strong>.
             </li>
             <li>View new entries in the table below.</li>
+            <li>Search by <strong>Title</strong>.</li>
             <li>
               Click the <strong>Delete</strong> icon to remove a file, or
               <strong>Delete All</strong> to clear all.
@@ -571,18 +594,18 @@
           Upload Folder
         </button>
 
-        {% if documents and documents.items %}
+        {% if documents_pagination and documents_pagination.items %}
         <!-- Tombol Delete All -->
         <form
           action="{{ url_for('cardiobot.delete_all_documents') }}"
           method="POST"
           style="display: inline-block"
+          class="form-delete-all"
         >
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
           <button
             type="submit"
             class="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md shadow-md transition-all"
-            onclick="return confirm('Are you sure you want to delete all documents?');"
             title="Delete All Documents"
           >
             <svg
@@ -606,98 +629,57 @@
         </form>
         {% endif %}
       </div>
-      {% if documents and documents.items %}
-      <!-- Tabel Dokumen -->
-      <table class="min-w-full bg-white border border-gray-200 mt-4">
-        <thead class="bg-gray-50">
-          <tr>
-            <th
-              class="px-6 py-2 text-xs font-semibold text-gray-700 uppercase border-b tracking-wider"
-            >
-              Title
-            </th>
-            <th
-              class="px-6 py-2 text-xs font-semibold text-gray-700 uppercase border-b tracking-wider"
-            >
-              Created At
-            </th>
-            <th
-              class="px-6 py-2 text-xs font-semibold text-gray-700 uppercase border-b tracking-wider"
-            >
-              Updated At
-            </th>
-            <th
-              class="px-6 py-2 text-xs font-semibold text-gray-700 uppercase border-b tracking-wider"
-            >
-              Actions
-            </th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-300 text-sm text-center">
-          {% for document in documents.items %}
-          <tr class="odd:bg-blue-50 even:bg-white hover:bg-gray-100">
-            <td
-              class="px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-900"
-            >
-              {{ document.title_file }}
-            </td>
-            <td
-              class="px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-900"
-            >
-              {{ document.created_at.strftime('%d %B %Y %H:%M:%S') }}
-            </td>
-            <td
-              class="px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-900"
-            >
-              {{ document.updated_at.strftime('%d %B %Y %H:%M:%S') }}
-            </td>
-            <td
-              class="px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-900 flex gap-1 justify-center"
-            >
-              <!-- View Button -->
-              <a
-                href="{{ url_for('cardiobot.view_document', file_id=document.id) }}"
-                class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded shadow transition"
-                title="View Document"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-4 w-4 inline-block"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                  />
-                </svg>
-              </a>
+      <!-- Search Bar -->
+      <div class="mb-4 flex items-center">
+        <input
+          type="text"
+          id="searchInputDocs"
+          placeholder="Search documents..."
+          value="{{ search_query if active_tab=='docs' else '' }}"
+          class="w-72 px-4 py-2 border border-gray-300 rounded-md focus:outline-none"
+        />
+      </div>
 
-              <!-- Delete Button -->
-              <form
-                action="{{ url_for('cardiobot.delete_document', file_id=document.id) }}"
-                method="POST"
-                style="display: inline"
-                onsubmit="return confirm('Are you sure you want to delete this document?');"
+      <!-- Tabel Dokumen -->
+      {% if documents_pagination and documents_pagination.items %}
+      <div class="overflow-x-auto">
+        <table class="min-w-full bg-white border border-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th
+                class="px-6 py-2 text-xs font-semibold text-gray-700 uppercase border-b"
               >
-                <input
-                  type="hidden"
-                  name="csrf_token"
-                  value="{{ csrf_token() }}"
-                />
-                <button
-                  type="submit"
-                  class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded shadow transition"
-                  title="Delete Document"
+                Title
+              </th>
+              <th
+                class="px-6 py-2 text-xs font-semibold text-gray-700 uppercase border-b"
+              >
+                Uploaded At
+              </th>
+
+              <th
+                class="px-6 py-2 text-xs font-semibold text-gray-700 uppercase border-b"
+              >
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-300 text-sm text-center">
+            {% for document in documents_pagination.items %}
+            <tr class="odd:bg-blue-50 even:bg-white hover:bg-gray-100">
+              <td class="px-6 py-2">{{ document.title_file }}</td>
+              <td class="px-6 py-2">
+                {{ document.created_at.strftime('%d %B %Y %H:%M:%S') }}
+              </td>
+
+              <td
+                class="px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-900 flex gap-1 justify-center"
+              >
+                <!-- View Button -->
+                <a
+                  href="{{ url_for('cardiobot.view_document', file_id=document.id) }}"
+                  class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded shadow transition"
+                  title="View Document"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -710,30 +692,127 @@
                       stroke-linecap="round"
                       stroke-linejoin="round"
                       stroke-width="2"
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2
-                       2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1
-                       0 00-1-1h-4a1 1 0 00-1 1v3m5 0H6"
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                     />
                   </svg>
-                </button>
-              </form>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+                </a>
+
+                <!-- Delete Button -->
+                <form
+                  action="{{ url_for('cardiobot.delete_document', file_id=document.id) }}"
+                  method="POST"
+                  style="display: inline"
+                  class="form-delete"
+                >
+                  <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token() }}"
+                  />
+                  <button
+                    type="submit"
+                    class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded shadow transition"
+                    title="Delete Document"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-4 w-4 inline-block"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2
+                       2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1
+                       0 00-1-1h-4a1 1 0 00-1 1v3m5 0H6"
+                      />
+                    </svg>
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="flex justify-center mt-4">
+        <nav class="inline-flex">
+          {% if documents_pagination.has_prev %}
+          <a
+            href="{{ url_for('admin.settings', tab='docs', page=documents_pagination.prev_num, search=search_query) }}"
+            class="px-3 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50"
+            >Prev</a
+          >
+          {% else %}
+          <span
+            class="px-3 py-2 text-xs font-medium text-gray-500 bg-gray-100 border border-gray-300 rounded-l-md"
+            >Prev</span
+          >
+          {% endif %} {% for p in documents_pagination.iter_pages(left_edge=1,
+          right_edge=1, left_current=2, right_current=2) %} {% if p %} {% if p
+          == documents_pagination.page %}
+          <span
+            class="px-3 py-2 text-xs font-medium text-white bg-blue-600 border border-blue-600"
+            >{{ p }}</span
+          >
+          {% else %}
+          <a
+            href="{{ url_for('admin.settings', tab='docs', page=p, search=search_query) }}"
+            class="px-3 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50"
+            >{{ p }}</a
+          >
+          {% endif %} {% else %}
+          <span
+            class="px-3 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300"
+            >…</span
+          >
+          {% endif %} {% endfor %} {% if documents_pagination.has_next %}
+          <a
+            href="{{ url_for('admin.settings', tab='docs', page=documents_pagination.next_num, search=search_query) }}"
+            class="px-3 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50"
+            >Next</a
+          >
+          {% else %}
+          <span
+            class="px-3 py-2 text-xs font-medium text-gray-500 bg-gray-100 border border-gray-300 rounded-r-md"
+            >Next</span
+          >
+          {% endif %}
+        </nav>
+      </div>
       {% else %}
       <p class="text-gray-500 mt-4">No documents uploaded yet.</p>
       {% endif %}
     </div>
   </div>
-  <!-- SECTION MODALS (di luar dari blok atas) -->
-  <!-- Modal Upload File (letakkan di luar semua .tab-content) -->
+
+  <!-- Modal Upload File -->
   <div
     id="docUploadModal"
     class="fixed inset-0 hidden flex bg-black bg-opacity-50 justify-center items-center z-50"
   >
-    <div class="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+    <div class="relative bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+      <button
+        id="closeDocModal"
+        type="button"
+        class="absolute top-3 right-3 text-gray-600 hover:text-gray-800 text-2xl"
+        aria-label="Close modal"
+        onclick="closeDocModal()"
+      >
+        &times;
+      </button>
+
       <h2 class="text-lg font-bold mb-4">Upload New Document</h2>
       <form
         method="POST"
@@ -756,13 +835,6 @@
           >
             Upload
           </button>
-          <button
-            type="button"
-            onclick="closeDocModal()"
-            class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700"
-          >
-            Cancel
-          </button>
         </div>
       </form>
     </div>
@@ -773,7 +845,17 @@
     id="docFolderModal"
     class="fixed inset-0 hidden flex bg-black bg-opacity-50 justify-center items-center z-50"
   >
-    <div class="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+    <div class="relative bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+      <button
+        id="closeDocFolderModal"
+        type="button"
+        class="absolute top-3 right-3 text-gray-600 hover:text-gray-800 text-2xl"
+        aria-label="Close modal"
+        onclick="closeDocFolderModal()"
+      >
+        &times;
+      </button>
+
       <h2 class="text-lg font-bold mb-4">Upload Folder</h2>
       <form
         method="POST"
@@ -790,19 +872,13 @@
           required
           class="w-full px-3 py-2 border border-gray-300 rounded-lg"
         />
+
         <div class="flex justify-end gap-2">
           <button
             type="submit"
             class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
           >
             Upload
-          </button>
-          <!-- Hapus atribut onclick, beri class untuk JS -->
-          <button
-            type="button"
-            class="cancel-folder-btn bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700"
-          >
-            Cancel
           </button>
         </div>
       </form>
@@ -812,7 +888,7 @@
   <!-- Modal untuk menambahkan model baru -->
   <div
     id="uploadModalModels"
-    class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden"
+    class="fixed inset-0 hidden flex bg-black bg-opacity-50 justify-center items-center z-50"
   >
     <div class="bg-white rounded-lg p-6 w-96">
       <div class="flex justify-between items-center mb-4">
@@ -857,7 +933,7 @@
   <!-- Modal untuk Upload Device -->
   <div
     id="uploadDevicesModal"
-    class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden"
+    class="fixed inset-0 hidden flex bg-black bg-opacity-50 justify-center items-center z-50"
   >
     <div class="flex items-center justify-center min-h-screen">
       <div
@@ -1057,10 +1133,8 @@
     navLinks.forEach((link) => {
       link.addEventListener("click", function (e) {
         e.preventDefault();
+
         const selectedTab = this.dataset.tab;
-        // Only intercept Models & Devices
-        if (selectedTab !== "docs") {
-        e.preventDefault();
 
         history.pushState(null, "", "?tab=" + selectedTab);
 
@@ -1083,6 +1157,7 @@
           "border-b-4"
         );
 
+        // 3) Show/Hide konten
         tabContents.forEach((c) => c.classList.add("hidden"));
         const target = document.getElementById(selectedTab + "-content");
         if (target) target.classList.remove("hidden");
@@ -1200,14 +1275,34 @@
       folderModal.addEventListener("click", (e) => {
         if (e.target === folderModal) folderModal.classList.add("hidden");
       });
-      // Cancel button inside folder modal
+
       folderModal.querySelectorAll(".cancel-folder-btn").forEach((btn) => {
         btn.addEventListener("click", () => {
           folderModal.classList.add("hidden");
         });
       });
     }
-    // Form submit untuk upload tampilkan loading:
+
+    //-------------Search Documents--------------------
+    const searchInputDocs = document.getElementById("searchInputDocs");
+    if (searchInputDocs) {
+      let toDocs;
+      searchInputDocs.addEventListener("keyup", function () {
+        clearTimeout(toDocs);
+        toDocs = setTimeout(() => {
+          const q = this.value.trim();
+          const url = new URL(location);
+
+          url.searchParams.set("tab", "docs");
+          if (q) url.searchParams.set("search", q);
+          else url.searchParams.delete("search");
+          url.searchParams.set("page", "1");
+          location.href = url.href;
+        }, 500);
+      });
+    }
+
+    //-------------Uploading Overlay--------------------
     document
       .querySelectorAll(
         "#docUploadModal form, #docFolderModal form, #uploadModalModels form, #uploadDevicesModal form"
@@ -1219,16 +1314,41 @@
             .classList.remove("hidden");
         });
       });
-    // Form submit untuk delete tampilkan deleting overlay:
+
+    //-------------Deleting Overlay--------------------
     document
       .querySelectorAll(
-        "form[action*='delete_model'], form[action*='delete_device'], form[action*='delete_document'], form[action*='delete_all_documents']"
+        "form[action*='delete_model'], form[action*='delete_device'], form.form-delete, form.form-delete-all"
       )
-      .forEach((f) => {
-        f.addEventListener("submit", () => {
+      .forEach((form) => {
+        form.addEventListener("submit", (e) => {
+          e.preventDefault();
+
+          const isDelete =
+            form.classList.contains("form-delete") ||
+            form.action.includes("delete_document");
+
+          const isDeleteAll =
+            form.classList.contains("form-delete-all") ||
+            form.action.includes("delete_all_documents");
+
+          let msg = "Are you sure you want to delete this item?";
+          if (isDeleteAll) {
+            msg =
+              "⚠️ Are you sure you want to delete all documents? This cannot be undone.";
+          } else if (isDelete) {
+            msg = "🗑️ Are you sure you want to delete this document?";
+          }
+
+          const ok = confirm(msg);
+          if (!ok) return;
+
           document
             .getElementById("deleteLoadingOverlay")
             .classList.remove("hidden");
+
+          // Delay kecil agar overlay sempat tampil
+          setTimeout(() => form.submit(), 50);
         });
       });
   });

@@ -24,17 +24,17 @@ class User(db.Model, UserMixin):
     updated_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
 
     device = db.relationship('Device', back_populates='user') 
+    profile = db.relationship('PatientProfile', back_populates='user', uselist=False)  # Relasi ke PatientProfile
 
     def get_id(self):
         return str(self.id)
-
 
 class Device(db.Model):
     id = db.Column(db.String(36), primary_key=True)  
     model = db.Column(db.String(50), nullable=False) 
     registered_at = db.Column(db.DateTime, default=datetime.utcnow)  
     updated_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
-     
+    status = db.Column(db.String(20), default='disconnected')
     user = db.relationship('User', back_populates='device', uselist=False)  
     blood_pressure_records = db.relationship('BloodPressureRecord', back_populates='device', lazy=True)  
 
@@ -54,7 +54,6 @@ class BloodPressureRecord(db.Model):
     def __repr__(self):
         return f"<BloodPressureRecord {self.id}, Device: {self.device_id}, Systolic: {self.systolic}, Diastolic: {self.diastolic}, Pulse: {self.pulse_rate}, Timestamp: {self.timestamp}>"
 
-    
 class Models(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), index=True, nullable=False)
@@ -68,22 +67,38 @@ class Models(db.Model):
 
     @classmethod
     def get_admin_models(cls):
-        """Mengambil data model yang hanya dapat diakses oleh admin"""
+        """Retrieve model data that can only be accessed by the admin"""
         return cls.query.join(User).filter(User.role == UserRole.admin).all()
-    
+
+class PatientProfile(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.String(10), db.ForeignKey('user.id'), nullable=False, unique=True)
+    user = db.relationship('User', back_populates='profile')
+    date_of_birth = db.Column(db.DateTime, nullable=False)  
+    gender = db.Column(db.String(10), nullable=False)  
+    address = db.Column(db.String(255), nullable=True)  
+    city = db.Column(db.String(100), nullable=True)  
+    postal_code = db.Column(db.String(10), nullable=True)  
+    national_id = db.Column(db.String(20), nullable=False)
+    occupation = db.Column(db.String(100), nullable=True)  
+    emergency_contact = db.Column(db.String(20), nullable=False)  
+    created_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp())
+    updated_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
+
+    def __repr__(self):
+        return f"<PatientProfile(id={self.id}, user_id={self.user_id}, gender={self.gender})>"
+
 class PatientData(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.String(10), db.ForeignKey('user.id'), nullable=False)
     user = db.relationship('User', backref='patient_data')
-    age = db.Column(db.Integer, nullable=False)  
     height = db.Column(db.Integer, nullable=False)  
-    weight = db.Column(db.Integer, nullable=False)  
-    gender = db.Column(db.Boolean, nullable=False) 
+    weight = db.Column(db.Float, nullable=False) 
     systolic = db.Column(db.Integer, nullable=False) 
     diastolic = db.Column(db.Integer, nullable=False)
-    bmi =  db.Column(db.Float, nullable=False)
-    map =  db.Column(db.Float, nullable=False)
-    pulse_pressure =  db.Column(db.Float, nullable=False)
+    bmi = db.Column(db.Float, nullable=False)
+    map = db.Column(db.Float, nullable=False)
+    pulse_pressure = db.Column(db.Float, nullable=False)
     cholesterol = db.Column(db.Integer, nullable=False) 
     gluc = db.Column(db.Integer, nullable=False) 
     smoke = db.Column(db.Boolean, nullable=False)  
@@ -93,8 +108,8 @@ class PatientData(db.Model):
     submitted_at = db.Column(db.DateTime, index=True, default=db.func.current_timestamp())
     
     def __repr__(self):
-        return f"<PatientData(id={self.id}, age={self.age}, gender={self.gender}, cardio={self.cardio})>"
-    
+        return f"<PatientData(id={self.id}, user_id={self.user_id}, cardio={self.cardio})>"
+
 class Document(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title_file = db.Column(db.String(255), nullable=False)

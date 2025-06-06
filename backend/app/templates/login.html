@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login</title>
+    <title>Sign in</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Link to External CSS -->
     <link
@@ -29,11 +29,11 @@
       }
     </style>
   </head>
-  <!-- Buat wrapper jadi flex-col agar flash message & container berada dalam flow normal -->
+  <!-- Make wrapper flex-col so flash message & container are in normal flow -->
   <body
     class="bg-gray-200 flex flex-col items-center justify-center min-h-screen"
   >
-    <!-- Wrapper dengan lebar yang sama seperti container login -->
+    <!-- Wrapper with the same width as the login container -->
     <div class="w-full max-w-4xl mx-auto px-4">
       <!-- Flash Messages -->
       {% with messages = get_flashed_messages(with_categories=true) %} {% if
@@ -68,7 +68,7 @@
 
           <h2 class="text-3xl font-bold text-teal-600">Sign in</h2>
           <p class="text-gray-500 text-sm mt-2">
-            Welcome back! Please login to your account.
+            Welcome back! Please sign in to your account.
           </p>
 
           <form method="POST" action="{{ url_for('auth.login') }}" class="mt-6">
@@ -79,7 +79,7 @@
                 name="patient_id"
                 placeholder="Enter your 10-digit Patient ID"
                 pattern="^\d{10}$"
-                title="Patient ID must be exactly 10 digits"
+                title="Patient ID must be 10 digits"
                 maxlength="10"
                 required
                 class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
@@ -146,7 +146,6 @@
       </div>
     </div>
     <script>
-      // Hanya dijalankan saat login page dibuka
       sessionStorage.removeItem("chatHistory");
       document
         .getElementById("togglePassword")

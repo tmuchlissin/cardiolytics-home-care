@@ -1,0 +1,392 @@
+ablasi kateter
+abses
+ace inhibitor
+air
+aktivitas
+alat
+alergi
+alergi
+alkohol
+anda
+aneurisma
+angina
+angina stabil
+angina tidak stabil
+angiografi
+angioplasti
+antibiotik
+antibodi
+antikoagulan
+antikoagulan oral
+antiplatelet
+aorta
+apa
+apjb
+arb
+aritmia
+arteri koroner
+arteriol
+arteriosklerosis
+asam urat
+aspirin
+asuransi
+aterosklerosis
+atrium
+aturan pakai
+audit klinis
+badan
+bagaimana
+bahaya merokok
+bangsal
+batuk
+bawaan
+bengkak
+berat
+berat badan
+berbahaya
+berhenti merokok
+berjalan
+berkeringat
+beta agonist
+beta blocker
+biaya periksa
+bingung
+biomarker kardiovaskular
+biopsi
+blok jantung
+bradikardia supraventrikular
+buah
+bypass koroner
+calcium channel blocker
+cara
+cara cegah komplikasi
+cara hindari stroke
+cara jaga jantung
+cara kurang stres
+cara makan sehat
+cara turun kolesterol
+cegah sakit jantung
+cek darah
+cek jantung
+ct scan jantung
+dada sesak
+daging
+darah
+darah rendah
+darah tinggi
+defibrilator implan
+demam
+denyut
+detak
+deteksi dini
+diabetes
+diagnosa
+diagnosis
+diare
+diastolik
+diet jantung
+dilasi atrium
+dingin
+disfungsi ventrikel
+disseksi aorta
+diuretik
+dokter
+dokumentasi medis
+dosis
+edema
+edema perifer
+edisi
+editor
+edukasi pasien
+efek inotropik
+efek samping obat
+ekg
+ekokardiografi
+ekokardiogram transesofageal
+elektrokardiogram
+elektrolit
+emboli
+embolisme
+endokarditis
+endotelium
+evaluasi terapi
+faktor
+faktor risiko framingham
+fibrilasi atrium
+fibrinolitik
+fisik
+flutter atrium
+gagal
+gagal jantung kongestif
+garam
+gatal
+gaya
+gejala
+gejala jantung bocor
+gizi
+guideline kardiovaskular
+gula
+gula darah
+hai
+halo
+hemoroid
+heparin
+hidup
+hiperlipidemia
+hipertensi
+hipertrofi ventrikel
+hipervolemia
+hipoksia
+hipotensi
+hipovolemia
+holter
+hormon
+icu
+imunisasi
+imunitas
+indeks ankle-brachial
+infark
+infeksi
+infus
+insulin
+integrasi data kesehatan
+iskemia
+iskemia miokard
+istirahat
+itu
+iya
+jadwal periksa
+jalan kaki
+jantung
+jenis
+kabar
+kaki bengkak
+kaku
+kalium
+kalium channel blocker
+kalsium
+kampanye kesadaran
+kapan
+kapiler
+kapsul
+kardiomiopati
+kardiomiopati dilatasi
+kardiomiopati hipertrofik
+kardiomiopati restriktif
+kardioplegia
+kardiotoksisitas
+kardiovaskular
+kardioversi
+kateterisasi
+katup jantung
+kebugaran
+kehamilan
+kejang
+keluhan
+kerja
+kesehatan
+kesemutan
+kista
+klinik
+kolesterol
+kolesterol tinggi
+koma
+komplikasi
+kondisi
+konduksi jantung
+konseling kesehatan
+konsensus medis
+konsultasi spesialis
+konsumsi
+kontraindikasi
+kontributor
+kuning
+kurang tahu
+laboratorium
+laporan medis
+latihan
+latihan napas
+lelah
+lemak
+luka
+magnesium
+makanan
+makanan sehat jantung
+manajemen klinis
+manajemen resiko
+mengapa
+menu jantung
+merah
+merokok
+minum
+minum air
+minum obat jantung
+miokarditis
+miokardium
+mitral
+modifikasi gaya hidup
+monitoring
+mri jantung
+muntah
+nadi
+naik berat badan
+napas
+natrium
+nitrat
+nodus atrioventrikular
+nodus sinoatrial
+normal
+nutrisi
+nyeri
+nyeri
+obat
+obat darah
+obat jantung
+olahraga aman
+olahraga untuk jantung
+operasi
+operasi jantung
+overdosis
+pacemaker
+panas
+panas dalam
+panduan
+panduan klinik
+pantangan diabetes
+pantangan jantung
+paru
+pasang stent
+pasien
+pedoman
+pedoman nasional
+pelatihan medis
+pemantauan jangka panjang
+pembuluh
+pemeriksaan fisik
+pemeriksaan rutin
+pencegahan
+pengawasan
+pengobatan
+penyakit
+perawat
+perawatan
+perban
+perikarditis
+periksa
+periksa jantung
+pernapasan
+pertolongan pertama
+perubahan
+pil
+pingsan
+plester
+pola makan
+polah hidup sehat
+poliklinik
+porsi makan
+prognosa
+program
+program pencegahan
+prosedur operasional
+protokol klinis
+pucat
+pulmonal
+puls oximetri
+pusing
+puskesmas
+rawat inap
+rawat jalan
+regurgitasi
+rehab jantung
+rehabilitasi
+rehabilitasi kardiac
+rekomendasi medis
+rendah
+resiko
+revaskularisasi
+riwayat
+rontgen
+ruang darurat
+ruang operasi
+rujukan medis
+rumah sakit
+saja
+sakit
+sakit jantung
+sakit kepala
+sakit perut
+salep
+saturasi oksigen
+sayuran
+senam jantung
+septum
+serangan jantung
+sianosis
+sindrom koroner akut
+sirkulasi
+sirup
+sistolik
+skor cha2ds2-vasc
+skrening kardiovaskular
+sosialisasi kesehatan
+spesialis
+standar operasi
+standar perawatan
+stabil
+statin
+stenosis
+stent
+stetoskop
+stres
+stres tes
+stroke
+suhu tubuh
+suntik
+suplemen
+syok
+tablet
+tahun
+takikardia
+tanda bahaya
+tanda jantung lemah
+tanda vital
+tanya dokter
+tanya spesialis
+tatalaksana
+tekanan
+tekanan arteri
+tekanan darah
+tensimeter
+terapi
+terapi fisik
+termometer
+tes darah
+tes darah kardiovaskular
+tes treadmill
+tes urin
+tetes
+tidak
+tidur cukup
+tinggi
+tips jantung sehat
+transfusi
+trikuspid
+trombosis
+trombosit
+trombus
+tumor
+turun berat badan
+ultrasonografi jantung
+ultrasound
+vaksin
+varises
+vaskularisasi
+vaskulitis
+vena cava
+vena jugularis
+vena pulmonalis
+ventrikel
+vitamin
+warfarin
+ya
+yoga jantung

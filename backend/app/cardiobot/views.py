@@ -1,13 +1,15 @@
 import os
-import shutil
+import json
+import numpy as np
+
 import docx2txt
-import pytz
-import difflib
 import re
+
+from pathlib import Path
+from spellchecker import SpellChecker 
+from rapidfuzz import fuzz  
 from io import BytesIO
 from datetime import datetime
-import json
-
 from flask import (
     Blueprint, render_template, request, redirect,
     url_for, flash, send_file, jsonify, current_app,
@@ -16,70 +18,91 @@ from flask import (
 from werkzeug.utils import secure_filename
 from PyPDF2 import PdfReader
 from dotenv import load_dotenv
+from sklearn.metrics.pairwise import cosine_similarity
+from pinecone import Pinecone, ServerlessSpec
 
 from langchain.chains import ConversationalRetrievalChain
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.memory import ConversationBufferMemory
 from langchain.prompts import PromptTemplate
-from langchain_huggingface import HuggingFaceEmbeddings
 from langchain.schema import Document as LangDocument
 from langchain_pinecone import Pinecone as LangchainPinecone
-from pinecone import Pinecone, ServerlessSpec
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 from app.extensions import db
 from app.models import Document
-from langchain_google_genai import ChatGoogleGenerativeAI
+
+from .config import (
+    PINECONE_API_KEY, PINECONE_ENV, INDEX_NAME, NAMESPACE, GEMINI_API_KEY, CHAT_PROMPT_TEMPLATE,
+    EMBEDDING_DIMENSION, EMBEDDER, ALLOWED_EXTENSIONS, GENERAL_QUERY_PATTERN,
+    FOLLOWUP_POSITIVE, FOLLOWUP_NEGATIVE, FOLLOWUP_NEUTRAL, GREETING_KEYWORDS, TIMEZONE
+)
 
 load_dotenv()
 
 cardiobot = Blueprint('cardiobot', __name__, url_prefix='/cardiobot')
-
-# API keys
-groq_api_key    = os.getenv('GROQ_API_KEY')
-openai_api_key  = os.getenv('OPENAI_API_KEY')
-gemini_api_key  = os.getenv('GEMINI_API_KEY')
-pinecone_api_key = os.getenv('PINECONE_API_KEY')
-pinecone_env     = os.getenv('PINECONE_ENVIRONMENT')
-
-# Timezone
-wib = pytz.timezone('Asia/Jakarta')
-
-# Pinecone index config
-INDEX_NAME = "cardiolytics"
-NAMESPACE = "cardiobot"  
-
-# File settings
-ALLOWED_EXTENSIONS  = {'pdf', 'docx', 'txt'}
 
 # In-memory state
 conversation_history: list[dict] = []
 chat_cache: dict[str, dict] = {}
 vector_store = None
 chain = None
+last_bot_question = ""
+conversation_context = {
+    "last_topic": None  
+}
 
-# Simple greeting keywords
-greeting_keywords = [
-    "hi", "halo", "hai", "hey", "tes", "hello",
-    "selamat pagi", "selamat siang", "selamat sore",
-    "selamat malam", "assalamualaikum"
-]
+spell = SpellChecker(language=None)
+current = Path(__file__).resolve()    
+base = current.parents[1] 
+dict_path = base / 'static' / 'src' / 'dict.txt'
+spell.word_frequency.load_text_file(str(dict_path))
 
 # Initialize Pinecone
 def init_pinecone():
-    pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
+    pc = Pinecone(
+        api_key=PINECONE_API_KEY,
+        environment=PINECONE_ENV,
+        grpc=True)
     
-    spec = ServerlessSpec(cloud="aws", region="us-east-1")  # cocok dengan dashboard kamu
-
+    spec = ServerlessSpec(cloud="aws", region="us-east-1")  
     if INDEX_NAME not in pc.list_indexes().names():
         pc.create_index(
             name=INDEX_NAME,
-            dimension=1024,  
+            dimension=EMBEDDING_DIMENSION,  
             metric="cosine",
             spec=spec
         )
     return pc
 
-init_pinecone()
+def correct_typo(text: str) -> str:
+    def fix_word(token: str) -> str:
+        m = re.match(r"^(\W*)(\w+)(\W*)$", token)
+        if not m:
+            return token
+        prefix, core, suffix = m.groups()
+
+        if core in spell:
+            return token
+
+        candidates = spell.candidates(core) or {core}
+        best = max(candidates, key=lambda c: fuzz.ratio(core, c))
+
+        return f"{prefix}{best}{suffix}"
+
+    corrected_tokens = [fix_word(t) for t in text.split()]
+    return " ".join(corrected_tokens)
+
+def fuzzy_match_keyword(input_text: str, keyword_set: set, threshold: float = 80) -> str:
+    input_text = input_text.lower().strip()
+    best_match = None
+    highest_score = threshold
+    for keyword in keyword_set:
+        score = fuzz.partial_ratio(input_text, keyword)
+        if score > highest_score:
+            highest_score = score
+            best_match = keyword
+    return best_match if highest_score >= threshold else input_text
 
 def allowed_file(filename: str) -> bool:
     return (
@@ -99,13 +122,88 @@ def extract_sentences(answer: str, context: str, max_sent=2) -> list[str]:
     scored.sort(key=lambda x: x[0], reverse=True)
     return [s for _, s in scored[:max_sent]]
 
+
+def is_based_on_docs(answer: str, doc_contents: list[str], threshold: float) -> bool:
+    answer_emb = EMBEDDER.embed_query(answer)
+    current_app.logger.debug(f"[EMBEDDING] Answer embedding generated. Shape: {len(answer_emb)}")
+
+    doc_embs = EMBEDDER.embed_documents(doc_contents)
+    current_app.logger.debug(f"[EMBEDDING] Document embeddings generated: {len(doc_embs)} items.")
+
+    similarities = cosine_similarity([answer_emb], doc_embs)[0]
+    max_score = float(np.max(similarities))
+    current_app.logger.debug(f"[HALLUCINATION] Max cosine similarity: {max_score:.4f}")
+
+    return max_score >= threshold
+
+def is_doc_relevant_hybrid(
+        question: str,
+        doc: str,
+        EMBEDDER,
+        min_word_overlap: int = 1,
+        min_cosine_similarity: float = 0.7,
+        alpha: float = 0.5
+    ) -> bool:
+    q_words = set(re.findall(r'\w+', question.lower()))
+    d_words = set(re.findall(r'\w+', doc.lower()))
+    word_overlap_score = len(q_words & d_words)
+
+    try:
+        question_emb = EMBEDDER.embed_query(question)
+        doc_emb = EMBEDDER.embed_query(doc)
+        cosine_sim = cosine_similarity([question_emb], [doc_emb])[0][0]
+    except Exception as e:
+        current_app.logger.warning(f"[RELEVANCE] Embedding failed: {e}")
+        cosine_sim = 0.0
+
+    overlap_pass = word_overlap_score >= min_word_overlap
+    similarity_pass = cosine_sim >= min_cosine_similarity
+
+    return overlap_pass and similarity_pass
+
+def classify_followup_response(message: str) -> str:
+    normalized = message.lower().strip()
+    normalized = message.lower().strip()
+
+    tokens = re.findall(r"\b\w+\b", normalized)
+    for kw in FOLLOWUP_POSITIVE:
+        if kw in tokens:
+            return "positive"
+    for kw in FOLLOWUP_NEGATIVE:
+        if kw in tokens:
+            return "negative"
+    for kw in FOLLOWUP_NEUTRAL:
+        if kw in tokens:
+            return "neutral"
+    return "unknown"
+
+
+def estimate_batch_size(batch_docs, batch_ids, embeddings):
+    texts = [chunk.page_content for chunk in batch_docs]
+
+    vectors = embeddings.embed_documents(texts)
+    payload = []
+    for vid, text, vec, chunk in zip(batch_ids, texts, vectors, batch_docs):
+        payload.append({
+            "id": vid,
+            "values": vec,
+            "metadata": {"source": chunk.metadata["source"]},
+            "text": text
+        })
+    raw = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+    return len(raw)
+
 def load_or_initialize_vector_store(app=None) -> LangchainPinecone | None:
     global vector_store
 
     if vector_store:
         return vector_store
 
-    pc = Pinecone(api_key=pinecone_api_key, environment=pinecone_env)
+    pc = Pinecone(
+        api_key=PINECONE_API_KEY, 
+        environment=PINECONE_ENV, 
+        grpc=True)
+    
     if INDEX_NAME not in pc.list_indexes().names():
         spec = ServerlessSpec(cloud="aws", region="us-east-1")
         pc.create_index(
@@ -115,20 +213,14 @@ def load_or_initialize_vector_store(app=None) -> LangchainPinecone | None:
             spec=spec
         )
 
-    embeddings = HuggingFaceEmbeddings(
-        model_name="intfloat/multilingual-e5-large",
-        model_kwargs={'device': 'cpu'}
-    )
-
     vector_store = LangchainPinecone(
         index_name=INDEX_NAME,
-        embedding=embeddings,       
+        embedding=EMBEDDER,       
         namespace=NAMESPACE,         
         text_key="page_content",
     )
 
     return vector_store
-
 
 def reload_vector_store():
     global vector_store
@@ -137,20 +229,28 @@ def reload_vector_store():
         current_app.logger.info("[reload] MySQL empty, skip rebuild.")
         return False
 
-    pc = Pinecone(api_key=pinecone_api_key, environment=pinecone_env)
+    pc = Pinecone(
+        api_key=PINECONE_API_KEY, 
+        environment=PINECONE_ENV,
+        grpc=True)
+    
+    try:
+        index_list = pc.list_indexes().names()
+        if INDEX_NAME not in index_list:
+            raise RuntimeError(f"Index '{INDEX_NAME}' not found in Pinecone. Available: {index_list}")
+    except Exception as e:
+        current_app.logger.error(f"[Pinecone] Could not verify index: {e}")
+        return False
+    
     idx = pc.Index(INDEX_NAME)
     try:
         idx.delete(delete_all=True, namespace=NAMESPACE)
     except Exception:
         current_app.logger.warning("[reload] Namespace clear failed, continuing.")
-
-    embeddings = HuggingFaceEmbeddings(
-        model_name="intfloat/multilingual-e5-large",
-        model_kwargs={'device':'cpu'})
     
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size=500, 
-        chunk_overlap=100,
+        chunk_size=1000, 
+        chunk_overlap=300,
         length_function=len,
         separators=["\n\n","\n","."," "])
     
@@ -166,43 +266,46 @@ def reload_vector_store():
             text=data.decode('utf-8',errors='ignore')
         for i,chunk in enumerate(splitter.split_text(text)):
             docs_for_index.append(LangDocument(page_content=chunk,
-                                              metadata={"source":d.title_file,
-                                                        "vector_id":f"{d.id}-{i}"}))
+                                            metadata={"source":d.title_file,
+                                                    "vector_id":f"{d.id}-{i}"}))
 
     vector_store = LangchainPinecone(
         index_name=INDEX_NAME,
-        embedding=embeddings,
+        embedding=EMBEDDER,
         namespace=NAMESPACE,
         text_key="page_content",
     )
-    vector_store.add_documents(
-        documents=docs_for_index,
-        ids=[md.metadata['vector_id'] for md in docs_for_index]
-    )
+    
+    BATCH_SIZE = 170
+    all_ids = [md.metadata["vector_id"] for md in docs_for_index]
+    for i in range(0, len(docs_for_index), BATCH_SIZE):
+        batch_docs = docs_for_index[i : i + BATCH_SIZE]
+        batch_ids  = all_ids     [i : i + BATCH_SIZE]
+
+        size_bytes = estimate_batch_size(batch_docs, batch_ids, EMBEDDER)
+        mb = size_bytes / (1024 * 1024)
+        if size_bytes > 4_194_304:
+            print(" ⚠️ Exceeds 4 MB, reduce BATCH_SIZE!")
+        current_app.logger.info(f"[reload] Batch {i//BATCH_SIZE+1}: {mb:.2f} MB")
+
+        vector_store.add_documents(
+            documents=batch_docs,
+            ids=batch_ids
+        )
+        
     current_app.logger.info(f"[reload] Indexed {len(docs_for_index)} chunks.")
     return True
 
 
-def create_conversational_chain(vs: Pinecone) -> ConversationalRetrievalChain:
-    chat_prompt = PromptTemplate(template=
-        """
-        INSTRUKSI UNTUK LLM:
-        - Jawab hanya berdasar dokumen yang diunggah.
-        - Sertakan sumber dan nomor halaman.
-        - Jika tidak ada, jawab: "Maaf, informasi tidak ditemukan."
-        - Jawab dalam bahasa Indonesia.
-        - **Gunakan format Markdown:**  
-            • Heading untuk judul  
-            • List bernomor untuk langkah-langkah  
-
-        **Pertanyaan Pengguna:** {question}
-        **Konteks Dokumen:** {context}
-        **Riwayat Percakapan:** {chat_history}
-        """
+def create_conversational_chain(vs: Pinecone) -> ConversationalRetrievalChain:    
+    chat_prompt = PromptTemplate(
+        template=CHAT_PROMPT_TEMPLATE,
+        input_variables=["question", "context", "chat_history"]
     )
+    
     llm = ChatGoogleGenerativeAI(
         model="gemini-2.5-flash-preview-04-17",
-        google_api_key=gemini_api_key,
+        google_api_key=GEMINI_API_KEY,
         temperature=0.1
     )
     memory = ConversationBufferMemory(
@@ -210,10 +313,12 @@ def create_conversational_chain(vs: Pinecone) -> ConversationalRetrievalChain:
         return_messages=True,
         output_key="answer"
     )
+    
     retriever = vs.as_retriever(
-        search_type="mmr",
-        search_kwargs={"k": 12, "fetch_k": 50}
+        search_type="similarity_score_threshold",
+        search_kwargs={"score_threshold": 0.7, "k": 5}
     )
+    
     return ConversationalRetrievalChain.from_llm(
         llm=llm,
         chain_type="stuff",
@@ -233,7 +338,8 @@ def initialize(state):
     app = state.app
     vs = load_or_initialize_vector_store(app)
     if not vs:
-        app.logger.warning("⚠️ Pinecone index belum ada.")
+        app.logger.warning("⚠️ Pinecone index does not exist yet.")
+
         return
     
     chain = create_conversational_chain(vs)
@@ -241,39 +347,113 @@ def initialize(state):
 
 @cardiobot.route('/clear_cache', methods=['POST'])
 def clear_cache():
-    global chat_cache
+    global chat_cache, conversation_context
+
     chat_cache.clear()
-    current_app.logger.info("✅ [DEBUG] chat_cache cleared")
+    conversation_context["last_topic"] = None
+    
+    current_app.logger.info("✅ [DEBUG] chat_cache cleared and last_topic reset")
+
     return jsonify({"status": "ok"}), 200
+
+def is_general_document_query(text: str) -> bool:
+    return bool(GENERAL_QUERY_PATTERN.search(text.lower().strip()))
+
+def reconstruct_with_context(user_input: str, history: list, last_topic: str = None, max_short: int = 3) -> str:
+    ui = user_input.strip().lower()
+    current_app.logger.debug(f"[RECONSTRUCT] Raw user_input: {ui!r}")
+
+    parts = re.split(r'[.?!]\s*', ui)
+    cleaned = [p for p in parts if p]
+    core = cleaned[-1] if cleaned else ui
+    current_app.logger.debug(f"[RECONSTRUCT] Core sentence after split: {core!r}")
+
+    tokens = core.split()
+    current_app.logger.debug(f"[RECONSTRUCT] Token count: {len(tokens)} (max_short={max_short})")
+
+    if last_topic and len(tokens) <= max_short:
+        topic_words = last_topic.lower().rstrip(' ?.!').split()
+        topic_core = topic_words[-1] if topic_words else last_topic.lower().rstrip(' ?.!')
+        merged = f"{core} {topic_core}?"
+        current_app.logger.debug(f"[RECONSTRUCT] Merged dynamic topic: {merged!r}")
+        return merged
+
+    for entry in reversed(history):
+        if not entry.get("followup"):
+            merged = f"{entry['user'].strip().lower()} {core}"
+            current_app.logger.debug(f"[RECONSTRUCT] Merged with history: {merged!r}")
+            return merged
+
+    current_app.logger.debug(f"[RECONSTRUCT] Returning core only")
+    return core
+
+
+def extract_topic_from_docs(question: str, docs: list, EMBEDDER, threshold: float = 0.7):
+    q_vec = EMBEDDER.embed_query(question)
+    
+    combined_texts = [
+        f"{getattr(d, 'title_file', d.metadata.get('title', ''))}\n{d.page_content}" for d in docs
+    ]
+    
+    doc_vecs = EMBEDDER.embed_documents(combined_texts)
+    sims = cosine_similarity([q_vec], doc_vecs)[0]
+
+    max_score = float(np.max(sims))
+    if max_score < threshold:
+        return None
+
+    best_idx = int(np.argmax(sims))
+    best_doc = docs[best_idx]
+
+    raw_title = getattr(best_doc, 'title_file', best_doc.metadata.get("title", ""))
+
+    topic = re.sub(r"^(pedoman|panduan)\s*", "", raw_title.strip(), flags=re.IGNORECASE)
+    return topic.strip()
+
+def is_similar_topic(new_text: str, last_topic: str, EMBEDDER, threshold: float) -> bool:
+    vec_new   = EMBEDDER.embed_query(new_text)
+    vec_last  = EMBEDDER.embed_query(last_topic)
+
+    sim = cosine_similarity([vec_new], [vec_last])[0,0]
+    return sim >= threshold
+
+def clean_answer(text):
+    text = re.sub(r'\n{2,}', '\n\n', text) 
+    text = text.replace("**", "").replace("*", "")  
+    text = re.sub(r'\.{3,}\s*\d+', '', text)  
+    text = re.sub(r'^(BAB\s+[IVXLC]+|[0-9]+\.[0-9]*)\.\s*', '', text, flags=re.MULTILINE) 
+    text = re.sub(r'\n{2,}', '\n\n', text).strip()  
+    return text
 
 @cardiobot.route('/chat', methods=['POST'])
 def chat():
-    global chat_cache, chain, vector_store, conversation_history
+    global chat_cache, chain, vector_store, conversation_history, last_bot_question, conversation_context
 
     data = request.get_json(silent=True) or {}
-
-    # — NORMALISASI INPUT —
     raw = data.get("message", "") or ""
-    # collapse semua whitespace jadi satu spasi, trim ujung, lalu lowercase
     user_input = re.sub(r"\s+", " ", raw).strip().lower()
-    # — END NORMALISASI —
 
+    corrected_input = correct_typo(user_input)
+    if corrected_input != user_input:
+        current_app.logger.debug(f"[CHAT] Typo corrected: {user_input!r} → {corrected_input!r}")
+        
+    user_input = corrected_input.strip().lower()
+    core = re.split(r'[.?!]\s*',  user_input)[-1]
+    
     current_app.logger.debug(f"[CHAT] Received message: {user_input!r}")
 
-    # 1) Pastikan bot siap dan input tidak kosong
     if not vector_store or not chain or not user_input:
-        current_app.logger.warning("[CHAT] Bot not ready or empty input")
-        return jsonify({"error": "Bot belum siap atau input kosong."}), 400
+        current_app.logger.warning("[CHAT] Bot not ready or input is empty")
+        return jsonify({"error": "Bot is not ready or input is empty."}), 400
 
-    # 2) Cek cache
     if user_input in chat_cache:
         current_app.logger.debug(f"[CHAT] Cache HIT for key {user_input!r}")
         response = chat_cache[user_input]
-        current_app.logger.debug(f"[CHAT] Returning from cache: {json.dumps(response)}")
+        current_app.logger.debug(f"[CHAT] Cache response all_topics: {response.get('all_topics', 'Not found')}")
         return jsonify(response)
 
-    # 3) Greeting sederhana
-    if user_input in greeting_keywords:
+    matched_greeting = fuzzy_match_keyword(user_input, GREETING_KEYWORDS)
+    if matched_greeting:
         resp = {
             "answer": "Halo! Saya adalah Cardiobot. Saya hanya akan menjawab pertanyaan seputar kardiovaskular.",
             "sources": []
@@ -282,48 +462,227 @@ def chat():
         current_app.logger.debug(f"[CHAT] Greeting stored to cache under key {user_input!r}")
         return jsonify(resp)
 
-    # 4) Cache miss → panggil chain
-    try:
-        res = chain.invoke({"question": user_input})
-        answer = res["answer"]
-        docs = res.get("source_documents", [])
-        snippets = [
-            {"file": d.metadata.get("source", "Unknown"), "text": s}
-            for d in docs
-            for s in (extract_sentences(answer, d.page_content) or [d.page_content[:200]])
-        ]
-        out = {"answer": answer, "sources": snippets}
+    if is_general_document_query(user_input):
+        current_app.logger.debug(f"[CHAT] General question detected: {user_input}")
+        docs = Document.query.all()
+        current_app.logger.debug(f"[CHAT] Retrieved documents: {[doc.title_file for doc in docs]}")
+        
+        if not docs:
+            response = {
+                "answer": "Maaf, saat ini tidak ada dokumen yang tersedia.",
+                "sources": [],
+                "based_on_docs": True
+            }
+            chat_cache[user_input] = response
+            conversation_history.append({
+                "user": raw.strip(),
+                "bot": response["answer"],
+                "followup": False,
+                "category": "general",
+            })
+            return jsonify(response)
 
-        # simpan ke cache
+        topics = [doc.title_file.split('.')[0].replace('_', ' ').title() for doc in docs]
+        current_app.logger.debug(f"[CHAT] Extracted topics: {topics}")
+        
+        max_initial_topics = 5
+        initial_topics = topics[:max_initial_topics]
+        remaining_topics = topics[max_initial_topics:]
+        remaining_count = len(remaining_topics)
+        
+        summary = "Dokumen yang tersedia berisi informasi tentang:\n"
+        summary += "\n".join(f"- {topic}" for topic in initial_topics)
+        if remaining_count > 0:
+            summary += f"\n- Dan lainnya (+{remaining_count})"      
+
+        response = {
+            "answer": summary,
+            "sources": [],
+            "all_topics": topics
+        }
+        
+        current_app.logger.debug(f"[CHAT] Response all_topics: {response['all_topics']}")
+        current_app.logger.debug(f"[CHAT] Final response before jsonify: {response}")  
+        
+        chat_cache[user_input] = response
+        conversation_history.append({
+            "user": raw.strip(),
+            "bot": summary,
+            "followup": False,
+            "category": "general",
+        })
+        
+        current_app.logger.debug(f"[CHAT] General question response: {summary}")
+        current_app.logger.debug(f"[CHAT] Total topics: {len(topics)}, Initial topics: {len(initial_topics)}, Remaining: {remaining_count}")
+        return jsonify(response)
+    try:
+        is_followup = bool(last_bot_question)
+        category = classify_followup_response(user_input)
+        last_t = conversation_context.get("last_topic")
+        
+        if is_followup and category == "negative":
+            response = {
+                "answer": "Baik, terima kasih. Jika ada pertanyaan lain, silakan ajukan! ☺️.",
+                "sources": []
+            }
+            chat_cache[user_input] = response
+            conversation_history.append({
+                "user": raw.strip(),
+                "bot": response["answer"],
+                "followup": True,
+                "category": category
+            })
+            last_bot_question = ""
+            current_app.logger.debug(f"[CHAT] Negative follow-up → closing response.")
+            return jsonify(response)
+
+        elif is_followup and category == "neutral":
+            response = {
+                "answer": "Baik, saya akan coba menjelaskan dengan lebih sederhana.\n\n🤔 Apa yang masih belum jelas bagi Anda?",
+                "sources": []
+            }
+            chat_cache[user_input] = response
+            conversation_history.append({
+                "user": raw.strip(),
+                "bot": response["answer"],
+                "followup": True,
+                "category": category
+            })
+            last_bot_question = ""
+            current_app.logger.debug(f"[CHAT] Neutral follow-up → clarification response.")
+            return jsonify(response)
+
+        elif is_followup and category == "positive":
+            follow_q = last_bot_question or ""
+            follow_q = re.sub(
+                r"(?i)^apakah anda ingin tahu lebih lanjut tentang\s*",
+                "",
+                follow_q
+            ).strip().rstrip('?').lower()
+            user_input = follow_q
+            current_app.logger.debug(f"[FOLLOWUP POSITIVE] Query for chain: {user_input}")
+        
+        elif is_followup and category == "unknown" and last_t:
+            if not is_similar_topic(core, last_t, EMBEDDER, threshold=0.8):
+                is_followup = False
+                current_app.logger.debug(f"[CHAT] Low similarity to {last_t!r} → new topic")
+
+        elif not is_followup:
+            res = chain.invoke({"question": user_input})
+            docs = res.get("source_documents", [])
+
+            topic_init = extract_topic_from_docs(user_input, docs, EMBEDDER, threshold=0.7)
+            conversation_context["last_topic"] = (topic_init or user_input).lower()
+            current_app.logger.debug(f"[CONTEXT] last_topic set → {conversation_context['last_topic']!r}")
+
+        else:
+            current_app.logger.debug(f"[CHAT] Follow-up in topic: {last_t!r}")
+            user_input = reconstruct_with_context(user_input, conversation_history, last_t)
+            current_app.logger.debug(f"[RECONSTRUCT] {user_input!r}")
+
+        res = chain.invoke({"question": user_input})
+        docs = res.get("source_documents", [])
+        
+        topic = extract_topic_from_docs(user_input, docs, EMBEDDER, threshold=0.7)
+        if topic:
+            conversation_context['last_topic'] = topic.lower()
+            current_app.logger.debug(f"[CONTEXT] last_topic set: {conversation_context['last_topic']}")
+            
+        answer = res["answer"]
+        answer = clean_answer(answer)
+
+        topic_from_question = extract_topic_from_docs(user_input, docs, EMBEDDER)
+        if topic_from_question:
+            conversation_context["last_topic"] = topic_from_question
+            current_app.logger.debug(f"[CONTEXT] Last topic updated from question: {topic_from_question}")
+
+        doc_contents = [d.page_content for d in docs]
+        hallucinated = not is_based_on_docs(answer, doc_contents, threshold=0.7)
+
+        no_info_response = "maaf, informasi" in answer.lower() and "tidak ditemukan" in answer.lower()
+
+        relevant_docs = any(
+            is_doc_relevant_hybrid(user_input, doc, EMBEDDER)
+            for doc in doc_contents
+        )
+
+        if hallucinated or no_info_response or not relevant_docs:
+            answer = (
+                "Maaf, saya tidak menemukan informasi yang relevan dalam dokumen yang tersedia. 😔\n\n"
+                "Silakan ajukan pertanyaan yang lebih spesifik atau tambahkan detail lainnya, ya! ✍️😊"
+            )
+
+            snippets = []
+            last_bot_question = ""
+            
+            if hallucinated:
+                current_app.logger.debug("[CHAT] Answer rejected due to low similarity score.")
+            elif no_info_response:
+                current_app.logger.debug("[CHAT] Answer identified as no-info response.")
+            else:
+                current_app.logger.debug("[CHAT] Answer rejected due to irrelevant documents.")
+        else:
+            parts = answer.rsplit("\n\n", 1)
+            last_bot_question = parts[1].strip() if len(parts) == 2 and "?" in parts[1] else ""
+            valid_docs = [
+                d for d in docs 
+                if is_doc_relevant_hybrid(user_input, d.page_content, EMBEDDER)
+            ]
+
+            snippets = [
+                {"file": d.metadata.get("source", "Unknown"), "text": s}
+                for d in valid_docs
+                for s in (extract_sentences(answer, d.page_content) or [d.page_content[:200]])
+            ]
+                    
+        out = {
+            "answer": answer,
+            "sources": snippets,
+            "based_on_docs": not hallucinated
+        }
+
         chat_cache[user_input] = out
+        conversation_history.append({
+            "user": raw.strip(),
+            "bot": answer,
+            "followup": is_followup,
+            "category": category,
+            "based_on_docs": not hallucinated
+        })
+                        
+        current_app.logger.debug(f"[CHAT] Generated answer: {answer!r}")
+        current_app.logger.debug(f"[CHAT] Source snippets ({len(snippets)}): {json.dumps(snippets)}")
         current_app.logger.debug(f"[CHAT] Cache MISS: stored response under key {user_input!r}")
         current_app.logger.debug(f"[CHAT] Current cache keys: {list(chat_cache.keys())}")
+        current_app.logger.debug(f"[CHAT] Based on docs: {not hallucinated}")
 
-        conversation_history.append({"user": user_input, "bot": answer})
         return jsonify(out)
 
     except Exception as e:
-        current_app.logger.error("Error di /chat: %s", e, exc_info=True)
-        return jsonify({"error": "Terjadi kesalahan di server."}), 500
-
+        current_app.logger.error("Error in /chat: %s", e, exc_info=True)
+        return jsonify({"error": "An error occurred on the server."}), 500
 
 @cardiobot.route('/live-chat', defaults={'file_id': None})
 @cardiobot.route('/live-chat/<int:file_id>')
 def live_chat(file_id):
-    
-    if file_id is None:
-        document = Document.query.first()
-        if not document:
-            abort(404, "Dokumen tidak ditemukan.")
-    else:
-        document = Document.query.get_or_404(file_id)
+    documents = Document.query.all()
+
+    if not documents:
+        return render_template(
+            'cardiobot/live_chat.html',
+            documents=[],
+            document=None,
+            navbar_title='Cardiobot'
+        )
+
+    current = Document.query.get(file_id) if file_id else documents[0]
 
     return render_template(
         'cardiobot/live_chat.html',
-        document=document,
+        documents=documents,
+        document=current,
         navbar_title='Cardiobot'
     )
-
 
 @cardiobot.route('/documents/preview/<int:file_id>')
 def preview_file(file_id):
@@ -339,14 +698,14 @@ def preview_file(file_id):
 def view_document(file_id):
     doc  = Document.query.get_or_404(file_id)
     mime = doc.title_file.rsplit('.',1)[1].lower()
-    # Bangun URL untuk preview PDF
+
     preview_url = url_for('cardiobot.preview_file', file_id=file_id)
     return render_template(
         'cardiobot/view_document.html',
         navbar_title='Cardiobot/Documents View',
         document=doc,
         mime_type=f"application/{mime}",
-        preview_url=preview_url,      # ← kirimkan di sini
+        preview_url=preview_url,    
     )
 
 
@@ -355,39 +714,41 @@ def upload_documents():
     global vector_store, chain      
     files = request.files.getlist('files[]')
     if not files or not all(allowed_file(f.filename) for f in files):
-        flash("❌ File tidak valid atau tidak ada file.", "error")
+        flash("❌ Invalid or no files provided.", "error")
         return redirect(url_for('admin.settings', tab='docs'))
 
-    # Simpan ke MySQL
     for f in files:
-        name = secure_filename(f.filename)
+        name = secure_filename(os.path.basename(f.filename)).lower()
         data = f.read()
         db.session.add(Document(
             title_file=name,
             file_data=data,
-            created_at=datetime.now(wib),
-            updated_at=datetime.now(wib)
+            created_at=datetime.now(TIMEZONE),
+            updated_at=datetime.now(TIMEZONE)
         ))
     db.session.commit()
 
-    # ==== REBUILD PINECONE HANYA DI SINI ====
     success = reload_vector_store()
     if success:
         global chain
         chain = create_conversational_chain(vector_store)
-    # =======================================
 
     clear_cache()
     
     total_docs = Document.query.count()
-    pc = Pinecone(api_key=pinecone_api_key, environment=pinecone_env)
-    stats = pc.Index(INDEX_NAME).describe_index_stats(namespace=NAMESPACE)
-    total_vectors = stats.total_vector_count
+    pc = Pinecone(
+        api_key=PINECONE_API_KEY, 
+        environment=PINECONE_ENV,
+        grpc=True)
+    index = pc.Index(INDEX_NAME)
 
-    current_app.logger.info(f"[DEBUG] MySQL docs={total_docs}, Pinecone vectors={total_vectors}")
+    stats = index.describe_index_stats(namespace=NAMESPACE)
+    remaining_vectors = stats.total_vector_count  
+
+    current_app.logger.info(f"[DEBUG] MySQL docs={total_docs}, Pinecone vectors={remaining_vectors}")
 
     flash(
-        f"✅ Indexed! (DB:{total_docs} docs, PC:{total_vectors} vectors)",
+        f"✅ Indexed! (DB:{total_docs} docs, PC:{remaining_vectors} vectors)",
         "success"
     )
     
@@ -396,11 +757,12 @@ def upload_documents():
 
 @cardiobot.route('/documents/delete/<int:file_id>', methods=['POST'])
 def delete_document(file_id):
-    # Inisialisasi client Pinecone
-    pc    = Pinecone(api_key=pinecone_api_key, environment=pinecone_env)
+    pc = Pinecone(
+        api_key=PINECONE_API_KEY, 
+        environment=PINECONE_ENV,
+        grpc=True)
     index = pc.Index(INDEX_NAME)
 
-    # 0) Debug awal: jumlah dokumen & vektor sebelum delete
     total_docs_before = Document.query.count()
     stats_before      = index.describe_index_stats(namespace=NAMESPACE)
     total_vec_before  = stats_before.total_vector_count
@@ -409,15 +771,12 @@ def delete_document(file_id):
         f"MySQL docs={total_docs_before}, Pinecone vec total={total_vec_before}"
     )
 
-    # 1) Ambil record & simpan blob-nya untuk chunking
     doc = Document.query.get_or_404(file_id)
     raw = doc.file_data
 
-    # 2) Hapus record MySQL
     db.session.delete(doc)
     db.session.commit()
 
-    # 3) Rekonstruksi teks & hitung jumlah chunk (vector_id)
     if doc.title_file.lower().endswith('.pdf'):
         reader = PdfReader(BytesIO(raw))
         text   = "".join(page.extract_text() or "" for page in reader.pages)
@@ -427,29 +786,25 @@ def delete_document(file_id):
         text   = raw.decode('utf-8', errors='ignore')
 
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size=500, chunk_overlap=100,
+        chunk_size=1000, chunk_overlap=300,
         length_function=len,
         separators=["\n\n", "\n", ".", " "]
     )
     n_chunks   = len(splitter.split_text(text))
 
-    # 4) Hapus vector-file yang sesuai
     vector_ids = [f"{file_id}-{i}" for i in range(n_chunks)]
     try:
         index.delete(ids=vector_ids, namespace=NAMESPACE)
     except Exception as e:
-        current_app.logger.warning(f"[DEBUG] Gagal delete vectors for doc {file_id}: {e}")
+        current_app.logger.warning(f"[DEBUG] Failed to delete vectors for doc {file_id}: {e}")
 
-    # 5) REBUILD IN-MEMORY VECTOR_STORE & CHAIN
-    #    agar vector_store & chain langsung sinkron tanpa menunggu restart
     reload_vector_store()
+    
     global chain
     chain = create_conversational_chain(vector_store)
 
-    # 6) CLEAR CHAT CACHE (opsional, supaya response lama tidak dipakai lagi)
     clear_cache()
     
-    # 7) Debug setelah delete
     total_docs_after = Document.query.count()
     stats_after      = index.describe_index_stats(namespace=NAMESPACE)
     total_vec_after  = stats_after.total_vector_count
@@ -459,10 +814,11 @@ def delete_document(file_id):
     )
 
     flash(
-        f"✅ Dokumen {file_id} di-DB MySQL: {total_docs_before}→{total_docs_after}; "
-        f"Vektor Pinecone: {total_vec_before}→{total_vec_after}.",
+        f"✅ Document {file_id} in MySQL DB: {total_docs_before}→{total_docs_after}; "
+        f"Pinecone vectors: {total_vec_before}→{total_vec_after}.",
         "success"
     )
+    
     return redirect(url_for('admin.settings', tab='docs'))
 
 @cardiobot.route('/delete_all_documents', methods=['POST'])
@@ -470,14 +826,17 @@ def delete_all_documents():
     Document.query.delete()
     db.session.commit()
 
-    pc = Pinecone(api_key=pinecone_api_key, environment=pinecone_env)
+    pc = Pinecone(
+        api_key=PINECONE_API_KEY, 
+        environment=PINECONE_ENV,
+        grpc=True)
     index = pc.Index(INDEX_NAME)
+    
     try:
         index.delete(delete_all=True, namespace=NAMESPACE)
     except Exception:
-        current_app.logger.info(f"Namespace '{NAMESPACE}' belum ada, skip delete_all.")
+        current_app.logger.info(f"Namespace '{NAMESPACE}' does not exist yet, skipping delete_all.")
 
-    # Debug: cek stats Pinecone
     stats = index.describe_index_stats(namespace=NAMESPACE)
     remaining_vectors = stats.total_vector_count  
     total_docs = Document.query.count()
@@ -490,7 +849,6 @@ def delete_all_documents():
         "success"
     )
     return redirect(url_for('admin.settings', tab='docs'))
-
 
 @cardiobot.route('/get_chat_history', methods=['GET'])
 def get_chat_history():

@@ -1,14 +1,19 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, abort, request, current_app
-from flask_login import login_user, logout_user, current_user, login_required
-from werkzeug.security import generate_password_hash, check_password_hash
-from app.extensions import db, mail 
-from app.models import User, UserRole
-from app.forms import RegistrationForm, LoginForm
-import jsonify
-from flask_mail import Mail, Message
-from app.utils import generate_reset_token, verify_reset_token, send_email_async
 import threading
 import os
+import jsonify
+
+from flask import (
+    Blueprint, render_template, redirect, 
+    url_for, flash, request, current_app
+    )
+
+from flask_login import login_user, logout_user, current_user, login_required
+from werkzeug.security import generate_password_hash, check_password_hash
+from app.extensions import db
+from app.models import User, UserRole
+from app.forms import RegistrationForm, LoginForm
+from flask_mail import Message
+from app.utils import generate_reset_token, verify_reset_token, send_email_async
 from dotenv import load_dotenv
 
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -26,11 +31,9 @@ def login():
     if form.validate_on_submit():
         user = User.query.filter_by(id=form.patient_id.data).first()
         if user and check_password_hash(user.password, form.password.data):
-            # Periksa apakah user sudah di-approve oleh admin
             if user.approved is not True:
-                flash("⏳ Your account is pending approval. Please wait for admin approval.", "attention")
+                flash("⏳ Your account is awaiting approval. Please wait for admin approval.", "attention")
                 return redirect(url_for('auth.login'))
-            # Jika sudah di-approve, login user
             login_user(user)
             
             # Debug
@@ -41,8 +44,8 @@ def login():
             else:
                 return redirect(url_for('main.index'))
         else:
-            flash("❌ Invalid Patient ID or password.", "danger")
-            print("❌ Invalid login attempt!")  # Debug
+            flash("❌ Patient ID or password is incorrect.", "danger")
+            print("❌ Invalid sign in attempt!")  # Debug
     return render_template('login.html', form=form)
 
 @auth.route('/forgot_password', methods=['GET', 'POST'])
@@ -55,28 +58,26 @@ def forgot_password():
             token = generate_reset_token(email)
             reset_url = url_for('auth.reset_password', token=token, _external=True)
             subject = "Password Reset Instructions"
-            body = f"Hi {user.user_name},\n\nTo reset your password, click the following link:\n{reset_url}\n\nIf you did not request a password reset, please ignore this email."
+            body = f"Hello {user.user_name},\n\nTo reset your password, click the following link:\n{reset_url}\n\nIf you did not request a password reset, please ignore this email."
             
             msg = Message(subject, sender=os.getenv('MAIL_DEFAULT_SENDER'), recipients=[email])
             msg.body = body
             
-            # Kirim email dalam thread dengan current_app
             thread = threading.Thread(target=send_email_async, args=(current_app._get_current_object(), msg))
             thread.start()
 
             flash("✅ Instructions to reset your password have been sent to your email.", "success")
             return redirect(url_for('auth.login'))
         else:
-            flash("❕Email address not found.", "danger")
+            flash("❕ Email address not found.", "danger")
 
     return render_template('forgot_password.html')
-
 
 @auth.route('/reset_password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
     email = verify_reset_token(token)
     if not email:
-        flash("❕The password reset link is invalid or has expired.", "danger")
+        flash("❕ The password reset link is invalid or has expired.", "danger")
         return redirect(url_for('auth.forgot_password'))
     
     if request.method == 'POST':
@@ -84,20 +85,20 @@ def reset_password(token):
         confirm_password = request.form.get('confirm_password')
 
         if new_password != confirm_password:
-            flash("❕Passwords do not match.", "danger")
+            flash("❕ Passwords do not match.", "danger")
             return render_template('reset_password.html', token=token)
         if len(new_password) < 8:
-            flash("❕Password must be at least 8 characters long.", "danger")
+            flash("❕ Password must be at least 8 characters.", "danger")
             return render_template('reset_password.html', token=token)
         
         user = User.query.filter_by(email=email).first()
         if user:
             user.password = generate_password_hash(new_password)
             db.session.commit()
-            flash("✅ Your password has been updated. Please log in.", "success")
+            flash("✅ Your password has been updated. Please sign in.", "success")
             return redirect(url_for('auth.login'))
         else:
-            flash("❕User not found.", "danger")
+            flash("❕ User not found.", "danger")
             return redirect(url_for('auth.forgot_password'))
     
     return render_template('reset_password.html', token=token)
@@ -112,24 +113,23 @@ def register():
     if form.validate_on_submit():
         print("✅ Form validation successful!")
 
-        # Format phone number terlebih dahulu
         phone_number = form.phone_number.data
         if phone_number.startswith('0'):
             phone_number = '62' + phone_number[1:]
 
         existing_user = User.query.filter_by(id=form.patient_id.data).first()
         if existing_user:
-            flash('⚠ Patient ID is already registered. Please use a different one.', 'warning')
+            flash('⚠ Patient ID is already registered. Use a different ID.', 'warning')
             return redirect(url_for('auth.register'))
 
         existing_email = User.query.filter_by(email=form.email.data).first()
         if existing_email:
-            flash('⚠ Email is already registered. Please use a different one.', 'warning')
+            flash('⚠ Email is already registered. Use a different email.', 'warning')
             return redirect(url_for('auth.register'))
 
         existing_phone = User.query.filter_by(phone_number=phone_number).first()
         if existing_phone:
-            flash('⚠ Phone number is already registered. Please use a different one.', 'warning')
+            flash('⚠ Phone number is already registered. Use a different number.', 'warning')
             return redirect(url_for('auth.register'))
 
         hashed_password = generate_password_hash(form.password.data)
@@ -153,7 +153,7 @@ def register():
         except Exception as e:
             db.session.rollback()
             print(f"❌ Database error: {e}")  # Debugging
-            flash('❌ An error occurred while registering. Please try again.', 'danger')
+            flash('❌ An error occurred during registration. Please try again.', 'danger')
 
     else:
         # print("❌ Form validation failed!")  # Debugging
@@ -195,4 +195,4 @@ def check_patient_id(patient_id):
     ):
         return jsonify({'valid': True})  
     
-    return jsonify({'valid': False})  
+    return jsonify({'valid': False})

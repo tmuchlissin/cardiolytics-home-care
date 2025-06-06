@@ -5,12 +5,29 @@
   }
 </style>
 
+<!-- Flash Messages Container -->
+<div class="w-full max-w-3xl mx-auto px-4">
+  {% with messages = get_flashed_messages(with_categories=true,
+  category_filter=['success', 'warning', 'error', 'attention']) %} {% if
+  messages %}
+  <div class="mb-4">
+    {% for category, message in messages %}
+    <div
+      class="flash-message p-3 rounded-lg text-center font-semibold {% if category == 'success' %} bg-green-100 border border-green-400 text-green-700 {% elif category == 'warning' %} bg-yellow-100 border border-yellow-400 text-yellow-700 {% elif category == 'error' %} bg-red-100 border border-red-400 text-red-700 {% elif category == 'attention' %} bg-gray-100 border border-gray-400 text-gray-700 {% endif %}"
+      role="alert"
+    >
+      <span class="block sm:inline">{{ message }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %} {% endwith %}
+</div>
+
 <div class="px-5 py-1" x-data="modalHandler()">
   <h1 class="text-2xl font-bold mb-4">Manage Users</h1>
 
-  <!-- Baris Search & Show Entries -->
   <div class="flex justify-between items-center mb-4">
-    <!-- Search Bar (kiri) -->
+
     <div>
       <input
         type="text"
@@ -20,7 +37,7 @@
         class="w-72 px-4 py-2 border border-gray-300 rounded-md font-medium focus:outline-none"
       />
     </div>
-    <!-- Dropdown Show Entries (kanan) -->
+
     <div class="flex items-center">
       <label for="entriesPerPage" class="text-sm text-gray-600 mr-2"
         >Show</label
@@ -457,7 +474,7 @@
             )}`
           );
         },
-        // Function to check if any changes have been made
+   
         hasChanged() {
           return (
             this.fullName !== this.originalData.fullName ||
@@ -478,14 +495,13 @@
           this.phone = dataset.phone;
           this.role = dataset.role;
           this.approved = dataset.approved;
-          this.deviceId = dataset.deviceId; // Example: "123", "-", or "" if not available
+          this.deviceId = dataset.deviceId; 
 
-          // Normalize deviceId: if empty or "-", set to "none"
           if (!this.deviceId || this.deviceId === "-") {
             this.deviceId = "none";
           }
 
-          // Store the original data snapshot
+
           this.originalData = {
             fullName: this.fullName,
             userName: this.userName,
@@ -503,23 +519,23 @@
             this.deviceId
           );
 
-          // Manually synchronize the device_id select field.
+
           const selectField = document.querySelector(
             'select[name="device_id"]'
           );
           if (selectField) {
-            // Check if an option for this deviceId already exists.
+ 
             const optionExists = Array.from(selectField.options).some(
               (option) => option.value === this.deviceId
             );
-            // If not, and deviceId is valid (not 'none'), add a new option.
+   
             if (!optionExists && this.deviceId !== "none") {
               let newOption = document.createElement("option");
               newOption.value = this.deviceId;
               newOption.text = this.deviceId;
               selectField.add(newOption);
             }
-            // Set the dropdown value to deviceId (or 'none')
+
             selectField.value = this.deviceId;
           }
           this.showModal = true;

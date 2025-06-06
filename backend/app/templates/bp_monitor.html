@@ -1,231 +1,891 @@
 {% extends "base.html" %} {% block content %}
-<div class="px-5 py-1">
-  <h1 class="text-2xl font-bold mb-4">Dashboard Monitor</h1>
+<style>
+  /* Transition for main content container on initial load */
+  .main-content.initial-load {
+    opacity: 0;
+    animation: fadeIn 0.5s ease-in forwards;
+  }
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+</style>
 
-  <!-- Main Flex Layout -->
-  <div class="flex flex-col md:flex-row gap-8 w-full max-w-10xl">
-    <!-- Left Column with Cards and Gauges -->
-    <div class="flex flex-col space-y-8 w-full max-w-10xl">
-      <!-- Health Status Overview Section -->
-      <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
-        <!-- Timestamp Section -->
+<!-- Flash Messages Container -->
+<div class="w-full max-w-3xl mx-auto px-4">
+  {% with messages = get_flashed_messages(with_categories=true,
+  category_filter=['success', 'warning', 'error', 'attention']) %} {% if
+  messages %}
+  <div class="mb-4">
+    {% for category, message in messages %}
+    <div
+      class="flash-message p-3 rounded-lg text-center font-semibold {% if category == 'success' %} bg-green-100 border border-green-400 text-green-700 {% elif category == 'warning' %} bg-yellow-100 border border-yellow-400 text-yellow-700 {% elif category == 'error' %} bg-red-100 border border-red-400 text-red-700 {% elif category == 'attention' %} bg-gray-100 border border-gray-400 text-gray-700 {% endif %}"
+      role="alert"
+    >
+      <span class="block sm:inline">{{ message }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %} {% endwith %}
+</div>
+
+<!-- Main Content Container -->
+<div class="px-5 py-1 main-content initial-load">
+  <h1 class="text-xl sm:text-2xl font-bold mb-4">Monitor Dashboard</h1>
+
+  <!-- Connect to Device Button -->
+  <div class="mb-4">
+    <button
+      id="connectBtn"
+      class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-sky-500 to-cyan-500 text-white font-semibold py-1.5 px-3 sm:py-2 sm:px-5 rounded-full shadow-md hover:from-sky-600 hover:to-cyan-600 focus:outline-none transition-all duration-300"
+    >
+      <i class="fas fa-plug animate-pulse text-sm sm:text-base"></i>
+      Connect to Device
+    </button>
+  </div>
+
+  <!-- Start Measurement Button -->
+  <button
+    id="startMeasurementBtn"
+    class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-lime-500 to-green-500 text-white font-semibold py-1.5 px-3 sm:py-2 sm:px-5 rounded-full shadow-md hover:from-lime-600 hover:to-green-600 focus:outline-none transition-all duration-300 mb-4 hidden"
+  >
+    <i class="fas fa-heartbeat animate-bounce text-sm sm:text-base"></i>
+    Start Measurement
+  </button>
+
+  <h2 class="text-lg sm:text-lg font-semibold mt-7">
+    Latest Measurement Results
+  </h2>
+
+  <!-- Main Layout -->
+  <div class="mt-3 space-y-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div
+        class="bg-blue-400 hover:bg-blue-500 transition-colors duration-300 rounded-xl shadow-md p-4 text-white flex flex-col items-center"
+      >
+        <i class="fas fa-clock text-xl sm:text-2xl opacity-90"></i>
+        <h3 class="text-xs sm:text-sm font-semibold mt-2">Timestamp</h3>
+        <p class="text-base sm:text-lg font-bold" id="currentDatetime">
+          {{ data.timestamp.strftime('%d-%m-%Y, %H:%M:%S WIB') if data else
+          'N/A' }}
+        </p>
+      </div>
+      <div
+        class="bg-pink-200 hover:bg-pink-300 transition-colors duration-300 rounded-xl shadow-md p-4 text-pink-800 flex flex-col items-center"
+      >
+        <i class="fas fa-heart text-xl sm:text-2xl opacity-90"></i>
+        <h3 class="text-xs sm:text-sm font-semibold mt-2">Pulse Pressure</h3>
+        <p class="text-base sm:text-lg font-bold" id="pulsePressure">
+          {{ (data.systolic - data.diastolic) if data else 'N/A' }} mmHg
+        </p>
+      </div>
+      <div
+        class="bg-purple-200 hover:bg-purple-300 transition-colors duration-300 rounded-xl shadow-md p-4 text-purple-800 flex flex-col items-center"
+      >
+        <i class="fas fa-tachometer-alt text-xl sm:text-2xl opacity-90"></i>
+        <h3 class="text-xs sm:text-sm font-semibold mt-2">
+          Mean Arterial Pressure
+        </h3>
+        <p class="text-base sm:text-lg font-bold" id="map">
+          {{ ((data.systolic + 2 * data.diastolic) / 3) | int if data else 'N/A'
+          }} mmHg
+        </p>
+      </div>
+      <div
+        class="bg-teal-200 hover:bg-teal-300 transition-colors duration-300 rounded-xl shadow-md p-4 text-teal-800 flex flex-col items-center"
+      >
+        <i class="fas fa-balance-scale text-xl sm:text-2xl opacity-90"></i>
+        <h3 class="text-xs sm:text-sm font-semibold mt-2">Sys/Dia Ratio</h3>
+        <p class="text-base sm:text-lg font-bold" id="ratio">
+          {{ (data.systolic / data.diastolic) | round(1) if data else 'N/A' }}
+        </p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      {% set status = data and (data.systolic < 90 or data.diastolic < 60 and
+      'Hypotension' or (data.systolic >= 160 or data.diastolic >= 100) and
+      'Stage 2 Hypertension' or (data.systolic >= 140 or data.diastolic >= 90)
+      and 'Stage 1 Hypertension' or (data.systolic >= 120 or data.diastolic >=
+      80) and 'Prehypertension' or 'Normal') or 'N/A' %}
+      <div class="lg:col-span-2 flex">
         <div
-          class="relative bg-blue-400 hover:bg-blue-500 transition-colors duration-300 rounded-3xl shadow-lg p-6 text-white flex flex-col items-center justify-center"
+          class="bg-white border border-gray-100 rounded-xl shadow-sm lg:p-6 p-4 flex flex-col items-center justify-end w-full h-full"
         >
-          <i class="fas fa-clock text-4xl mb-4 opacity-90"></i>
-          <h3 class="text-lg font-semibold mb-1">Timestamp</h3>
-          <p
-            class="text-2xl font-extrabold mt-1 text-center"
-            id="currentDatetime"
-          ></p>
+          <div class="text-center mb-2">
+            <p class="text-sm sm:text-base font-semibold text-gray-800">
+              AVG. BLOOD PRESSURE =
+              <span
+                class="text-sm sm:text-base font-semibold text-gray-800"
+                id="avgBloodPressure"
+              >
+                {{ data.systolic if data else 'N/A' }}/{{ data.diastolic if data
+                else 'N/A' }} mmHg
+              </span>
+            </p>
+            <p
+              id="bpStatus"
+              class="text-sm sm:text-base font-semibold mb-4"
+              style="{% if status == 'Hypotension' %}color: rgba(54, 162, 235, 1);{% elif status == 'Normal' %}color: rgba(75, 192, 192, 1);{% elif status == 'Prehypertension' %}color: rgba(255, 159, 64, 1);{% elif status == 'Stage 1 Hypertension' %}color: rgba(255, 99, 132, 1);{% elif status == 'Stage 2 Hypertension' %}color: rgba(255, 99, 132, 1);{% else %}color: #6B7280;{% endif %}"
+            >
+              {{ status }}
+            </p>
+          </div>
+          <div class="grid grid-cols-2 gap-4 w-full">
+            <div class="flex flex-col items-center">
+              <h3 class="text-sm font-bold text-gray-800 mb-0">Systolic</h3>
+              <canvas
+                id="systolicChart"
+                class="w-full sm:max-w-[280px] h-[140px] sm:h-[180px]"
+              ></canvas>
+            </div>
+            <div class="flex flex-col items-center">
+              <h3 class="text-sm font-bold text-gray-800 mb-0">Diastolic</h3>
+              <canvas
+                id="diastolicChart"
+                class="w-full sm:max-w-[280px] h-[140px] sm:h-[180px]"
+              ></canvas>
+            </div>
+          </div>
+          <div class="mt-4 flex flex-wrap justify-center gap-6">
+            <div class="flex items-center gap-2">
+              <span
+                class="w-4 h-4 rounded-sm"
+                style="background-color: rgba(54, 162, 235, 1)"
+              ></span>
+              <span class="text-sm font-medium text-gray-700">Hypotension</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span
+                class="w-4 h-4 rounded-sm"
+                style="background-color: rgba(75, 192, 192, 1)"
+              ></span>
+              <span class="text-sm font-medium text-gray-700">Normal</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span
+                class="w-4 h-4 rounded-sm"
+                style="background-color: rgba(255, 159, 64, 1)"
+              ></span>
+              <span class="text-sm font-medium text-gray-700"
+                >Prehypertension</span
+              >
+            </div>
+            <div class="flex items-center gap-2">
+              <span
+                class="w-4 h-4 rounded-sm"
+                style="background-color: rgba(255, 99, 132, 0.8)"
+              ></span>
+              <span class="text-sm font-medium text-gray-700"
+                >Stage 1 Hypertension</span
+              >
+            </div>
+            <div class="flex items-center gap-2">
+              <span
+                class="w-4 h-4 rounded-sm"
+                style="background-color: rgba(255, 99, 132, 1)"
+              ></span>
+              <span class="text-sm font-medium text-gray-700"
+                >Stage 2 Hypertension</span
+              >
+            </div>
+          </div>
         </div>
-
-        <!-- Avg Blood Pressure Section -->
         <div
-          class="relative bg-yellow-400 hover:bg-yellow-500 transition-colors duration-300 rounded-3xl shadow-lg p-6 text-white flex flex-col items-center justify-center"
-        >
-          <i
-            class="fa-solid fa-hand-holding-droplet text-4xl mb-4 opacity-90"
-          ></i>
-          <h3 class="text-lg text-center font-semibold mb-1">
-            Average Blood Pressure
-          </h3>
-          <p class="text-2xl font-extrabold mt-1">124 / 82 mmHg</p>
-          <p class="text-xl font-extrabold mt-1">Status: Normal</p>
-        </div>
+          id="combinedLegend"
+          class="mt-4 flex flex-wrap justify-center gap-6"
+        ></div>
+      </div>
 
-        <!-- Heart Rate Section -->
+      {% if data and data.pulse_rate %} {% if data.pulse_rate < 60 %} {% set
+      hrStatus = "Bradycardia" %} {% set hrColor = "rgba(54, 162, 235, 1)" %} {%
+      elif data.pulse_rate > 100 %} {% set hrStatus = "Tachycardia" %} {% set
+      hrColor = "rgba(255, 99, 132, 1)" %} {% else %} {% set hrStatus = "Normal"
+      %} {% set hrColor = "rgba(75, 192, 192, 1)" %} {% endif %} {% else %} {%
+      set hrStatus = "N/A" %} {% set hrColor = "#6B7280" %} {% endif %}
+      <div class="lg:col-span-1 flex">
         <div
-          class="relative bg-green-400 hover:bg-green-500 transition-colors duration-300 rounded-3xl shadow-lg p-6 text-white flex flex-col items-center justify-center"
+          class="bg-white border border-gray-100 rounded-xl shadow-sm lg:p-6 p-4 flex flex-col items-center justify-end w-full h-full"
         >
-          <i class="fas fa-heartbeat text-4xl mb-4 opacity-90"></i>
-          <h3 class="text-lg font-semibold mb-1">Heart Rate</h3>
-          <p class="text-2xl font-extrabold mt-1">72 BPM</p>
-          <p class="text-xl font-extrabold mt-1">Status: Normal</p>
-        </div>
-
-        <!-- Pulse Pressure Section -->
-        <div
-          class="relative bg-red-400 hover:bg-red-500 transition-colors duration-300 rounded-3xl shadow-lg p-6 text-white flex flex-col items-center justify-center"
-        >
-          <i class="fas fa-heart text-4xl mb-4 opacity-90"></i>
-          <h3 class="text-lg font-semibold mb-1">Pulse Pressure</h3>
-          <p class="text-2xl font-extrabold mt-1">42 mmHg</p>
-        </div>
-
-        <!-- Mean Arterial Pressure Section -->
-        <div
-          class="relative bg-purple-400 hover:bg-purple-500 transition-colors duration-300 rounded-3xl shadow-lg p-6 text-white flex flex-col items-center justify-center"
-        >
-          <i class="fas fa-tachometer-alt text-4xl mb-4 opacity-90"></i>
-          <h3 class="text-lg text-center font-semibold mb-1">
-            Mean Arterial Pressure
-          </h3>
-          <p class="text-2xl font-extrabold mt-1">96 mmHg</p>
-        </div>
-
-        <!-- Systolic to Diastolic Ratio Section -->
-        <div
-          class="relative bg-teal-400 hover:bg-teal-500 transition-colors duration-300 rounded-3xl shadow-lg p-6 text-white flex flex-col items-center justify-center"
-        >
-          <i class="fas fa-balance-scale text-4xl mb-4 opacity-90"></i>
-          <h3 class="text-lg text-center font-semibold mb-1">
-            Systolic/Diastolic Ratio
-          </h3>
-          <p class="text-2xl font-extrabold mt-1">1.5</p>
+          <div class="text-center mb-2">
+            <p class="text-sm sm:text-base font-semibold text-gray-800">
+              PULSE
+            </p>
+            <p
+              id="hrStatus"
+              class="text-sm sm:text-base font-semibold mb-4"
+              style="{% if hrStatus == 'Bradycardia' %}color: rgba(54, 162, 235, 1);{% elif hrStatus == 'Normal' %}color: rgba(75, 192, 192, 1);{% elif hrStatus == 'Tachycardia' %}color: rgba(255, 99, 132, 1);{% else %}color: #6B7280;{% endif %}"
+            >
+              {{ hrStatus }}
+            </p>
+          </div>
+          <h3 class="text-sm font-bold text-gray-800 mb-0">Heart Rate</h3>
+          <canvas
+            id="heartRateChart"
+            class="w-full sm:max-w-[280px] h-[140px] sm:h-[180px] mt-4"
+          ></canvas>
+          <div class="mt-4 flex flex-wrap justify-center gap-6">
+            <div class="flex items-center gap-2">
+              <span
+                class="w-4 h-4 rounded-sm"
+                style="background-color: rgba(54, 162, 235, 1)"
+              ></span>
+              <span class="text-sm font-medium text-gray-700">Bradycardia</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span
+                class="w-4 h-4 rounded-sm"
+                style="background-color: rgba(75, 192, 192, 1)"
+              ></span>
+              <span class="text-sm font-medium text-gray-700">Normal</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span
+                class="w-4 h-4 rounded-sm"
+                style="background-color: rgba(255, 99, 132, 1)"
+              ></span>
+              <span class="text-sm font-medium text-gray-700">Tachycardia</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Gauge Charts Section -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="lg:col-span-3">
         <div
-          class="bg-white hover:shadow-xl transition-shadow duration-300 rounded-xl p-4 flex flex-col items-center"
+          class="bg-white border border-gray-100 rounded-xl shadow-sm p-4 lg:p-6 h-[250px] sm:h-[300px] lg:h-[350px]"
         >
-          <h2 class="text-md font-bold mb-3 text-gray-800">
-            Systolic Pressure
-          </h2>
-          <canvas id="systolicChart" width="140" height="80"></canvas>
-        </div>
-        <div
-          class="bg-white hover:shadow-xl transition-shadow duration-300 rounded-xl p-4 flex flex-col items-center"
-        >
-          <h2 class="text-md font-bold mb-3 text-gray-800">
-            Diastolic Pressure
-          </h2>
-          <canvas id="diastolicChart" width="140" height="80"></canvas>
-        </div>
-        <div
-          class="bg-white hover:shadow-xl transition-shadow duration-300 rounded-xl p-4 flex flex-col items-center"
-        >
-          <h2 class="text-md font-bold mb-3 text-gray-800">Heart Rate</h2>
-          <canvas id="heartRateChart" width="140" height="80"></canvas>
+          <h3
+            class="text-base sm:text-lg font-semibold text-center text-gray-800 mb-3"
+          >
+            Blood Pressure & Heart Rate Trend
+          </h3>
+          <canvas id="trendChart" class="w-full h-full mb-5"></canvas>
         </div>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- Include Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
+<!-- Uploading Overlay (Updated to match CVD Predict style) -->
+<div
+  id="predictOverlay"
+  class="fixed inset-0 hidden z-[999] bg-black bg-opacity-60 flex items-center justify-center"
+>
+  <div class="flex flex-col items-center space-y-4 text-white">
+    <svg
+      class="animate-spin h-10 w-10"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+    >
+      <circle
+        class="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        stroke-width="4"
+      ></circle>
+      <path
+        class="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+      ></path>
+    </svg>
+    <p class="text-lg font-semibold">Processing… Please wait</p>
+  </div>
+</div>
 
-  <script>
-    // Update DateTime
-    function updateDateTime() {
-      const now = new Date();
-      const optionsTime = {
-        hour: "numeric",
-        minute: "numeric",
-        second: "numeric",
-        hour12: false,
-        timeZone: "Asia/Jakarta",
-      };
-      const datetimeString = `${String(now.getDate()).padStart(
-        2,
-        "0"
-      )} ${now.toLocaleString("default", {
-        month: "short",
-      })} ${now.getFullYear()}, ${now.toLocaleTimeString(
-        "en-US",
-        optionsTime
-      )} WIB`;
-      document.getElementById("currentDatetime").innerText = datetimeString;
-    }
-    setInterval(updateDateTime, 1000);
-    updateDateTime();
+<script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
+<script>
+          // Add transition handling
+          document.addEventListener("DOMContentLoaded", function () {
+            const mainContent = document.querySelector(".main-content");
+            if (mainContent) {
+              mainContent.addEventListener("animationend", () => {
+                mainContent.classList.remove("initial-load");
+              });
+            }
+          });
 
-    // Needle plugin
-    const gaugeNeedle = {
-      id: "gaugeNeedle",
-      afterDatasetsDraw(chart) {
-        const ctx = chart.ctx;
-        const xCenter = chart.getDatasetMeta(0).data[0].x;
-        const yCenter = chart.getDatasetMeta(0).data[0].y;
-        const outerRadius = chart.getDatasetMeta(0).data[0].outerRadius;
-        const innerRadius = chart.getDatasetMeta(0).data[0].innerRadius;
-        const widthSlice = (outerRadius - innerRadius) / 2;
-        const radius = 10;
-        const needleValue = chart.data.datasets[0].needleValue;
+          const state = {
+            isConnected: false,
+            isMeasuring: false,
+            latestData: null,
+            trendData: {
+              labels: [],
+              systolic: [],
+              diastolic: [],
+              pulse_rate: []
+            }
+          };
 
-        // Get the total data to calculate the angle for the needle
-        const dataTotal = chart.data.datasets[0].data.reduce(
-          (a, b) => a + b,
-          0
-        );
-        const circumference =
-          (chart.getDatasetMeta(0).data[0].circumference / Math.PI) *
-          (needleValue / dataTotal);
-        const angle = circumference + 1.8;
+          const utils = {
+            showOverlay(message) {
+              const overlay = document.getElementById('predictOverlay');
+              const overlayMessage = overlay.querySelector('p');
+              overlayMessage.textContent = message;
+              overlay.classList.remove('hidden');
+            },
 
-        ctx.save();
-        ctx.translate(xCenter, yCenter);
-        ctx.rotate(Math.PI * angle);
-        ctx.beginPath();
-        ctx.strokeStyle = "#7b7b7b"; // softer grey
-        ctx.fillStyle = "#7b7b7b";
-        ctx.lineWidth = 1;
-        ctx.moveTo(0 - radius, 0);
-        ctx.lineTo(0, 0 - innerRadius - widthSlice);
-        ctx.lineTo(0 + radius, 0);
-        ctx.closePath();
-        ctx.stroke();
-        ctx.fill();
-        ctx.restore();
-      },
-    };
+            hideOverlay() {
+              document.getElementById('predictOverlay').classList.add('hidden');
+            },
 
-    // Render Chart Function
-    const renderChart = (chartId, needleValue, type) => {
-      const data = {
-        labels:
-          type === "Heart Rate"
-            ? ["Bradycardia", "Normal", "Tachycardia"]
-            : ["Hypotension", "Normal", "Prehypertension", "Hypertension"],
+            validateData(data) {
+              return data &&
+                typeof data.systolic === 'number' && data.systolic > 0 &&
+                typeof data.diastolic === 'number' && data.diastolic > 0 &&
+                typeof data.pulse_rate === 'number' && data.pulse_rate > 0 &&
+                data.timestamp;
+            },
+
+            getBPStatus(systolic, diastolic) {
+              if (systolic < 90 || diastolic < 60) return 'Hypotension';
+              if (systolic >= 160 || diastolic >= 100) return 'Stage 2 Hypertension';
+              if (systolic >= 140 || diastolic >= 90) return 'Stage 1 Hypertension';
+              if (systolic >= 120 || diastolic >= 80) return 'Prehypertension';
+              return 'Normal';
+            },
+
+            getHRStatus(pulseRate) {
+              if (!pulseRate) return 'N/A';
+              return pulseRate < 60 ? 'Bradycardia' :
+                     pulseRate > 100 ? 'Tachycardia' : 'Normal';
+            },
+
+            formatTimestamp(timestamp) {
+              const parts = timestamp.split(', ');
+              const date = parts[0];
+              const timeParts = parts[1].split(':');
+              const time = `${timeParts[0]}:${timeParts[1]} ${timeParts[2].split(' ')[1]}`;
+              return `${date}\n${time}`;
+            }
+          };
+
+          const gaugeNeedle = {
+            id: "gaugeNeedle",
+            afterDatasetsDraw(chart) {
+              const ctx = chart.ctx;
+              const meta = chart.getDatasetMeta(0).data[0];
+              const xCenter = meta.x;
+              const yCenter = meta.y;
+              const outerRadius = meta.outerRadius;
+              const innerRadius = meta.innerRadius;
+              const widthSlice = (outerRadius - innerRadius) / 2;
+              const radius = 10;
+              const needleValue = chart.data.datasets[0].needleValue || 0;
+              const data = chart.data.datasets[0].data;
+              const minValue = data[0];
+              const maxValue = data[data.length - 1];
+
+              const proportion = (needleValue - minValue) / (maxValue - minValue);
+              const angle = proportion * Math.PI - Math.PI / 2;
+
+              ctx.save();
+              ctx.translate(xCenter, yCenter);
+              ctx.rotate(angle);
+              ctx.beginPath();
+              ctx.strokeStyle = "#7b7b7b";
+              ctx.fillStyle = "#7b7b7b";
+              ctx.lineWidth = 1;
+              ctx.moveTo(0 - radius, 0);
+              ctx.lineTo(0, 0 - innerRadius - widthSlice);
+              ctx.lineTo(0 + radius, 0);
+              ctx.closePath();
+              ctx.stroke();
+              ctx.fill();
+              ctx.restore();
+            }
+          };
+
+          const centerTextPlugin = {
+            id: "centerText",
+            afterDatasetsDraw(chart) {
+              const ctx = chart.ctx;
+              const meta = chart.getDatasetMeta(0).data[0];
+              const xCenter = meta.x;
+              const yCenter = meta.y;
+              const canvasHeight = chart.canvas.height;
+
+              const needleValue = chart.data.datasets[0].needleValue || 0;
+              const type = chart.data.datasets[0].label;
+              const text = type === "Heart Rate" ? `${needleValue} BPM` : `${needleValue} mmHg`;
+
+              const fontSize = canvasHeight < 120 ? 12 : canvasHeight < 150 ? 14 : 16;
+              const offset = canvasHeight < 120 ? 15 : 20;
+
+              ctx.save();
+              ctx.font = `bold ${fontSize}px Poppins`;
+              ctx.fillStyle = "#333";
+              ctx.textAlign = "center";
+              ctx.textBaseline = "middle";
+              ctx.fillText(text, xCenter, yCenter + offset);
+              ctx.restore();
+            }
+          };
+
+          const initializeGaugeChart = (chartId, type) => {
+            const data = {
+              labels: type === "Heart Rate"
+                ? ["Bradycardia", "Normal", "Tachycardia"]
+                : ["Hypotension", "Normal", "Prehypertension", "Stage 1 Hypertension", "Stage 2 Hypertension"],
+              datasets: [{
+                label: type,
+                data: type === "Heart Rate"
+                  ? [40, 100, 140]
+                  : type === "Systolic"
+                    ? [70, 120, 140, 160, 200]
+                    : [40, 80, 90, 100, 120],
+                backgroundColor: type === "Heart Rate"
+                  ? ["rgba(54, 162, 235, 1)", "rgba(75, 192, 192, 1)", "rgba(255, 99, 132, 1)"]
+                  : ["rgba(54, 162, 235, 1)", "rgba(75, 192, 192, 1)", "rgba(255, 159, 64, 1)",
+                     "rgba(255, 99, 132, 0.8)", "rgba(255, 99, 132, 1)"],
+                needleValue: 0,
+                circumference: 180,
+                rotation: 270,
+                cutout: "70%",
+              }],
+            };
+
+            const config = {
+              type: "doughnut",
+              data: data,
+              options: {
+                rotation: 180,
+                circumference: 180,
+                aspectRatio: window.innerWidth < 400
+                  ? 1.2
+                  : window.innerWidth < 640
+                    ? 1.5
+                    : 1.8,
+                plugins: {
+                  legend: { display: false },
+                  tooltip: {
+                    enabled: true,
+                    callbacks: {
+                      label: (context) => {
+                        const needleVal = context.chart.data.datasets[0].needleValue || 0;
+                        const label = context.chart.data.datasets[0].label;
+                        const suffix = label === "Heart Rate" ? " BPM" : " mmHg";
+                        return `${label}: ${needleVal}${suffix}`;
+                      }
+                    }
+                  }
+                },
+                hover: {
+                  mode: 'nearest',
+                  intersect: true
+                }
+              },
+              plugins: [gaugeNeedle, centerTextPlugin],
+            };
+
+            return new Chart(document.getElementById(chartId), config);
+          };
+
+  const initializeTrendChart = () => {
+    const ctx = document.getElementById('trendChart').getContext('2d');
+    return new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: state.trendData.labels,
         datasets: [
           {
-            label: type,
-            data:
-              type === "Heart Rate"
-                ? [50, 60, 100] // Rentang Heart Rate
-                : type === "Systolic"
-                ? [90, 110, 120, 140] // Rentang Systolic
-                : [60, 70, 80, 90], // Rentang Diastolic
-            backgroundColor:
-              type === "Heart Rate"
-                ? [
-                    "rgba(54, 162, 235, 0.6)", // Bradycardia
-                    "rgba(75, 192, 192, 0.6)", // Normal
-                    "rgba(255, 99, 132, 0.6)", // Tachycardia
-                  ]
-                : [
-                    "rgba(54, 162, 235, 0.6)", // Hypotension
-                    "rgba(75, 192, 192, 0.6)", // Normal
-                    "rgba(255, 159, 64, 0.6)", // Prehypertension
-                    "rgba(255, 99, 132, 0.6)", // Hypertension
-                  ],
-            needleValue: needleValue, // Nilai jarum
-            circumference: 180,
-            rotation: 270,
-            cutout: "70%",
+            label: 'Systolic (mmHg)',
+            data: state.trendData.systolic,
+            borderColor: 'rgba(255, 99, 132, 1)',
+            backgroundColor: 'rgba(255, 99, 132, 0.1)',
+            pointBackgroundColor: 'rgba(255, 99, 132, 1)',
+            pointBorderColor: '#ffffff',
+            pointBorderWidth: 3,
+            pointRadius: 6,
+            pointHoverRadius: 8,
+            borderWidth: 4,
+            tension: 0.4,
+            fill: false
           },
-        ],
-      };
-
-      const config = {
-        type: "doughnut",
-        data: data,
-        options: {
-          aspectRatio: 1.6,
-          plugins: { legend: { display: true, position: "bottom" } },
+          {
+            label: 'Diastolic (mmHg)',
+            data: state.trendData.diastolic,
+            borderColor: 'rgba(54, 162, 235, 1)',
+            backgroundColor: 'rgba(54, 162, 235, 0.1)',
+            pointBackgroundColor: 'rgba(54, 162, 235, 1)',
+            pointBorderColor: '#ffffff',
+            pointBorderWidth: 3,
+            pointRadius: 6,
+            pointHoverRadius: 8,
+            borderWidth: 4,
+            tension: 0.4,
+            fill: false
+          },
+          {
+            label: 'Heart Rate (BPM)',
+            data: state.trendData.pulse_rate,
+            borderColor: 'rgba(75, 192, 192, 1)',
+            backgroundColor: 'rgba(75, 192, 192, 0.1)',
+            pointBackgroundColor: 'rgba(75, 192, 192, 1)',
+            pointBorderColor: '#ffffff',
+            pointBorderWidth: 3,
+            pointRadius: 6,
+            pointHoverRadius: 8,
+            borderWidth: 4,
+            tension: 0.4,
+            fill: false
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'top',
+            labels: {
+              font: {
+                size: 14,
+                family: 'Poppins, sans-serif',
+                weight: 'bold'
+              },
+              padding: 15,
+              usePointStyle: true,
+              boxWidth: 10,
+              boxHeight: 10
+            }
+          },
+          tooltip: {
+            mode: 'index',
+            intersect: false,
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            titleFont: { size: 14, weight: 'bold', family: 'Poppins, sans-serif' },
+            bodyFont: { size: 12, family: 'Poppins, sans-serif' },
+            padding: 12,
+            cornerRadius: 6,
+            callbacks: {
+              label: function(context) {
+                return `${context.dataset.label}: ${context.parsed.y}`;
+              }
+            }
+          }
         },
-        plugins: [gaugeNeedle],
-      };
+        scales: {
+          x: {
+            title: {
+              display: false, // Enable x-axis title
+              text: 'Date and Time',
+              font: { size: 14, weight: 'bold', family: 'Poppins, sans-serif' },
+              color: '#333'
+            },
+            grid: {
+              display: false
+            },
+            ticks: {
+              display: false, // Enable x-axis ticks (labels)
+              font: { size: 12, family: 'Poppins, sans-serif' },
+              color: '#333',
+              maxRotation: 45, // Rotate labels for better readability
+              minRotation: 45,
+              maxTicksLimit: 8,
+              callback: function(value, index, values) {
+                return this.getLabelForValue(value).split('\n');
+              }
+            }
+          },
+          y: {
+            title: {
+              display: false,
+              text: 'Value',
+              font: { size: 14, weight: 'bold', family: 'Poppins, sans-serif' },
+              color: '#333'
+            },
+            grid: {
+              color: 'rgba(0, 0, 0, 0.2)',
+              borderDash: [5, 5],
+              tickBorderDash: [5, 5],
+              drawTicks: true
+            },
+            ticks: {
+              font: { size: 10, family: 'Poppins, sans-serif' },
+              color: '#333',
+              stepSize: 40,
+              padding: 15
+            },
+            suggestedMin: 0,
+            suggestedMax: 200
+          }
+        },
+        elements: {
+          line: {
+            borderCapStyle: 'round',
+            borderJoinStyle: 'round'
+          }
+        },
+        layout: {
+          padding: {
+            bottom: 30
+          }
+        }
+      }
+    });
+  };
 
-      return new Chart(document.getElementById(chartId), config);
+          const updateChart = (chart, needleValue) => {
+            if (!chart || !needleValue || isNaN(needleValue)) return;
+            chart.data.datasets[0].needleValue = needleValue;
+            chart.update();
+          };
+
+    const updateTrendChart = (data) => {
+      if (!utils.validateData(data)) return;
+
+      // Append new data to the end of the arrays
+      state.trendData.labels.push(utils.formatTimestamp(data.timestamp));
+      state.trendData.systolic.push(data.systolic);
+      state.trendData.diastolic.push(data.diastolic);
+      state.trendData.pulse_rate.push(data.pulse_rate);
+
+      // Remove oldest data if exceeding 30 points
+      if (state.trendData.labels.length > 30) {
+        state.trendData.labels.shift();
+        state.trendData.systolic.shift();
+        state.trendData.diastolic.shift();
+        state.trendData.pulse_rate.shift();
+      }
+
+      // Update chart with data in ascending order (oldest to newest)
+      charts.trend.data.labels = [...state.trendData.labels];
+      charts.trend.data.datasets[0].data = [...state.trendData.systolic];
+      charts.trend.data.datasets[1].data = [...state.trendData.diastolic];
+      charts.trend.data.datasets[2].data = [...state.trendData.pulse_rate];
+      charts.trend.update();
     };
+   const updateDashboard = (records) => {
+    console.log('Records received:', records);
+    if (!records || records.length === 0 || !utils.validateData(records[0])) {
+      console.warn('Invalid or missing data');
+      return;
+    }
 
-    // Render each chart with different needle values
-    renderChart("systolicChart", 120, "Systolic"); // Posisi jarum untuk Systolic
-    renderChart("diastolicChart", 75, "Diastolic"); // Posisi jarum untuk Diastolic
-    renderChart("heartRateChart", 85, "Heart Rate"); // Posisi jarum untuk Heart Rate
-  </script>
-</div>
+    const latestData = records[0];
+    state.latestData = latestData;
+
+    document.getElementById('currentDatetime').textContent = latestData.timestamp;
+    document.getElementById('pulsePressure').textContent = `${latestData.systolic - latestData.diastolic} mmHg`;
+    document.getElementById('map').textContent = `${Math.round((latestData.systolic + 2 * latestData.diastolic) / 3)} mmHg`;
+    document.getElementById('ratio').textContent = (latestData.systolic / latestData.diastolic).toFixed(1);
+    document.getElementById('avgBloodPressure').textContent = `${latestData.systolic}/${latestData.diastolic} mmHg`;
+
+    const bpStatus = utils.getBPStatus(latestData.systolic, latestData.diastolic);
+    const bpStatusElement = document.getElementById('bpStatus');
+    bpStatusElement.textContent = bpStatus;
+    bpStatusElement.style.color = bpStatus === 'Hypotension' ? 'rgba(54, 162, 235, 1)' :
+                                  bpStatus === 'Normal' ? 'rgba(75, 192, 192, 1)' :
+                                  bpStatus === 'Prehypertension' ? 'rgba(255, 159, 64, 1)' :
+                                  bpStatus === 'Stage 1 Hypertension' ? 'rgba(255, 99, 132, 0.8)' :
+                                  bpStatus === 'Stage 2 Hypertension' ? 'rgba(255, 99, 132, 1)' :
+                                  '#6B7280';
+
+    document.getElementById('hrStatus').textContent = utils.getHRStatus(latestData.pulse_rate);
+
+    updateChart(charts.systolic, latestData.systolic);
+    updateChart(charts.diastolic, latestData.diastolic);
+    updateChart(charts.heartRate, latestData.pulse_rate);
+
+    // Populate trend data in ascending order (oldest first)
+    state.trendData.labels = [];
+    state.trendData.systolic = [];
+    state.trendData.diastolic = [];
+    state.trendData.pulse_rate = [];
+
+    // Records are in descending order (newest first), so reverse them to get ascending order
+    records.reverse().forEach(data => {
+      if (utils.validateData(data)) {
+        state.trendData.labels.push(utils.formatTimestamp(data.timestamp));
+        state.trendData.systolic.push(data.systolic);
+        state.trendData.diastolic.push(data.diastolic);
+        state.trendData.pulse_rate.push(data.pulse_rate);
+      }
+    });
+
+    // Update chart with data in ascending order
+    charts.trend.data.labels = [...state.trendData.labels];
+    charts.trend.data.datasets[0].data = [...state.trendData.systolic];
+    charts.trend.data.datasets[1].data = [...state.trendData.diastolic];
+    charts.trend.data.datasets[2].data = [...state.trendData.pulse_rate];
+    charts.trend.update();
+  };
+
+          const fetchData = async () => {
+            try {
+              const response = await fetch('/bp-monitor/api/get_blood_pressure');
+              const records = await response.json();
+              console.log('Fetched records:', records);
+              if (Array.isArray(records) && records.length > 0) {
+                updateDashboard(records);
+              } else {
+                console.warn('No valid data received');
+              }
+            } catch (error) {
+              console.error('Error fetching data:', error);
+              utils.showOverlay('Error retrieving data');
+              setTimeout(utils.hideOverlay, 2000);
+            }
+          };
+
+          const handleConnect = async () => {
+            if (state.isConnected) return;
+
+            utils.showOverlay('Checking Device Connection...');
+            try {
+              const response = await fetch('/bp-monitor/check_connection', { method: 'POST' });
+              const data = await response.json();
+
+              setTimeout(() => {
+                utils.showOverlay(data.message || `Connection: ${data.connection}`);
+                setTimeout(() => {
+                  utils.hideOverlay();
+                  if (data.status === 'success' && data.connection === 'connected') {
+                    state.isConnected = true;
+                    document.getElementById('connectBtn').classList.add('hidden');
+                    document.getElementById('startMeasurementBtn').classList.remove('hidden');
+                  }
+                }, 2000);
+              }, 2000);
+            } catch (error) {
+              console.error('Error checking connection:', error);
+              utils.showOverlay('Failed to Connect');
+              setTimeout(utils.hideOverlay, 2000);
+            }
+          };
+
+          const handleStartMeasurement = async () => {
+            if (state.isMeasuring || !state.isConnected) return;
+
+            state.isMeasuring = true;
+            utils.showOverlay('Measuring Blood Pressure... Please Wait');
+
+            try {
+              await new Promise(resolve => setTimeout(resolve, 7000));
+              const response = await fetch('/bp-monitor/start_measurement', { method: 'POST' });
+              const data = await response.json();
+
+              if (data.status === 'success') {
+                utils.showOverlay('Sending data from device...');
+                const nodeRedResponse = await fetch('http://localhost:1880/start_measurement', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ device_id: data.device_id })
+                });
+                const nodeRedData = await nodeRedResponse.json();
+                console.log('Node-RED response:', nodeRedData);
+
+                if (nodeRedData.status === 'success') {
+                  utils.showOverlay('Measurement successful!');
+                  setTimeout(async () => {
+                    const response = await fetch('/bp-monitor/api/get_blood_pressure');
+                    const records = await response.json();
+                    if (Array.isArray(records) && records.length > 0) {
+                      const latestData = records[0];
+                      state.latestData = latestData;
+                      updateChart(charts.systolic, latestData.systolic);
+                      updateChart(charts.diastolic, latestData.diastolic);
+                      updateChart(charts.heartRate, latestData.pulse_rate);
+                      updateTrendChart(latestData);
+                      document.getElementById('currentDatetime').textContent = latestData.timestamp;
+                      document.getElementById('pulsePressure').textContent = `${latestData.systolic - latestData.diastolic} mmHg`;
+                      document.getElementById('map').textContent = `${Math.round((latestData.systolic + 2 * latestData.diastolic) / 3)} mmHg`;
+                      document.getElementById('ratio').textContent = (latestData.systolic / latestData.diastolic).toFixed(1);
+                      document.getElementById('avgBloodPressure').textContent = `${latestData.systolic}/${latestData.diastolic} mmHg`;
+
+                      const bpStatus = utils.getBPStatus(latestData.systolic, latestData.diastolic);
+                      const bpStatusElement = document.getElementById('bpStatus');
+                      bpStatusElement.textContent = bpStatus;
+                      bpStatusElement.style.color = bpStatus === 'Hypotension' ? 'rgba(54, 162, 235, 1)' :
+                                                    bpStatus === 'Normal' ? 'rgba(75, 192, 192, 1)' :
+                                                    bpStatus === 'Prehypertension' ? 'rgba(255, 159, 64, 1)' :
+                                                    bpStatus === 'Stage 1 Hypertension' ? 'rgba(255, 99, 132, 0.8)' :
+                                                    bpStatus === 'Stage 2 Hypertension' ? 'rgba(255, 99, 132, 1)' :
+                                                    '#6B7280';
+
+                      document.getElementById('hrStatus').textContent = utils.getHRStatus(latestData.pulse_rate);
+                    }
+                    utils.hideOverlay();
+                    state.isMeasuring = false;
+                  }, 2000);
+                } else {
+                  throw new Error('Failed to start measurement on device');
+                }
+              } else {
+                throw new Error(data.message);
+              }
+            } catch (error) {
+              console.error('Measurement Error:', error);
+              utils.showOverlay(error.message || 'Error During Measurement');
+              setTimeout(() => {
+                utils.hideOverlay();
+                state.isMeasuring = false;
+              }, 2000);
+            }
+          };
+
+          const init = () => {
+            const initialData = {
+              systolic: {{ data.systolic if data else 120 }},
+              diastolic: {{ data.diastolic if data else 75 }},
+              pulse_rate: {{ data.pulse_rate if data else 85 }},
+              timestamp: "{{ data.timestamp.strftime('%d-%m-%Y, %H:%M:%S WIB') if data else '04-06-2025, 22:36:00 WIB' }}"
+            };
+
+            if (utils.validateData(initialData)) {
+              updateDashboard([initialData]);
+            }
+
+            fetchData();
+
+            document.getElementById('connectBtn').addEventListener('click', handleConnect);
+            document.getElementById('startMeasurementBtn').addEventListener('click', handleStartMeasurement);
+
+            state.isConnected = false;
+            document.getElementById('connectBtn').classList.remove('hidden');
+            document.getElementById('startMeasurementBtn').classList.add('hidden');
+          };
+
+          window.addEventListener('resize', () => {
+            charts.systolic.destroy();
+            charts.diastolic.destroy();
+            charts.heartRate.destroy();
+            charts.systolic = initializeGaugeChart("systolicChart", "Systolic");
+            charts.diastolic = initializeGaugeChart("diastolicChart", "Diastolic");
+            charts.heartRate = initializeGaugeChart("heartRateChart", "Heart Rate");
+            if (state.latestData) {
+              updateChart(charts.systolic, state.latestData.systolic);
+              updateChart(charts.diastolic, state.latestData.diastolic);
+              updateChart(charts.heartRate, state.latestData.pulse_rate);
+            }
+          });
+
+          const charts = {
+            systolic: initializeGaugeChart("systolicChart", "Systolic"),
+            diastolic: initializeGaugeChart("diastolicChart", "Diastolic"),
+            heartRate: initializeGaugeChart("heartRateChart", "Heart Rate"),
+            trend: initializeTrendChart()
+          };
+
+          setTimeout(function () {
+              let flashMessages = document.querySelectorAll(".flash-message");
+              flashMessages.forEach(function (msg) {
+                msg.style.transition = "opacity 0.5s";
+                msg.style.opacity = "0";
+                setTimeout(() => msg.remove(), 500);
+              });
+            }, 3000);
+
+          init();
+</script>
 {% endblock %}

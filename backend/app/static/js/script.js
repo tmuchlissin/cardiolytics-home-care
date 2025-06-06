@@ -3,7 +3,6 @@ document.addEventListener("DOMContentLoaded", function () {
   const sidebar = document.getElementById("sidebar");
   const mainContent = document.querySelector(".main-content");
 
-  // Periksa status sidebar dari localStorage
   const sidebarState = localStorage.getItem("sidebarState");
 
   if (sidebarState === "hidden") {

@@ -45,9 +45,25 @@
     margin-right: 4px;
     white-space: nowrap;
   }
+
+  /* Transition for main content container on initial load */
+  .main-content.initial-load {
+    opacity: 0;
+    animation: fadeIn 0.4s ease-in forwards;
+  }
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 </style>
 
-<div class="px-5 py-1">
+<div class="px-5 py-1 main-content initial-load">
   <h1 class="text-2xl font-bold text-gray-900 mb-4">Chatbot Assistant</h1>
 
   <div class="flex justify-center items-center h-[75vh]">
@@ -104,11 +120,19 @@
 </div>
 
 <script>
-    const chatEndpoint = "{{ url_for('cardiobot.chat') }}";
+  document.addEventListener("DOMContentLoaded", function () {
+    // Remove initial-load class after animation
+    const mainContent = document.querySelector(".main-content");
+    mainContent.addEventListener("animationend", () => {
+      mainContent.classList.remove("initial-load");
+    });
+  });
 
-    function showWelcomeBubble() {
-      const chatHistory = document.getElementById("chat-history");
-      const welcomeHTML = `
+  const chatEndpoint = "{{ url_for('cardiobot.chat') }}";
+
+  function showWelcomeBubble() {
+    const chatHistory = document.getElementById("chat-history");
+    const welcomeHTML = `
       <div class="flex items-center space-x-3">
         <div class="text-green-500 text-2xl">
           <i class="fas fa-robot"></i>
@@ -119,8 +143,9 @@
             bg-gray-200
             p-4
             rounded-lg
-            shadow
-            transition-transform transform hover:scale-105
+            shadow-md
+            transition-transform transform duration-200
+            hover:scale-[1.02]
             text-left
             whitespace-normal
           ">
@@ -130,155 +155,244 @@
         </div>
       </div>`;
 
-      chatHistory.innerHTML = welcomeHTML;
-      saveChatHistory();
-    }
+    chatHistory.innerHTML = welcomeHTML;
+    saveChatHistory();
+  }
 
-    document.addEventListener("DOMContentLoaded", () => {
-      const saved = sessionStorage.getItem("chatHistory");
-      if (saved) {
-        document.getElementById("chat-history").innerHTML = saved;
-      } else {
-        showWelcomeBubble();
+  document.addEventListener("DOMContentLoaded", () => {
+    const saved = sessionStorage.getItem("chatHistory");
+    if (saved) {
+      document.getElementById("chat-history").innerHTML = saved;
+    } else {
+      showWelcomeBubble();
+    }
+  });
+
+  function saveChatHistory() {
+    const html = document.getElementById("chat-history").innerHTML;
+    sessionStorage.setItem("chatHistory", html);
+  }
+
+  function clearChatHistory() {
+    sessionStorage.removeItem("chatHistory");
+    showWelcomeBubble();
+
+    fetch("{{ url_for('cardiobot.clear_cache') }}", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    })
+      .then((res) => {
+        if (!res.ok) console.warn("Gagal clear chat_cache di server");
+        else console.log("chat_cache cleared server-side");
+      })
+      .catch((err) => console.error("Error clearing cache:", err));
+  }
+
+  document
+    .getElementById("chat-input")
+    .addEventListener("keydown", function (event) {
+      if (event.key === "Enter") {
+        sendMessage();
       }
     });
 
-    function saveChatHistory() {
-      const html = document.getElementById("chat-history").innerHTML;
-      sessionStorage.setItem("chatHistory", html);
-    }
-
-    function clearChatHistory() {
-      sessionStorage.removeItem("chatHistory");
-      showWelcomeBubble();
-
-      fetch("{{ url_for('cardiobot.clear_cache') }}", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      })
-        .then((res) => {
-          if (!res.ok) console.warn("Gagal clear chat_cache di server");
-          else console.log("chat_cache cleared server-side");
-        })
-        .catch((err) => console.error("Error clearing cache:", err));
-    }
-
-    document
-      .getElementById("chat-input")
-      .addEventListener("keydown", function (event) {
-        if (event.key === "Enter") {
-          sendMessage();
-        }
-      });
-
-    function addMessageToChat(content, isBot = false, isError = false) {
+  function addMessageToChat(content, isBot = false, isError = false, sources = [], allTopics = []) {
+    {% if document %}
       const documentTitle = {{ document.title_file|tojson }};
       const previewUrl = {{ url_for('cardiobot.preview_file', file_id=document.id)|tojson }};
-      const chatHistory = document.getElementById("chat-history");
-      const messageDiv = document.createElement("div");
-      messageDiv.classList.add("flex", isBot ? "justify-start" : "justify-end");
+    {% else %}
+      const documentTitle = '';
+      const previewUrl = '';
+    {% endif %}
 
-      const emojis = ["🎉", "🚀", "✨", "📝", "📌", "📖", "🔖"];
-      const headerEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+    const sourceDocs = [
+      {%- for doc in documents %}
+        {
+          id: {{ doc.id }},
+          title: {{ doc.title_file|tojson }},
+          previewUrl: {{ url_for('cardiobot.preview_file', file_id=doc.id)|tojson }}
+        }{{ "," if not loop.last }}
+      {%- endfor %}
+    ];
 
-      // 1) Ambil semua token halaman
-      const pageRe = /Halaman\s*([IVXLCDM\d, ]+)/gi;
-      const pages = new Set();
-      let m;
-      while ((m = pageRe.exec(content)) !== null) {
-        m[1]
-          .split(",")
-          .map((p) => p.trim())
-          .forEach((n) => pages.add(n));
-      }
+    const chatHistory = document.getElementById("chat-history");
+    const messageDiv = document.createElement("div");
+    messageDiv.classList.add("flex", isBot ? "justify-start" : "justify-end");
 
-      // 1a) Helper: konversi Romawi -> Integer
-      function romanToInt(r) {
-        const map = { I: 1, V: 5, X: 10, L: 50, C: 100, D: 500, M: 1000 };
-        let s = r.toUpperCase(),
-          total = 0;
-        for (let i = 0; i < s.length; i++) {
-          const curr = map[s[i]] || 0;
-          const next = map[s[i + 1]] || 0;
-          if (next > curr) {
-            total += next - curr;
-            i++;
-          } else total += curr;
-        }
-        return total;
-      }
+    const emojis = ["🎉", "🚀", "✨", "📝", "📌", "📖", "🔖"];
+    const headerEmoji = emojis[Math.floor(Math.random() * emojis.length)];
 
-      // 1b) Sort tokens: romawi dulu (ascending), lalu numerik (ascending)
-      function sortPages(tokens) {
-        const romans = [],
-          nums = [];
-        tokens.forEach((orig) => {
-          if (/^[ivxlcdm]+$/i.test(orig)) romans.push(orig);
-          else nums.push(orig);
-        });
-        romans.sort((a, b) => romanToInt(a) - romanToInt(b));
-        nums.sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
-        return [...romans, ...nums];
-      }
-
-    // 2) Bersihkan semua fragment Sumber lama
     let cleaned = content
       .replace(/^\s*\*?\s*Sumber:.*$/gim, "")
       .replace(/\(Sumber:.*?\)/gi, "")
       .trim();
 
-    // --- 3) Rakit HTML "Sumber" DENGAN LINK ---
+    cleaned = cleaned.replace(/^\s*\*+\s*$/gm, "");
+    cleaned = cleaned.replace(/,\s*halaman\s*\d+\)/g, "");
+    cleaned = cleaned.replace(/\.{3,}\s*\d+/g, '');
+    cleaned = cleaned.replace(/^(BAB\s+[IVXLC]+|[0-9]+\.[0-9]*)\.\s*/gm, '');
+
     let sourceLine = "";
-    if (pages.size) {
-      const ordered = sortPages([...pages]);
-      sourceLine =
-        "<br><br>" +
-        '<div class="border-t border-gray-400 mt-2 pt-2 text-sm text-gray-700">' +
-          "<strong>Sumber Referensi:</strong>\n" +
-          `<a href="${previewUrl}" target="_blank" class="italic underline hover:text-blue-800">` +
-            documentTitle +
-          "</a>" +
-          `, Halaman ${ordered.join(", ")}` +
-        "</div>";
+    if (isBot && Array.isArray(sources) && sources.length) {
+      const byFile = {};
+      sources.forEach(s => {
+        if (!byFile[s.file]) byFile[s.file] = new Set();
+        if (s.page) byFile[s.file].add(s.page);
+      });
+
+      const items = Object.entries(byFile).map(([file, pages]) => {
+        const url = sourceDocs.find(d => d.title === file)?.previewUrl || "#";
+        return `<li class="flex items-start break-words mb-2">
+          <a href="${url}" target="_blank" class="italic underline hover:text-blue-800 break-all">› ${file}</a> </li>`;
+      }).join("");
+
+      sourceLine = `<div class="border-t border-gray-400 mt-8 pt-2 text-sm text-gray-700"><strong>Dokumen Terkait:</strong><ul class="list-disc list-inside break-words max-w-[400px] mt-2 space-y-3">${items}</ul></div>`;
     }
 
-
-    // 4) Gabungkan kembali
     let full = cleaned + sourceLine;
 
-    // 5) Emoji & bold untuk header “# …”
     full = full.replace(
-      /^#\s*(.+)$/gm,
+      /^#{1,5}\s*(.+)$/gm,
       (_match, h) => `<strong>${headerEmoji} ${h.trim()}</strong>`
     );
 
-    // 6) Convert markdown → HTML
+    let initialTopicItems = "";
+    let initialTopicLines = [];
+
+    if (full.includes("Dokumen yang tersedia berisi informasi tentang:")) {
+      const parts = full.split("Dokumen yang tersedia berisi informasi tentang:");
+      const intro = parts[0].trim();
+      const topicList = parts[1].trim();
+
+      const topicLines = topicList.split("\n").filter(line => line.startsWith("-"));
+      initialTopicLines = topicLines.filter(line => !line.includes("Dan lainnya"));
+      const hasMoreLine = topicLines.find(line => line.includes("Dan lainnya"));
+      let remainingCount = 0;
+      let hasMore = false;
+
+      if (hasMoreLine) {
+        const match = hasMoreLine.match(/Dan lainnya \(\+(\d+)\)/);
+        if (match) {
+          remainingCount = parseInt(match[1], 10);
+          hasMore = true;
+        }
+      }
+
+      if (!hasMore && allTopics.length > 0) {
+        remainingCount = allTopics.length - initialTopicLines.length;
+        hasMore = remainingCount > 0;
+      }
+
+      initialTopicItems = initialTopicLines
+        .map(line => {
+          const topic = line.replace(/^-/, "").trim();
+          return `<li class="flex items-start space-x-2">
+            <span class="text-purple-500 text-lg"><i class="fas fa-heartbeat"></i></span>
+            <span class="text-gray-800">${topic}</span>
+          </li>`;
+        })
+        .join("");
+
+      let moreLink = "";
+      if (hasMore) {
+        moreLink = `<li class="flex items-start space-x-2 expand-topics-item">
+          <span class="text-purple-500 text-lg"><i class="fas fa-heartbeat"></i></span>
+          <a href="#" class="text-blue-600 hover:underline expand-topics" data-all-topics='${JSON.stringify(allTopics)}'>Dan lainnya (+${remainingCount})</a>
+        </li>`;
+      }
+
+      full = `${intro} Dokumen yang tersedia berisi informasi tentang:
+        <ul class="list-none mt-2 space-y-2 topic-list">${initialTopicItems}${moreLink}</ul>`;
+    } else {
+      const lines = full.split("\n");
+      const processedLines = lines.map(line => {
+        if (/^\d+\.\s[^:]+:/.test(line)) {
+          return line.replace(/^(\d+\.\s[^:]+:)/, "<strong>$1</strong>");
+        }
+        return line;
+      });
+      full = processedLines.join("\n");
+    }
+
     const html = full
-      .replace(/^(\d+\.\s[^:]+:)/gm, "<strong>$1</strong>")
       .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
       .replace(/\n/g, "<br>");
 
-    // 7) Render bubble
     const messageContent = `
-    <div class="flex items-center space-x-2">
-      <div class="${isBot ? "text-green-500" : "text-blue-500"} text-2xl">
-        <i class="fas ${isBot ? "fa-robot" : "fa-user"}"></i>
-      </div>
-      <div class="max-w-xs ${
-        isBot ? "bg-gray-200" : "bg-blue-600 text-white"
-      } p-3 rounded-lg shadow-md transform hover:scale-105 ${
-      isError ? "bg-red-200 text-red-800" : ""
-    }">
-        <p class="message-content">${html}</p>
-      </div>
-    </div>`;
+      <div class="flex items-center space-x-3">
+        <div class="${isBot ? "text-green-500" : "text-blue-500"} text-2xl">
+          <i class="fas ${isBot ? "fa-robot" : "fa-user"}"></i>
+        </div>
+        <div class="max-w-xs inline-block m-1 ${isBot ? "bg-gray-200" : "bg-blue-600 text-white"}
+                    p-4 rounded-lg shadow-md transform transition-transform duration-200
+                    hover:scale-[1.02] ${isError ? "bg-red-200 text-red-800" : ""}">
+          <p class="message-content">${html}</p>
+        </div>
+      </div>`;
 
     messageDiv.innerHTML = messageContent;
+
+    if (full.includes("Dokumen yang tersedia berisi informasi tentang:")) {
+      const expandLink = messageDiv.querySelector(".expand-topics");
+      if (expandLink) {
+        expandLink.addEventListener("click", (e) => {
+          e.preventDefault();
+          const allTopics = JSON.parse(expandLink.getAttribute("data-all-topics"));
+          const topicList = messageDiv.querySelector(".topic-list");
+          const expandItem = messageDiv.querySelector(".expand-topics-item");
+
+          console.log("allTopics from data-all-topics:", allTopics);
+          console.log("initialTopicLines length:", initialTopicLines.length);
+          console.log("remainingCount:", allTopics.length - initialTopicLines.length);
+          console.log("additionalTopics:", allTopics.slice(initialTopicLines.length));
+
+          if (expandItem) {
+            expandItem.remove();
+          } else {
+            console.error("expand-topics-item not found");
+          }
+
+          if (!topicList) {
+            console.error("topic-list not found");
+            return;
+          }
+
+          if (!allTopics || allTopics.length === 0) {
+            console.error("allTopics is empty or invalid from data-all-topics");
+            return;
+          }
+
+          const additionalTopics = allTopics.slice(initialTopicLines.length);
+          if (additionalTopics.length === 0) {
+            console.warn("No additional topics to display");
+            return;
+          }
+          const additionalTopicItems = additionalTopics
+            .map(topic => `
+              <li class="flex items-start space-x-2 pl-2">
+                <span class="text-purple-500 text-lg"> <i class="fas fa-heartbeat"></i></span>
+                <span class="text-gray-800 break-words">
+                  ${topic || 'Unknown Topic'}
+                </span>
+              </li>
+            `).join("");
+
+          console.log("additionalTopicItems HTML:", additionalTopicItems);
+          topicList.insertAdjacentHTML("beforeend", additionalTopicItems);
+          console.log("Added additional topics to DOM");
+          console.log("Updated topicList HTML:", topicList.innerHTML);
+
+          chatHistory.scrollTop = chatHistory.scrollHeight;
+          saveChatHistory();
+        });
+      } else {
+        console.error("expand-topics link not found");
+      }
+    }
     chatHistory.appendChild(messageDiv);
     chatHistory.scrollTop = chatHistory.scrollHeight;
     saveChatHistory();
   }
-
 
   function showTypingIndicator() {
     const chatHistory = document.getElementById("chat-history");
@@ -293,18 +407,16 @@
     icon.innerHTML = '<i class="fas fa-robot"></i>';
 
     const bubble = document.createElement("div");
-    bubble.className = "bg-gray-200 p-3 rounded-lg shadow-md inline-flex items-center";
+    bubble.className =
+      "bg-gray-200 p-3 rounded-lg shadow-md inline-flex items-center";
 
-    // Teks "Thinking" dengan styling
     const thinkingSpan = document.createElement("span");
     thinkingSpan.className = "typing-text";
     thinkingSpan.textContent = "Thinking";
 
-    // Container dot-bounce
     const dotsContainer = document.createElement("div");
     dotsContainer.className = "typing-dots";
 
-    // Tambahkan tiga dot
     for (let i = 0; i < 3; i++) {
       const dot = document.createElement("span");
       dotsContainer.appendChild(dot);
@@ -337,9 +449,6 @@
           body: JSON.stringify({ message: message }),
         });
 
-        const chatHistory = document.getElementById("chat-history");
-        chatHistory.removeChild(chatHistory.lastChild);
-
         console.log("Response status:", response.status);
 
         if (!response.ok) {
@@ -351,21 +460,40 @@
         const data = await response.json();
 
         if (data && data.answer) {
-          // hapus typing indicator sebelum menampilkan jawaban
+          await new Promise(resolve => setTimeout(resolve, 1000));
+
           const typ = document.getElementById("typing-indicator");
           if (typ) typ.remove();
 
-          addMessageToChat(data.answer, true);
+          addMessageToChat(
+            data.answer,
+            true,
+            false,
+            data.sources,
+            data.all_topics
+          );
         } else {
+          const typ = document.getElementById("typing-indicator");
+          if (typ) typ.remove();
+
           addMessageToChat(
             "Maaf, terjadi kesalahan dalam mendapatkan jawaban.",
             true,
-            true
+            true,
+            data.sources,
+            data.all_topics
           );
         }
       } catch (error) {
         console.error("Fetch error:", error);
-        addMessageToChat(`Kesalahan: ${error.message}`, true, true);
+        const typ = document.getElementById("typing-indicator");
+        if (typ) typ.remove();
+
+        addMessageToChat(
+          `Kesalahan: ${error.message}`,
+          true,
+          true
+        );
       } finally {
         chatInput.disabled = false;
       }

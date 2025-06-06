@@ -4,9 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Cardiolytics</title>
-    <!-- Tailwind CSS CDN -->
+
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- (Opsional) Font Awesome untuk ikon -->
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
@@ -22,7 +21,7 @@
       body {
         font-family: "Poppins", sans-serif;
       }
-      /* Animasi bubble mengambang */
+      /* Floating bubble animation */
       @keyframes float {
         0%,
         100% {
@@ -36,7 +35,7 @@
         animation: float 6s ease-in-out infinite;
       }
     </style>
-    <!-- Sertakan Swiper CSS -->
+
     <link
       rel="stylesheet"
       href="https://unpkg.com/swiper/swiper-bundle.min.css"
@@ -54,7 +53,6 @@
       <div
         class="container mx-auto px-6 py-4 max-w-7xl flex justify-between items-center"
       >
-        <!-- Logo dengan gambar -->
         <a href="{{ url_for('auth.landing_page') }}" class="text-xl font-bold">
           <img
             src="{{ url_for('static', filename='img/cardiolytics.png') }}"
@@ -73,13 +71,13 @@
             >Services</a
           >
           <a href="#testimoni" class="hover:text-teal-600 transition"
-            >Testimoni</a
+            >Testimonials</a
           >
           <a href="#faq" class="hover:text-teal-600 transition">FAQ</a>
           <a
             href="{{ url_for('auth.login') }}"
             class="text-teal-600 font-semibold px-4 py-2 border border-teal-600 rounded-lg hover:bg-teal-600 hover:text-white transition"
-            >Sign In</a
+            >Sign in</a
           >
         </div>
       </div>
@@ -90,7 +88,6 @@
       id="home"
       class="relative pt-32 pb-32 bg-gradient-to-r from-teal-700 to-teal-500 text-white overflow-hidden"
     >
-      <!-- Bubble Dekoratif Acak -->
       <div
         class="pointer-events-none absolute"
         style="
@@ -146,7 +143,7 @@
           animation-delay: 3s;
         "
       ></div>
-      <!-- Bubble Dekoratif Tambahan -->
+
       <div
         class="pointer-events-none absolute -top-16 -left-16 w-72 h-72 bg-teal-300 opacity-30 rounded-full blur-3xl mix-blend-multiply animate-float"
       ></div>
@@ -159,7 +156,6 @@
         style="animation-delay: 4s"
       ></div>
 
-      <!-- Swirl / Garis Dekoratif Putus-putus -->
       <div class="pointer-events-none absolute inset-0">
         <svg
           class="w-full h-full"
@@ -176,17 +172,15 @@
         </svg>
       </div>
 
-      <!-- Konten Section: flex agar teks & gambar berdampingan -->
       <div
         class="relative z-10 container mx-auto px-6 max-w-7xl flex flex-col md:flex-row items-center"
       >
-        <!-- Kolom Teks (kiri) -->
         <div class="md:w-[720px]">
           <h1 class="text-4xl md:text-5xl font-bold drop-shadow-lg">
-            Welcome to Cardiolytics Home Care
+            Cardiolytics Home Care
           </h1>
           <p class="mt-4 max-w-xl text-lg text-gray-100">
-            Comprehensive cardiovascular analytics and personalized healthcare
+            Comprehensive cardiovascular analytics and personalized health
             monitoring from the comfort of your home.
           </p>
           <a
@@ -196,9 +190,7 @@
             Get Started
           </a>
         </div>
-        <!-- Kolom Gambar (kanan) -->
         <div class="md:w-[720px] mt-8 md:mt-0 flex justify-center">
-          <!-- Contoh gambar PNG transparan -->
           <img
             src="{{ url_for('static', filename='img/2.gif') }}"
             class="w-full"
@@ -211,9 +203,8 @@
       </div>
     </section>
 
-    <!-- SECTION 2: ABOUT (White) -->
+    <!-- SECTION 2: ABOUT US (White) -->
     <section id="about" class="relative bg-white text-gray-800 pt-16 pb-24">
-      <!-- Bubble Dekoratif Acak (warna teal lembut) -->
       <div
         class="pointer-events-none absolute"
         style="
@@ -256,7 +247,6 @@
         "
       ></div>
 
-      <!-- Swirl / Garis Dekoratif Putus-putus -->
       <div class="pointer-events-none absolute inset-0">
         <svg
           class="w-full h-full"
@@ -280,11 +270,9 @@
           monitoring and expert medical insights for better heart health.
         </p>
 
-        <!-- Container dengan gambar dan teks -->
         <div
           class="mt-8 flex flex-col md:flex-row items-center justify-center gap-8"
         >
-          <!-- Gambar -->
           <div class="w-full md:w-[480px] flex justify-center">
             <img
               src="{{ url_for('static', filename='img/5.png') }}"
@@ -297,12 +285,11 @@
             />
           </div>
 
-          <!-- Teks -->
           <div class="w-full md:w-1/2 text-center md:text-left">
             <h3 class="text-2xl font-semibold text-teal-600">Our Mission</h3>
             <p class="mt-2 text-gray-600">
-              We empower individuals to take charge of their cardiac well-being
-              while staying connected to healthcare professionals from anywhere.
+              We empower individuals to manage their heart health while staying
+              connected with healthcare professionals from anywhere.
             </p>
           </div>
         </div>
@@ -314,7 +301,6 @@
       id="services"
       class="relative pt-16 pb-24 bg-gradient-to-r from-teal-700 to-teal-500 text-white overflow-hidden"
     >
-      <!-- Bubble Dekoratif Acak -->
       <div
         class="pointer-events-none absolute"
         style="
@@ -357,7 +343,6 @@
         "
       ></div>
 
-      <!-- Swirl / Garis Dekoratif Putus-putus -->
       <div class="pointer-events-none absolute inset-0">
         <svg
           class="w-full h-full"
@@ -374,16 +359,13 @@
         </svg>
       </div>
 
-      <!-- Konten Section -->
       <div class="relative z-10 container mx-auto px-6 max-w-7xl">
         <h2 class="text-3xl font-bold text-white text-center">Our Services</h2>
         <p class="mt-4 max-w-xl mx-auto text-center text-white">
           We offer a range of services to help you maintain optimal heart health
-          and stay connected with your healthcare team, anytime and anywhere.
+          and stay connected with your healthcare team, anytime, anywhere.
         </p>
-        <!-- Card Services -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-10">
-          <!-- Card 1 -->
           <div
             class="bg-white rounded-xl shadow-lg overflow-hidden transform transition duration-300 hover:scale-105 hover:shadow-2xl"
           >
@@ -399,13 +381,12 @@
                 Real-time Blood Pressure Monitoring
               </h3>
               <p class="mt-4 text-center text-gray-600">
-                Continuously monitor your blood pressure with our real-time
-                analytics, allowing for early detection of irregularities and
-                prompt medical intervention.
+                Monitor your blood pressure continuously with our real-time
+                analytics, enabling early detection of abnormalities and prompt
+                medical intervention.
               </p>
             </div>
           </div>
-          <!-- Card 2 -->
           <div
             class="bg-white rounded-xl shadow-lg overflow-hidden transform transition duration-300 hover:scale-105 hover:shadow-2xl"
           >
@@ -421,13 +402,12 @@
                 Cardiovascular Prediction
               </h3>
               <p class="mt-4 text-center text-gray-600">
-                Utilize our advanced predictive algorithms to assess your
+                Leverage our advanced predictive algorithms to assess your
                 cardiovascular risk and receive personalized recommendations
                 from leading experts.
               </p>
             </div>
           </div>
-          <!-- Card 3 -->
           <div
             class="bg-white rounded-xl shadow-lg overflow-hidden transform transition duration-300 hover:scale-105 hover:shadow-2xl"
           >
@@ -443,9 +423,9 @@
                 Cardiobot
               </h3>
               <p class="mt-4 text-center text-gray-600">
-                Meet Cardiobot – your AI-powered cardiovascular assistant
-                designed to answer your questions, provide trusted heart health
-                insights, and guide you in making informed decisions.
+                Meet Cardiobot – an AI-powered cardiovascular assistant designed
+                to answer your questions, provide trusted heart health insights,
+                and guide you in making informed decisions.
               </p>
             </div>
           </div>
@@ -453,9 +433,8 @@
       </div>
     </section>
 
-    <!-- SECTION 4: TESTIMONI (White) -->
+    <!-- SECTION 4: TESTIMONIALS (White) -->
     <section id="testimoni" class="relative bg-white text-gray-800 pt-16 pb-24">
-      <!-- Bubble Dekoratif Acak -->
       <div
         class="pointer-events-none absolute"
         style="
@@ -484,7 +463,6 @@
         "
       ></div>
 
-      <!-- Swirl / Garis Dekoratif Putus-putus -->
       <div class="pointer-events-none absolute inset-0">
         <svg
           class="w-full h-full"
@@ -500,13 +478,10 @@
           <path d="M 0 470 Q 360 430 720 470 T 1440 470" />
         </svg>
       </div>
-      <!-- Testimonials Section -->
       <div class="relative py-12 overflow-hidden">
-        <!-- Background Decoration Left -->
         <div
           class="absolute -top-10 -left-20 w-56 h-56 bg-teal-200 rounded-full opacity-50 z-[-1]"
         ></div>
-        <!-- Background Decoration Right -->
         <div
           class="absolute bottom-0 -right-20 w-56 h-56 bg-teal-100 rounded-full opacity-50 z-[-1]"
         ></div>
@@ -516,21 +491,21 @@
             Testimonials
           </h2>
           <p class="mt-4 max-w-xl mx-auto text-center text-gray-600">
-            Here are some testimonials from Cardiolytics Home Care users.
+            Hear stories from Cardiolytics Home Care users about how our
+            features help them maintain their heart health.
           </p>
 
-          <!-- Swiper Container -->
           <div class="swiper testimonialSwiper mt-5 overflow-hidden">
             <div class="swiper-wrapper">
-              <!-- Slide 1 -->
               <div class="swiper-slide flex justify-center overflow-hidden">
                 <div
                   class="w-full md:w-3/4 lg:w-2/3 h-60 bg-teal-100 border border-teal-300 rounded-xl p-6 shadow-md flex flex-col items-center justify-center transform transition duration-300 hover:scale-102 hover:shadow-xl overflow-hidden will-change-transform"
                 >
                   <p class="text-gray-700 italic text-center">
-                    "Since using Cardiolytics, I've been able to monitor my
-                    heart condition anytime. The doctors are very responsive to
-                    all my queries!"
+                    "The Blood Pressure Monitor feature has been incredibly
+                    helpful in tracking my blood pressure daily. The dashboard
+                    is clear and easy to understand, making me more aware of my
+                    heart condition."
                   </p>
                   <div class="mt-10 flex items-center space-x-3">
                     <img
@@ -547,15 +522,14 @@
                   </div>
                 </div>
               </div>
-              <!-- Slide 2 -->
               <div class="swiper-slide flex justify-center overflow-hidden">
                 <div
                   class="w-full md:w-3/4 lg:w-2/3 h-60 bg-teal-100 border border-teal-300 rounded-xl p-6 shadow-md flex flex-col items-center justify-center transform transition duration-300 hover:scale-102 hover:shadow-xl overflow-hidden will-change-transform"
                 >
                   <p class="text-gray-700 italic text-center">
-                    "The mobile app is easy to use, the measurements are
-                    accurate, and I feel more at ease knowing I can connect with
-                    a doctor anytime."
+                    "Cardiovascular Predict gave me a clear picture of my heart
+                    risk. The personalized recommendations from the AI truly
+                    helped me take early preventive steps."
                   </p>
                   <div class="mt-10 flex items-center space-x-3">
                     <img
@@ -572,14 +546,14 @@
                   </div>
                 </div>
               </div>
-              <!-- Slide 3 -->
               <div class="swiper-slide flex justify-center overflow-hidden">
                 <div
                   class="w-full md:w-3/4 lg:w-2/3 h-60 bg-teal-100 border border-teal-300 rounded-xl p-6 shadow-md flex flex-col items-center justify-center transform transition duration-300 hover:scale-102 hover:shadow-xl overflow-hidden will-change-transform"
                 >
                   <p class="text-gray-700 italic text-center">
-                    "The cardiologists here are extremely professional. I
-                    received the right advice to maintain my heart health."
+                    "Cardiobot is so helpful! I can ask about heart health
+                    anytime, and the answers are always clear and based on
+                    trusted medical information."
                   </p>
                   <div class="mt-10 flex items-center space-x-3">
                     <img
@@ -596,15 +570,14 @@
                   </div>
                 </div>
               </div>
-              <!-- Slide 4 -->
               <div class="swiper-slide flex justify-center overflow-hidden">
                 <div
                   class="w-full md:w-3/4 lg:w-2/3 h-60 bg-teal-100 border border-teal-300 rounded-xl p-6 shadow-md flex flex-col items-center justify-center transform transition duration-300 hover:scale-102 hover:shadow-xl overflow-hidden will-change-transform"
                 >
                   <p class="text-gray-700 italic text-center">
-                    "Cardiolytics has completely changed the way I manage my
-                    heart condition. The constant monitoring gives me peace of
-                    mind."
+                    "The combination of Blood Pressure Monitor and Cardiobot
+                    makes me feel more at ease. I can track my blood pressure
+                    and consult Cardiobot immediately if I have questions."
                   </p>
                   <div class="mt-10 flex items-center space-x-3">
                     <img
@@ -621,15 +594,14 @@
                   </div>
                 </div>
               </div>
-              <!-- Slide 5 -->
               <div class="swiper-slide flex justify-center overflow-hidden">
                 <div
                   class="w-full md:w-3/4 lg:w-2/3 h-60 bg-teal-100 border border-teal-300 rounded-xl p-6 shadow-md flex flex-col items-center justify-center transform transition duration-300 hover:scale-102 hover:shadow-xl overflow-hidden will-change-transform"
                 >
                   <p class="text-gray-700 italic text-center">
-                    "The user-friendly interface and real-time updates have made
-                    it easier for me to stay informed about my heart's
-                    performance. Highly recommended!"
+                    "The Cardiovascular Predict feature is highly accurate! I
+                    can understand my heart risk and get easy-to-understand
+                    advice for a healthier life."
                   </p>
                   <div class="mt-10 flex items-center space-x-3">
                     <img
@@ -648,7 +620,6 @@
               </div>
             </div>
 
-            <!-- Pagination -->
             <div class="swiper-pagination mt-4"></div>
           </div>
         </div>
@@ -660,7 +631,6 @@
       id="faq"
       class="relative pt-16 pb-24 bg-gradient-to-r from-teal-700 to-teal-500 text-white overflow-hidden"
     >
-      <!-- Bubble Dekoratif Acak -->
       <div
         class="pointer-events-none absolute"
         style="
@@ -703,7 +673,6 @@
         "
       ></div>
 
-      <!-- Swirl / Garis Dekoratif Putus-putus -->
       <div class="pointer-events-none absolute inset-0">
         <svg
           class="w-full h-full"
@@ -722,64 +691,72 @@
 
       <!-- FAQ Section -->
       <div class="relative z-10 container mx-auto px-6 max-w-7xl">
-        <h2 class="text-3xl font-bold text-center">FAQ</h2>
+        <h2 class="text-3xl font-bold text-center">
+          Frequently Asked Questions
+        </h2>
         <p class="mt-4 max-w-xl mx-auto text-center text-gray-100">
-          Frequently asked questions about our services.
+          Answers to common questions about Cardiolytics Home Care features and
+          services.
         </p>
-        <!-- FAQ Items -->
         <div class="mt-8 space-y-6">
-          <!-- FAQ 1 -->
           <details class="bg-white text-gray-800 rounded-lg p-4">
             <summary class="cursor-pointer font-semibold text-teal-600">
-              How do I get started with Cardiolytics services?
+              How does the Blood Pressure Monitor work?
             </summary>
             <p class="mt-2 text-gray-700">
-              You can sign up via our mobile app or website. Once registered,
-              you'll be asked to provide initial health data and then start
-              monitoring your heart condition using our supported devices.
+              The Blood Pressure Monitor feature allows you to track your blood
+              pressure in real-time using a compatible device. The data is
+              displayed in an easy-to-read integrated dashboard, helping you
+              monitor heart health trends and share results with your doctor.
             </p>
           </details>
-          <!-- FAQ 2 -->
+
           <details class="bg-white text-gray-800 rounded-lg p-4">
             <summary class="cursor-pointer font-semibold text-teal-600">
-              Is this service suitable for all ages?
+              What is Cardiovascular Predict, and how accurate are its
+              predictions?
             </summary>
             <p class="mt-2 text-gray-700">
-              Cardiolytics services are designed for users of all ages,
-              especially for those who wish to monitor their heart health
-              regularly.
+              Cardiovascular Predict uses advanced AI models to analyze your
+              health data and predict cardiovascular risks. The model is trained
+              with trusted medical data to provide accurate results and
+              personalized recommendations to prevent heart issues.
             </p>
           </details>
-          <!-- FAQ 3 -->
+
           <details class="bg-white text-gray-800 rounded-lg p-4">
             <summary class="cursor-pointer font-semibold text-teal-600">
-              What about the cost of doctor consultations?
+              How does Cardiobot help me understand my heart health?
             </summary>
             <p class="mt-2 text-gray-700">
-              Consultation fees vary depending on your subscription plan.
-              Detailed pricing and payment methods are available on our app and
-              website.
+              Cardiobot is an AI-powered assistant that provides quick and
+              reliable answers to your questions about heart health. Based on
+              documents from medical institutions, Cardiobot explains
+              information in easy-to-understand language whenever you need it.
             </p>
           </details>
-          <!-- FAQ 4 -->
+
           <details class="bg-white text-gray-800 rounded-lg p-4">
             <summary class="cursor-pointer font-semibold text-teal-600">
-              How secure is my health data?
+              Is my health data secure on the Cardiolytics platform?
             </summary>
             <p class="mt-2 text-gray-700">
-              We use state-of-the-art encryption and adhere to strict privacy
-              protocols to ensure your health data remains secure and
-              confidential.
+              We use high-level encryption and comply with international privacy
+              standards to protect your health data. All information is securely
+              stored and accessible only to you and the medical professionals
+              you authorize.
             </p>
           </details>
-          <!-- FAQ 5 -->
+
           <details class="bg-white text-gray-800 rounded-lg p-4">
             <summary class="cursor-pointer font-semibold text-teal-600">
-              Can I use the service internationally?
+              Do I need special equipment to use these services?
             </summary>
             <p class="mt-2 text-gray-700">
-              Yes, Cardiolytics is accessible worldwide, allowing you to monitor
-              your heart health no matter where you are.
+              For the Blood Pressure Monitor feature, you need a blood pressure
+              measuring device compatible with our app. Cardiovascular Predict
+              and Cardiobot can be used directly through the website or app
+              without additional equipment.
             </p>
           </details>
         </div>
@@ -788,7 +765,6 @@
 
     <!-- Office Section -->
     <section id="office" class="relative bg-white text-gray-800 pt-16 pb-24">
-      <!-- Bubble Decorative Elements -->
       <div
         class="pointer-events-none absolute"
         style="
@@ -817,7 +793,6 @@
         "
       ></div>
 
-      <!-- Swirl / Decorative Dashed Lines -->
       <div class="pointer-events-none absolute inset-0">
         <svg
           class="w-full h-full"
@@ -836,7 +811,7 @@
 
       <div class="container mx-auto px-6 max-w-7xl relative z-10">
         <h2 class="text-3xl font-bold text-teal-600 text-center">
-          More Information
+          Additional Information
         </h2>
 
         <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -844,7 +819,7 @@
           <div>
             <iframe
               class="w-full h-64 rounded-lg"
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d909.2430041751471!2d112.79360754554914!3d-7.276433980140686!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2dd7fa10ebfbf931%3A0x2eb0a9059e0c4559!2sPusat%20Unggulan%20Teknologi%20PENS!5e1!3m2!1sid!2sid!4v1740657095439!5m2!1sid!2sid"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d909.2430041751471!2d112.79360754554914!3d-7.276433980140686!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2dd7fa10ebfbf931%3A0x2eb0a9059e0c4559!2sPusat%20Unggulan%20Teknologi%20PENS!5e1!3m2!1sen!2sus!4v1740657095439!5m2!1sen!2sus"
               style="border: 0"
               allowfullscreen=""
               loading="lazy"
@@ -860,8 +835,8 @@
                 Office Address
               </h3>
               <p class="text-sm text-gray-700">
-                Surabaya - Jl. Raya ITS, Keputih, Kec. Sukolilo, Surabaya, Jawa
-                Timur 60111
+                Surabaya - Jl. Raya ITS, Keputih, Sukolilo District, Surabaya,
+                East Java 60111
               </p>
             </div>
             <!-- Our Services -->
@@ -882,8 +857,8 @@
               <h3 class="text-lg font-semibold mb-2 text-teal-600">Others</h3>
               <ul class="space-y-1 text-sm">
                 <li class="text-gray-700">About Us</li>
-                <li class="text-gray-700">Testimoni</li>
-                <li class="text-gray-700">FAQ</li>
+                <li class="text-gray-700">Testimonials</li>
+                <li class="text-gray-700">Frequently Asked Questions</li>
               </ul>
             </div>
             <!-- Contact Us -->
@@ -924,18 +899,15 @@
     <!-- Footer -->
     <footer class="bg-white text-center py-3">
       <div class="container mx-auto max-w-4xl px-6">
-        <p class="text-gray-700">
-          &copy; 2025 Cardiolytics. All Rights Reserved.
-        </p>
+        <p class="text-gray-700">© 2025 Cardiolytics. All Rights Reserved.</p>
       </div>
     </footer>
 
-    <!-- Sertakan Swiper JS (CDN) di bagian paling bawah sebelum penutup </body> -->
     <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
     <script>
       var swiper = new Swiper(".testimonialSwiper", {
         loop: true,
-        effect: "fade", // Efek fade untuk transisi yang halus
+        effect: "fade",
         autoplay: {
           delay: 3000,
           disableOnInteraction: false,

@@ -16,13 +16,21 @@ from reportlab.lib.units import inch
 from reportlab.platypus import KeepInFrame
 from sqlalchemy.orm import joinedload
 import os
+from datetime import datetime
 
 admin = Blueprint('admin', __name__)
 
+def calculate_age(date_of_birth):
+    if date_of_birth is None:
+        return None
+    today = datetime.today()
+    age = today.year - date_of_birth.year - ((today.month, today.day) < (date_of_birth.month, date_of_birth.day))
+    return age if age >= 0 else None  
 
 ###########################################################
 ######################### AUTH ############################
 ###########################################################
+
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -41,6 +49,7 @@ def logout():
 ###########################################################
 ####################### USER APPROVAL #####################
 ###########################################################
+
 @admin.route('/admin/user-approval')
 @login_required
 @admin_required
@@ -64,6 +73,8 @@ def approve_user(user_id):
 
 ###########################################################
 ##################### MANAGE USER #########################
+###########################################################
+
 @admin.route('/admin/user-management')
 @login_required
 @admin_required
@@ -171,7 +182,7 @@ def edit_user(user_id):
             user.device_id = device_id
         
         db.session.commit()
-        flash("✅ User updated successfully!", "success")
+        flash("✅ User successfully updated!", "success")
         return redirect(url_for("admin.user_management", page=page, per_page=per_page, search=search_query))
     
     return render_template(
@@ -196,37 +207,51 @@ def delete_user(user_id):
     if user:
         db.session.delete(user)
         db.session.commit()
-        flash("✅ User deleted successfully!", "success")
+        flash("✅ User successfully deleted!", "success")
     
     return redirect(url_for("admin.user_management", page=page, per_page=per_page, search=search_query))
-
 
 ###########################################################
 ####################### PATIENT DATA ######################
 ###########################################################
-@admin.route('/admin/patient-data')
+
+@admin.route('/admin/patient_data')
 @login_required
 def patient_data():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
     search_query = request.args.get('search', '')
     
-    query = PatientData.query.order_by(PatientData.submitted_at.desc())
+    query = PatientData.query.options(joinedload(PatientData.user).joinedload(User.profile))\
+                            .order_by(PatientData.submitted_at.desc())
+    
     if search_query:
         query = query.filter(PatientData.user_id.contains(search_query))
     
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
     patient_data_list = pagination.items
     
+
+    patient_data_with_details = [
+    {
+        'patient': patient,
+        'age': calculate_age(patient.user.profile.date_of_birth if patient.user and patient.user.profile else None),
+        'gender': True if patient.user.profile.gender == "Male" else False if patient.user.profile.gender == "Female" else None
+    }
+    for patient in patient_data_list
+    ]
+
+    # for data in patient_data_with_details:
+    #     print(f"Patient ID: {data['patient'].user_id}, Gender: {data['gender']}")
+    
     return render_template(
         'patient_data.html', 
         navbar_title="Patient Data", 
-        patient_data=patient_data_list, 
+        patient_data=patient_data_with_details,
         pagination=pagination,
         entries_per_page=per_page,
         search_query=search_query
     )
-
 
 # @admin.route('/admin/patient-data/delete-data/<int:patient_id>', methods=['POST'])
 # @login_required
@@ -239,79 +264,69 @@ def patient_data():
 #     except Exception as e:
 #         db.session.rollback()
 #         flash(f'Error deleting patient data: {str(e)}', 'danger')
-    
+#     
 #     return redirect(url_for(
 #         'admin.patient_data'
 #     ))
 
 def generate_observations(patient):
-    """
-    Menghasilkan kalimat observasi dinamis berdasarkan data medis pasien
-    dan menyertakan nama lengkap serta patient_id di awal.
-    """
-    # Awal kalimat dengan identitas pasien
-    observations = f"Observations for {patient.user.full_name} (ID : {patient.user_id}), "
+    observations = f"Observations for {patient.user.full_name} (ID: {patient.user_id}), "
 
-    # Tekanan darah
     if patient.systolic >= 160 or patient.diastolic >= 100:
-        observations += "The patient exhibits significantly high blood pressure, indicating Stage 2 Hypertension. "
+        observations += "Patient shows very high blood pressure, indicative of Stage 2 Hypertension. "
     elif patient.systolic >= 140 or patient.diastolic >= 90:
-        observations += "The patient shows signs of Stage 1 Hypertension. "
+        observations += "Patient shows signs of Stage 1 Hypertension. "
     elif patient.systolic >= 120 or patient.diastolic >= 80:
-        observations += "There is a mild elevation in blood pressure (prehypertension). "
+        observations += "Slight elevation in blood pressure (pre-hypertension). "
     else:
-        observations += "Patient shows stable vital signs. "
+        observations += "Patient's vital signs are stable. "
 
-    # Kolesterol
     if patient.cholesterol == 2:
-        observations += "Cholesterol levels are well above normal. "
+        observations += "Cholesterol level is well above normal. "
     elif patient.cholesterol == 1:
-        observations += "Cholesterol levels are above normal. "
+        observations += "Cholesterol level is above normal. "
     else:
-        observations += "Cholesterol levels are within normal range. "
+        observations += "Cholesterol level is within normal range. "
 
-    # Glukosa
     if patient.gluc == 2:
-        observations += "Glucose levels are well above normal. "
+        observations += "Glucose level is well above normal. "
     elif patient.gluc == 1:
-        observations += "Glucose levels are above normal. "
+        observations += "Glucose level is above normal. "
     else:
-        observations += "Glucose levels are within normal range. "
+        observations += "Glucose level is within normal range. "
 
-    # Kebiasaan merokok
     if patient.smoke:
         observations += "Patient is a smoker. "
     else:
-        observations += "Patient does not smoke. "
+        observations += "Patient is not a smoker. "
 
-    # Konsumsi alkohol
     if patient.alco:
-        observations += "Alcohol consumption is noted. "
+        observations += "Alcohol consumption recorded. "
     else:
-        observations += "No alcohol consumption is reported. "
+        observations += "No alcohol consumption reported. "
 
-    # Aktivitas fisik
     if patient.active:
         observations += "Patient is physically active. "
     else:
         observations += "Patient has low physical activity. "
 
-    # Risiko kardiovaskular
     if patient.cardio:
-        observations += "Overall, the patient is at risk of cardiovascular disease."
+        observations += "Overall, patient is at risk of cardiovascular disease."
     else:
-        observations += "Overall, cardiovascular risk is low."
+        observations += "Overall, low cardiovascular risk. "
 
-    # Rekomendasi umum
-    observations += ("Cardio risk is monitored regularly. Recommended to maintain a healthy diet, "
-                    "engage in regular exercise, and follow up with the cardiologist every 6 months.")
+    observations += ("Cardiovascular risk is monitored regularly. It is recommended to maintain a healthy diet, "
+                    "engage in regular exercise, and consult with a cardiologist every 6 months.")
 
     return observations
 
 @admin.route('/download_patient_pdf/<int:patient_id>', methods=['GET'])
 @login_required
-def download_patient_data(patient_id):
+def download_patient_pdf(patient_id):
     patient = PatientData.query.options(joinedload(PatientData.user)).get_or_404(patient_id)
+    
+    age = calculate_age(patient.user.profile.date_of_birth if patient.user and patient.user.profile else None)
+    
     buffer = BytesIO()
     doc = SimpleDocTemplate(
         buffer,
@@ -328,10 +343,23 @@ def download_patient_data(patient_id):
     styles['Title'].alignment = TA_CENTER
     styles['Heading2'].alignment = TA_LEFT
 
+    # Define a style for table cells to ensure consistent rendering
+    table_cell_style = styles['Normal'].clone('TableCell')
+    table_cell_style.fontSize = 10
+    table_cell_style.leading = 12
+    table_cell_style.alignment = TA_LEFT
+
+    # Define a bold style for specific labels
+    bold_cell_style = styles['Normal'].clone('BoldCell')
+    bold_cell_style.fontName = 'Helvetica-Bold'
+    bold_cell_style.fontSize = 10
+    bold_cell_style.leading = 12
+    bold_cell_style.alignment = TA_LEFT
+    
     elements = []
 
     # ---------------------------------------------------------
-    # 1. HEADER (LOGO + ALAMAT) dalam satu baris
+    # 1. HEADER (LOGO + ADDRESS) 
     # ---------------------------------------------------------
     logo_path = os.path.join(current_app.root_path, 'static', 'img', 'cardiolytics.png')
     try:
@@ -366,13 +394,13 @@ def download_patient_data(patient_id):
     elements.append(Spacer(1, 6))
 
     # ---------------------------------------------------------
-    # 2. INFORMASI PASIEN
+    # 2. PATIENT INFORMATION
     # ---------------------------------------------------------
     patient_info_data = [
-        ["Patient ID", patient.user_id],
-        ["Full Name", patient.user.full_name],
-        ["Email", patient.user.email],
-        ["Phone Number", patient.user.phone_number],
+        ["Patient ID", Paragraph(patient.user_id, table_cell_style)],
+        ["Full Name", Paragraph(patient.user.full_name, table_cell_style)],
+        ["Email", Paragraph(patient.user.email, table_cell_style)],
+        ["Phone Number", Paragraph(patient.user.phone_number, table_cell_style)],
     ]
     patient_info_table = Table(patient_info_data, colWidths=[250, 300])
     patient_info_table.setStyle(TableStyle([
@@ -388,38 +416,42 @@ def download_patient_data(patient_id):
     elements.append(Spacer(1, 6))
 
     # ---------------------------------------------------------
-    # 3. DATA MEDIS 
+    # 3. MEDICAL DATA 
     # ---------------------------------------------------------
-    def categorize_level(value):
-        categories = {0: "Normal", 1: "Above Normal", 2: "Well Above Normal"}
+    def categorize_level_cholesterol(value):
+        categories = {0: "Normal (≤ 200 mg/dL)", 1: "Above normal (200–239 mg/dL)", 2: "Well above normal (≥ 126 mg/dL)"}
+        return categories.get(value, "Unknown")
+    
+    def categorize_level_glucose(value):
+        categories = {0: "Normal (≤ 100 mg/dL)", 1: "Above normal (100–125 mg/dL)", 2: "Well above normal (≥ 126 mg/dL)"}
         return categories.get(value, "Unknown")
 
     bmi_value = round(patient.weight / ((patient.height/100)**2), 2)
-    pp_value  = patient.systolic - patient.diastolic
+    pp_value = patient.systolic - patient.diastolic
     map_value = round((patient.systolic + 2*patient.diastolic) / 3, 2)
 
     medical_data_data = [
-        ["Age",                          str(patient.age)],
-        ["Gender",                       "Male" if patient.gender else "Female"],
-        ["Height (cm)",                  str(patient.height)],
-        ["Weight (kg)",                  str(int(patient.weight))],
-        ["BMI (kg/m²)",                  f"{bmi_value:.2f}"],
-        ["Blood Pressure (mmHg)",        f"{patient.systolic}/{patient.diastolic}"],
-        ["Pulse Pressure (mmHg)",        str(pp_value)],
-        ["Mean Arterial Pressure (mmHg)", f"{map_value:.2f}"],
-        ["Cholesterol",                  categorize_level(patient.cholesterol)],
-        ["Glucose",                      categorize_level(patient.gluc)],
-        ["Smoke",                        "Yes" if patient.smoke else "No"],
-        ["Alcohol",                      "Yes" if patient.alco else "No"],
-        ["Physical Activity",            "Yes" if patient.active else "No"],
-        ["Cardio Risk",                  "At Risk" if patient.cardio else "Healthy"],
+        ["Age", Paragraph(f"{age if age is not None else '-'} years", table_cell_style)],
+        ["Gender", Paragraph(patient.user.profile.gender if patient.user and patient.user.profile else '-', table_cell_style)],
+        ["Height", Paragraph(f"{patient.height} (cm)", table_cell_style)],
+        ["Weight", Paragraph(f"{patient.weight:.1f} (kg)", table_cell_style)],
+        ["BMI", Paragraph(f"{bmi_value:.2f} (kg/m²)", table_cell_style)],
+        ["Blood Pressure", Paragraph(f"{patient.systolic}/{patient.diastolic} (mmHg)", table_cell_style)],
+        ["Pulse Pressure", Paragraph(f"{pp_value} (mmHg)", table_cell_style)],
+        ["Mean Arterial Pressure", Paragraph(f"{map_value:.2f} (mmHg)", table_cell_style)],
+        ["Cholesterol", Paragraph(categorize_level_cholesterol(patient.cholesterol), table_cell_style)],
+        ["Glucose (fasting glucose)", Paragraph(categorize_level_glucose(patient.gluc), table_cell_style)],
+        ["Smoking", Paragraph("Yes (Active Smoker)" if patient.smoke else "No (Non-Smoker)", table_cell_style)],
+        ["Alcohol", Paragraph("Yes (≥ 1 glass/day)" if patient.alco else "No (0 glasses/day)", table_cell_style)],
+        ["Physical Activity", Paragraph("Yes (Regular ≥ 3 times/week)" if patient.active else "No (Not Regular)", table_cell_style)],
+        [Paragraph("Cardiovascular Risk", bold_cell_style), Paragraph("<b>At Risk (Diagnosed at Risk of CVD)</b>" if patient.cardio else "<b>Healthy (Diagnosed without CVD)</b>", table_cell_style)],
     ]
 
-    medical_data_table = Table(medical_data_data, colWidths=[250,300])
+    medical_data_table = Table(medical_data_data, colWidths=[250, 300])
     medical_data_table.setStyle(TableStyle([
-        ('ALIGN',       (0, 0), (-1, -1), 'LEFT'),
-        ('GRID',        (0, 0), (-1, -1), 0.5, colors.grey),
-        ('BOTTOMPADDING',(0, 0), (-1, -1), 5),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
     ]))
     elements.append(Paragraph("<b>Medical Data</b>", styles['Heading2']))
     elements.append(medical_data_table)
@@ -434,14 +466,14 @@ def download_patient_data(patient_id):
 
     auto_observations = generate_observations(patient)
     observations_text = f"""
-    <b>Observations :</b><br/>
+    <b>Observations:</b><br/>
     {auto_observations}
     """
     observations_para = Paragraph(observations_text, observations_style)
 
-    footer_text = Paragraph(f'''<b>Disclaimer :</b><br/>
-                            This medical record is generated automatically. For official use, please consult your healthcare provider.
-                            ''',styles['Normal']
+    footer_text = Paragraph(f'''<b>Disclaimer:</b><br/>
+                            This medical report is generated automatically. For official use, please consult with your healthcare provider.
+                            ''', styles['Normal']
     )
 
     signature_label = Paragraph(
@@ -453,7 +485,7 @@ def download_patient_data(patient_id):
     try:
         signature_img = Image(signature_path, width=100, height=30)
     except Exception:
-        signature_img = Paragraph("<b>No Signature Found</b>", styles['Normal'])
+        signature_img = Paragraph("<b>Signature Not Found</b>", styles['Normal'])
 
     signature_table_inner = Table([
         [signature_label],
@@ -480,7 +512,7 @@ def download_patient_data(patient_id):
     ]))
 
     report_generated = Paragraph(
-        f"Report Generated : {patient.submitted_at.strftime('%Y-%m-%d %H:%M')}<br/><br/>")
+        f"Report Generated: {patient.submitted_at.strftime('%Y-%m-%d %H:%M')}<br/><br/>")
     
     elements.append(Spacer(1, 12))
     elements.append(footer_table)
@@ -488,7 +520,7 @@ def download_patient_data(patient_id):
     elements.append(report_generated)
     
     # ---------------------------------------------------------
-    # Bangun dokumen & kembalikan file PDF
+    # REBUILD DOCUMENT & RETURN PDF 
     # ---------------------------------------------------------
     doc.build(elements)
     buffer.seek(0)
@@ -503,46 +535,55 @@ def download_patient_data(patient_id):
 ###########################################################
 ######################### SETTINGS ########################
 ###########################################################
-@admin.route('/admin/settings')
+@admin.route('/settings')
 @login_required
 @admin_required
 def settings():
-    active_tab = request.args.get('tab', 'models') 
-    
-    model = Models.query.order_by(Models.created_at.desc()).first()
+    active_tab      = request.args.get('tab', 'models')
+    page            = request.args.get('page', 1, type=int)
+    search_query    = request.args.get('search', '').strip()
 
-    page = request.args.get('page', 1, type=int)
-    search_query = request.args.get('search', '').strip()
-    
-    device_query = Device.query
-    
-     # Kirim dokumen hanya kalau tab = docs
-    documents = None
-    if active_tab == "docs":
-        documents = Document.query.paginate(page=page, per_page=10)
-        
-    if search_query:
-        device_query = device_query.filter(
+    model           = Models.query.order_by(Models.created_at.desc()).first()
+
+    device_q        = Device.query
+    if search_query and active_tab == 'devices':
+        device_q = device_q.filter(
             or_(
                 Device.id.ilike(f"%{search_query}%"),
                 Device.model.ilike(f"%{search_query}%")
             )
         )
-    
-    device_pagination = device_query.order_by(Device.registered_at.desc()).paginate(page=page, per_page=5, error_out=False)
-    devices = device_pagination.items
-    
-    form = ModelForm()
+    device_pagination = device_q \
+        .order_by(Device.registered_at.desc()) \
+        .paginate(page=page, per_page=5, error_out=False)
+    devices         = device_pagination.items
+
+    doc_q           = Document.query
+    if search_query and active_tab == 'docs':
+        doc_q = doc_q.filter(
+            Document.title_file.ilike(f"%{search_query}%")
+        )
+    documents_pagination = doc_q \
+        .order_by(Document.created_at.desc()) \
+        .paginate(page=page, per_page=5, error_out=False)
+    documents       = documents_pagination.items
+
+    form            = ModelForm()
+
     return render_template(
         'admin_settings.html',
+        active_tab=active_tab,
+        search_query=search_query,
         model=model,
+
         devices=devices,
         device_pagination=device_pagination,
-        form=form,
+
         documents=documents,
-        search_query=search_query,
+        documents_pagination=documents_pagination,
+
+        form=form,
         navbar_title="Settings",
-        active_tab=active_tab
     )
 
 #------------------------- Model --------------------------#
@@ -554,7 +595,7 @@ def delete_model(model_id):
     model = Models.query.get_or_404(model_id)
     db.session.delete(model)
     db.session.commit()
-    flash('✅ Model deleted successfully!', 'success')
+    flash('✅ Model successfully deleted!', 'success')
     return redirect(url_for('admin.settings'))
 
 ALLOWED_EXTENSIONS = {'pkl', 'joblib', 'h5'}
@@ -566,7 +607,7 @@ def allowed_file(filename):
 @login_required
 def upload_model():
     if current_user.role != UserRole.admin:
-        flash('You are not authorized to upload models.', 'danger')
+        flash('❌ You are not authorized to upload a model.', 'danger')
         return redirect(url_for('index'))
 
     existing_model = Models.query.first()
@@ -589,10 +630,10 @@ def upload_model():
             )
             db.session.add(new_model)
             db.session.commit()
-            flash('✅ Model uploaded successfully!', 'success')
+            flash('✅ Model successfully uploaded!', 'success')
             return redirect(url_for('admin.settings'))
         else:
-            flash('No file selected or file type is not allowed.', 'warning')
+            flash('No file selected or file type not allowed.', 'warning')
             return redirect(url_for('admin.settings', tab='models'))
     
     return render_template('admin_settings.html', tab='models', model=None, form=form, navbar_title="Settings")
@@ -609,13 +650,13 @@ def upload_device():
         model = form.model.data
         
         if Device.query.filter_by(id=device_id).first():
-            flash('⚠️ A device with this ID is already registered!', 'warning')
+            flash('⚠️ Device with this ID is already registered!', 'warning')
             return redirect(url_for('admin.settings', tab='devices'))
         
         new_device = Device(id=device_id, model=model)
         db.session.add(new_device)
         db.session.commit()
-        flash('✅ Device successfully added', 'success')
+        flash('✅ Device successfully added!', 'success')
         return redirect(url_for('admin.settings', tab='devices'))
         
     return render_template('admin_settings.html', tab='devices', form=form, navbar_title="Settings")
@@ -627,7 +668,7 @@ def delete_device(device_id):
     device = Device.query.get_or_404(device_id)
     db.session.delete(device)
     db.session.commit()
-    flash('✅ Device deleted successfully!', 'success')
+    flash('✅ Device successfully deleted!', 'success')
     return redirect(url_for('admin.settings', tab='devices'))
 
 @admin.route('/edit_device', methods=['POST'])
@@ -641,14 +682,14 @@ def edit_device():
     new_model = request.form.get('edit_model')
 
     if Device.query.filter(Device.id == new_device_id, Device.id != dev.id).first():
-        flash("⚠️ Device ID already in use!", "danger")
+        flash("⚠️ Device ID is already in use!", "danger")
         return redirect(url_for('admin.settings', tab='devices'))
 
     dev.id = new_device_id
     dev.model = new_model
     db.session.commit()
 
-    flash("✅ Device updated successfully!", "success")
+    flash("✅ Device successfully updated!", "success")
     return redirect(url_for('admin.settings', tab='devices'))
 
 #------------------------- Docs --------------------------#
