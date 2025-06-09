@@ -203,7 +203,7 @@
                   <label class="text-sm font-semibold text-gray-600 mb-1.5"
                     >{{ form.height.label }}</label
                   >
-                  {{ form.height(class="bg-gray-50 border border-gray-200 p-3
+                  {{ form.height(class="bg-gray-100 border border-gray-300 p-3
                   rounded-lg shadow-sm focus:outline-none focus:ring-2
                   focus:ring-indigo-500 focus:border-indigo-500 transition-all
                   duration-300 w-full text-gray-800 placeholder-gray-400",
@@ -213,7 +213,7 @@
                   <label class="text-sm font-semibold text-gray-600 mb-1.5"
                     >{{ form.weight.label }}</label
                   >
-                  {{ form.weight(class="bg-gray-50 border border-gray-200 p-3
+                  {{ form.weight(class="bg-gray-100 border border-gray-300 p-3
                   rounded-lg shadow-sm focus:outline-none focus:ring-2
                   focus:ring-indigo-500 focus:border-indigo-500 transition-all
                   duration-300 w-full text-gray-800 placeholder-gray-400",
@@ -244,30 +244,79 @@
               </h2>
               <div class="space-y-5">
                 <div class="flex flex-col">
-                  <label class="text-sm font-semibold text-gray-600 mb-1.5"
-                    >{{ form.systolic.label }}</label
+                  <label
+                    class="flex items-center text-sm font-semibold text-gray-600 mb-1.5"
                   >
-                  {{ form.systolic(class="bg-gray-50 border border-gray-200 p-3
-                  rounded-lg shadow-sm focus:outline-none focus:ring-2
+                    {{ form.systolic.label }}
+                    <span class="relative group ml-1 flex-shrink-0">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-4 w-4 text-gray-400 hover:text-gray-600 cursor-pointer"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z"
+                        />
+                      </svg>
+                      <div
+                        class="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 w-48 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        Auto-filled from your last blood pressure measurement;
+                        you can edit if needed.
+                      </div>
+                    </span>
+                  </label>
+                  {{ form.systolic( class="bg-gray-100 border border-gray-300
+                  p-3 rounded-lg shadow-sm focus:outline-none focus:ring-2
                   focus:ring-indigo-500 focus:border-indigo-500 transition-all
                   duration-300 w-full text-gray-800 placeholder-gray-400",
-                  placeholder="e.g., 120", required="required") }}
+                  placeholder="e.g., 120", required="required" ) }}
                 </div>
                 <div class="flex flex-col">
-                  <label class="text-sm font-semibold text-gray-600 mb-1.5"
-                    >{{ form.diastolic.label }}</label
+                  <label
+                    class="flex items-center text-sm font-semibold text-gray-600 mb-1.5"
                   >
-                  {{ form.diastolic(class="bg-gray-50 border border-gray-200 p-3
-                  rounded-lg shadow-sm focus:outline-none focus:ring-2
+                    {{ form.diastolic.label }}
+                    <span class="relative group ml-1 flex-shrink-0">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-4 w-4 text-gray-400 hover:text-gray-600 cursor-pointer"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z"
+                        />
+                      </svg>
+                      <div
+                        class="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 w-48 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        Auto-filled from your last blood pressure measurement;
+                        you can edit if needed.
+                      </div>
+                    </span>
+                  </label>
+                  {{ form.diastolic( class="bg-gray-100 border border-gray-300
+                  p-3 rounded-lg shadow-sm focus:outline-none focus:ring-2
                   focus:ring-indigo-500 focus:border-indigo-500 transition-all
                   duration-300 w-full text-gray-800 placeholder-gray-400",
-                  placeholder="e.g., 80", required="required") }}
+                  placeholder="e.g., 120", required="required" ) }}
                 </div>
+
                 <div class="flex flex-col">
                   <label class="text-sm font-semibold text-gray-600 mb-1.5"
                     >{{ form.cholesterol.label }}</label
                   >
-                  {{ form.cholesterol(class="bg-gray-50 border border-gray-200
+                  {{ form.cholesterol(class="bg-gray-100 border border-gray-300
                   p-3 rounded-lg shadow-sm focus:outline-none focus:ring-2
                   focus:ring-indigo-500 focus:border-indigo-500 transition-all
                   duration-300 w-full text-gray-800", required="required") }}
@@ -276,7 +325,7 @@
                   <label class="text-sm font-semibold text-gray-600 mb-1.5"
                     >{{ form.gluc.label }}</label
                   >
-                  {{ form.gluc(class="bg-gray-50 border border-gray-200 p-3
+                  {{ form.gluc(class="bg-gray-100 border border-gray-300 p-3
                   rounded-lg shadow-sm focus:outline-none focus:ring-2
                   focus:ring-indigo-500 focus:border-indigo-500 transition-all
                   duration-300 w-full text-gray-800", required="required") }}
@@ -309,7 +358,7 @@
                   <label class="text-sm font-semibold text-gray-600 mb-1.5"
                     >{{ form.smoke.label }}</label
                   >
-                  {{ form.smoke(class="bg-gray-50 border border-gray-200 p-3
+                  {{ form.smoke(class="bg-gray-100 border border-gray-300 p-3
                   rounded-lg shadow-sm focus:outline-none focus:ring-2
                   focus:ring-indigo-500 focus:border-indigo-500 transition-all
                   duration-300 w-full text-gray-800", required="required") }}
@@ -318,7 +367,7 @@
                   <label class="text-sm font-semibold text-gray-600 mb-1.5"
                     >{{ form.alco.label }}</label
                   >
-                  {{ form.alco(class="bg-gray-50 border border-gray-200 p-3
+                  {{ form.alco(class="bg-gray-100 border border-gray-300 p-3
                   rounded-lg shadow-sm focus:outline-none focus:ring-2
                   focus:ring-indigo-500 focus:border-indigo-500 transition-all
                   duration-300 w-full text-gray-800", required="required") }}
@@ -327,7 +376,7 @@
                   <label class="text-sm font-semibold text-gray-600 mb-1.5"
                     >{{ form.active.label }}</label
                   >
-                  {{ form.active(class="bg-gray-50 border border-gray-200 p-3
+                  {{ form.active(class="bg-gray-100 border border-gray-200 p-3
                   rounded-lg shadow-sm focus:outline-none focus:ring-2
                   focus:ring-indigo-500 focus:border-indigo-500 transition-all
                   duration-300 w-full text-gray-800", required="required") }}

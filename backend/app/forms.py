@@ -125,7 +125,7 @@ class PatientDataForm(FlaskForm):
     systolic = IntegerField('Systolic BP (mmHg)', validators=[DataRequired()])
     diastolic = IntegerField('Diastolic BP (mmHg)', validators=[DataRequired()])
     cholesterol = SelectField('Cholesterol', 
-                              choices=[('', 'None'), ('0', 'Normal (≤ 200 mg/dL)'), ('1', 'Above normal (200–239 mg/dL)'), ('2', 'Well above normal (≥ 126 mg/dL)')],
+                              choices=[('', 'None'), ('0', 'Normal (≤ 200 mg/dL)'), ('1', 'Above normal (200–239 mg/dL)'), ('2', 'Well above normal (≥ 240 mg/dL)')],
                               validators=[DataRequired()])
     gluc = SelectField('Glucose (fasting glucose)', 
                        choices=[('', 'None'), ('0', 'Normal (≤ 100 mg/dL)'), ('1', 'Above normal (100–125 mg/dL)'), ('2', 'Well above normal (≥ 126 mg/dL)')],

@@ -1,0 +1,66 @@
+[
+  {
+    "id": "inject_start_pipeline",
+    "type": "inject",
+    "z": "flow",
+    "name": "Start Pipeline on Boot",
+    "props": [],
+    "repeat": "",
+    "crontab": "",
+    "once": true,
+    "onceDelay": 0.1,
+    "x": 180,
+    "y": 120,
+    "wires": [["exec_pipeline"]]
+  },
+  {
+    "id": "exec_pipeline",
+    "type": "exec",
+    "z": "flow",
+    "command": "python3 /home/qul/Developments/College/final_project/backend/app/bp_monitor/bridging_pipeline.py",
+    "addpay": false,
+    "append": "",
+    "useSpawn": "false",
+    "timer": "",
+    "oldrc": false,
+    "name": "Run full_pipeline.py",
+    "x": 410,
+    "y": 120,
+    "wires": [
+      ["debug_stdout"],
+      ["debug_stderr"],
+      []
+    ]
+  },
+  {
+    "id": "debug_stdout",
+    "type": "debug",
+    "z": "flow",
+    "name": "Pipeline Output",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "x": 650,
+    "y": 100,
+    "wires": []
+  },
+  {
+    "id": "debug_stderr",
+    "type": "debug",
+    "z": "flow",
+    "name": "Pipeline Error",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "x": 650,
+    "y": 140,
+    "wires": []
+  }
+]
+

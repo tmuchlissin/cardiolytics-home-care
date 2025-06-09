@@ -11,6 +11,7 @@ from app.extensions import db, migrate,  csrf, login_manager, mail
 from app.models import User
 from config import Config
 from types import SimpleNamespace
+from app.bp_monitor.views import bp_monitor, setup_mqtt_status_listener
 
 def create_app():
     app = Flask(__name__)
@@ -40,10 +41,7 @@ def create_app():
     with app.app_context():
         initialize(SimpleNamespace(app=app))
         init_pinecone()
-        # print("Registered routes:")
-        # for rule in app.url_map.iter_rules():
-        #     print(f"{rule.endpoint}: {rule.rule}")
-        # user = User.query.filter_by(user_name='muchlis').first()
-        # print(f"User: {user.user_name}, Device ID: {user.device_id}")
+        setup_mqtt_status_listener(app)
+
     
     return app

@@ -12,7 +12,7 @@ from flask import (
 from flask_login import current_user, login_required
 from markupsafe import Markup
 from app.forms import PatientDataForm
-from app.models import db, PatientData, PatientProfile, User
+from app.models import db, PatientData, PatientProfile, User, BloodPressureRecord
 from app.utils import load_active_model
 from flask import send_file
 from io import BytesIO
@@ -74,6 +74,17 @@ def upload_menu():
     gender = profile.gender.lower()
     encoded_gender = 1 if gender == 'male' else 0  
 
+    if request.method == 'GET':
+        device = current_user.device
+        if device:
+            last_bp = BloodPressureRecord.query \
+                        .filter_by(device_id=device.id) \
+                        .order_by(BloodPressureRecord.timestamp.desc()) \
+                        .first()
+            if last_bp:
+                form.systolic.data  = last_bp.systolic
+                form.diastolic.data = last_bp.diastolic
+                
     if form.validate_on_submit():
         height = form.height.data
         weight = form.weight.data
@@ -133,13 +144,13 @@ def upload_menu():
         if cardio_result:
             message = Markup(
                 f'⚠️ Your condition is at risk of cardiovascular disease. '
-                f'<a href="{history_url}"><u>View full details</u></a>'
+                f'<a href="{history_url}"><u>See details</u></a>'
             )
             flash(message, 'warning')
         else:
             message = Markup(
-                f'✅ Your condition is healthy (not at risk). '
-                f'<a href="{history_url}"><u>View full details</u></a>'
+                f'✅ Your condition is healthy. '
+                f'<a href="{history_url}"><u>See details</u></a>'
             )
             flash(message, 'success')
         
@@ -164,7 +175,7 @@ def upload_menu():
         db.session.commit()
         return redirect(url_for('cvd_predict.menu', tab='predict'))
     
-    # If the form is not valid, send patient data for the history tab
+        
     patients = PatientData.query.filter_by(user_id=current_user.id)\
                                 .options(joinedload(PatientData.user).joinedload(User.profile))\
                                 .order_by(PatientData.submitted_at.desc()).all()
