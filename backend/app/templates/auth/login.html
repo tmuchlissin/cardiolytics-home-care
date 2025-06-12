@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign in</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Link to External CSS -->
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/styles.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <!-- Favicon -->
+    <link
+      rel="icon"
+      type="image/png"
+      href="{{ url_for('static', filename='img/medical-check.png') }}"
+    />
+    <style>
+      /* Import font Poppins */
+      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap");
+
+      body {
+        font-family: "Poppins", sans-serif;
+      }
+    </style>
+  </head>
+  <!-- Make wrapper flex-col so flash message & container are in normal flow -->
+  <body
+    class="bg-gray-200 flex flex-col items-center justify-center min-h-screen"
+  >
+    <!-- Wrapper with the same width as the login container -->
+    <div class="w-full max-w-4xl mx-auto px-4">
+      <!-- Flash Messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %}
+      <div class="mb-4">
+        {% for category, message in messages %}
+        <div
+          class="flash-message p-3 rounded-lg text-center font-semibold {% if category == 'success' %} bg-green-100 border border-green-400 text-green-700 {% elif category == 'warning' %} bg-yellow-100 border border-yellow-400 text-yellow-700 {% elif category == 'danger' %} bg-red-100 border border-red-400 text-red-700 {% elif category == 'attention' %} bg-gray-100 border border-gray-400 text-gray-700 {% endif %}"
+        >
+          {{ message }}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %} {% endwith %}
+
+      <!-- Main Container (Login) -->
+      <div class="bg-white shadow-lg rounded-lg flex w-full">
+        <!-- Left Section - Login Form -->
+        <div class="w-1/2 p-10">
+          <!-- Logo (Clickable) -->
+          <a href="{{ url_for('auth.landing_page') }}">
+            <img
+              src="{{ url_for('static', filename='img/cardiolytics.png') }}"
+              class="w-48 h-auto mb-4 mx-auto"
+              draggable="false"
+              oncontextmenu="return false;"
+              ondragstart="return false;"
+              onmousedown="return false;"
+              alt="Cardiolytics Logo"
+            />
+          </a>
+
+          <h2 class="text-3xl font-bold text-teal-600">Sign in</h2>
+          <p class="text-gray-500 text-sm mt-2">
+            Welcome back! Please sign in to your account.
+          </p>
+
+          <form method="POST" action="{{ url_for('auth.login') }}" class="mt-6">
+            <div class="mb-4">
+              <label class="block text-gray-700">Patient ID</label>
+              <input
+                type="text"
+                name="patient_id"
+                placeholder="Enter your 10-digit Patient ID"
+                pattern="^\d{10}$"
+                title="Patient ID must be 10 digits"
+                maxlength="10"
+                required
+                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+              />
+            </div>
+            <div class="mb-4 relative">
+              <label class="block text-gray-700">Password</label>
+              <div class="relative">
+                <input
+                  type="password"
+                  name="password"
+                  id="password"
+                  placeholder="Enter your password"
+                  class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300 pr-10"
+                />
+                <button
+                  type="button"
+                  id="togglePassword"
+                  class="absolute inset-y-0 right-3 flex items-center"
+                >
+                  <i id="eyeIcon" class="fa-solid fa-eye text-gray-500"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="flex justify-between items-center mb-4">
+              <a
+                href="{{ url_for('auth.forgot_password') }}"
+                class="text-sm text-blue-500 hover:underline"
+              >
+                Forgot Password?
+              </a>
+            </div>
+            <button
+              type="submit"
+              class="w-full bg-teal-400 text-white py-2 rounded-lg hover:bg-teal-500 transition"
+            >
+              Sign in
+            </button>
+          </form>
+
+          <p class="text-center text-gray-500 mt-3">
+            Don't have an account?
+            <a
+              href="{{ url_for('auth.register') }}"
+              class="text-blue-500 hover:underline"
+              >Sign up</a
+            >
+          </p>
+        </div>
+
+        <!-- Right Section - Illustration -->
+        <div class="w-1/2 bg-gray-50 flex items-center justify-center">
+          <img
+            src="{{ url_for('static', filename='img/login.png') }}"
+            class="w-3/4"
+            draggable="false"
+            oncontextmenu="return false;"
+            ondragstart="return false;"
+            onmousedown="return false;"
+            alt="Login Illustration"
+          />
+        </div>
+      </div>
+    </div>
+    <script>
+      sessionStorage.removeItem("chatHistory");
+      document
+        .getElementById("togglePassword")
+        .addEventListener("click", function () {
+          let passwordInput = document.getElementById("password");
+          let eyeIcon = document.getElementById("eyeIcon");
+
+          if (passwordInput.type === "password") {
+            passwordInput.type = "text";
+            eyeIcon.classList.remove("fa-eye");
+            eyeIcon.classList.add("fa-eye-slash");
+          } else {
+            passwordInput.type = "password";
+            eyeIcon.classList.remove("fa-eye-slash");
+            eyeIcon.classList.add("fa-eye");
+          }
+        });
+
+      setTimeout(function () {
+        let flashMessages = document.querySelectorAll(".flash-message");
+        flashMessages.forEach(function (msg) {
+          msg.style.transition = "opacity 0.5s";
+          msg.style.opacity = "0";
+          setTimeout(() => msg.remove(), 500);
+        });
+      }, 2000);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,503 @@
+{% extends "base.html" %} {% block content %}
+<style>
+  .message-content {
+    text-align: justify;
+    line-height: 1.6;
+    word-break: break-word;
+  }
+
+  .typing-dots {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .typing-dots span {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background-color: #4b5563; /* gray-700 */
+    border-radius: 50%;
+    animation: dotBounce 1s infinite ease-in-out;
+  }
+  .typing-dots span:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+  .typing-dots span:nth-child(3) {
+    animation-delay: 0.4s;
+  }
+
+  @keyframes dotBounce {
+    0%,
+    80%,
+    100% {
+      transform: translateY(0);
+    }
+    40% {
+      transform: translateY(-6px);
+    }
+  }
+
+  /* Styling untuk teks "Thinking" */
+  .typing-text {
+    font-size: 0.99rem; /* text-sm */
+    font-weight: 500; /* medium */
+    color: #374151; /* gray-700 */
+    margin-right: 4px;
+    white-space: nowrap;
+  }
+
+  /* Transition for main content container on initial load */
+  .main-content.initial-load {
+    opacity: 0;
+    animation: fadeIn 0.4s ease-in forwards;
+  }
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+</style>
+
+<div class="px-5 py-1 main-content initial-load">
+  <h1 class="text-2xl font-bold text-gray-900 mb-4">Chatbot Assistant</h1>
+
+  <div class="flex justify-center items-center h-[75vh]">
+    <div
+      class="w-full max-w-4xl p-8 bg-white bg-opacity-10 backdrop-filter backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-100"
+    >
+      <div
+        class="relative bg-gradient-to-r from-purple-600 to-indigo-600 p-5 rounded-t-3xl text-white text-center shadow-md"
+      >
+        <h1 class="text-2xl font-extrabold">Cardiobot 🤖</h1>
+        <button
+          onclick="clearChatHistory()"
+          class="absolute top-1/2 right-5 transform -translate-y-1/2 text-white transition-transform duration-200 ease-in-out hover:scale-110 hover:shadow-lg focus:outline-none"
+          title="Clear Chat"
+        >
+          <i class="fas fa-trash-alt text-2xl"></i>
+        </button>
+      </div>
+
+      <div
+        id="chat-history"
+        class="p-6 h-[65vh] overflow-y-auto space-y-4 rounded-b-3xl shadow-inner bg-white border-t border-gray-200"
+      ></div>
+
+      <div class="mt-6 flex">
+        <input
+          id="chat-input"
+          type="text"
+          placeholder="Ketik pertanyaan Anda..."
+          class="w-full p-4 border border-gray-300 rounded-l-3xl focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200"
+        />
+        <button
+          onclick="sendMessage()"
+          class="bg-blue-600 text-white p-4 rounded-r-3xl hover:bg-blue-700 transition duration-200 focus:outline-none flex items-center justify-center"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M2 12l18-9-6 18-2-6 6-2-18 9z"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Remove initial-load class after animation
+    const mainContent = document.querySelector(".main-content");
+    mainContent.addEventListener("animationend", () => {
+      mainContent.classList.remove("initial-load");
+    });
+  });
+
+  const chatEndpoint = "{{ url_for('cardiobot.chat') }}";
+
+  function showWelcomeBubble() {
+    const chatHistory = document.getElementById("chat-history");
+    const welcomeHTML = `
+      <div class="flex items-center space-x-3">
+        <div class="text-green-500 text-2xl">
+          <i class="fas fa-robot"></i>
+        </div>
+        <div class="
+            inline-block
+            max-w-xs
+            bg-gray-200
+            p-4
+            rounded-lg
+            shadow-md
+            transition-transform transform duration-200
+            hover:scale-[1.02]
+            text-left
+            whitespace-normal
+          ">
+          <p class="m-0 leading-relaxed">
+            Halo! Saya adalah Cardiobot. Saya hanya akan menjawab pertanyaan seputar kardiovaskular.
+          </p>
+        </div>
+      </div>`;
+
+    chatHistory.innerHTML = welcomeHTML;
+    saveChatHistory();
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const saved = sessionStorage.getItem("chatHistory");
+    if (saved) {
+      document.getElementById("chat-history").innerHTML = saved;
+    } else {
+      showWelcomeBubble();
+    }
+  });
+
+  function saveChatHistory() {
+    const html = document.getElementById("chat-history").innerHTML;
+    sessionStorage.setItem("chatHistory", html);
+  }
+
+  function clearChatHistory() {
+    sessionStorage.removeItem("chatHistory");
+    showWelcomeBubble();
+
+    fetch("{{ url_for('cardiobot.clear_cache') }}", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    })
+      .then((res) => {
+        if (!res.ok) console.warn("Gagal clear chat_cache di server");
+        else console.log("chat_cache cleared server-side");
+      })
+      .catch((err) => console.error("Error clearing cache:", err));
+  }
+
+  document
+    .getElementById("chat-input")
+    .addEventListener("keydown", function (event) {
+      if (event.key === "Enter") {
+        sendMessage();
+      }
+    });
+
+  function addMessageToChat(content, isBot = false, isError = false, sources = [], allTopics = []) {
+    {% if document %}
+      const documentTitle = {{ document.title_file|tojson }};
+      const previewUrl = {{ url_for('cardiobot.preview_file', file_id=document.id)|tojson }};
+    {% else %}
+      const documentTitle = '';
+      const previewUrl = '';
+    {% endif %}
+
+    const sourceDocs = [
+      {%- for doc in documents %}
+        {
+          id: {{ doc.id }},
+          title: {{ doc.title_file|tojson }},
+          previewUrl: {{ url_for('cardiobot.preview_file', file_id=doc.id)|tojson }}
+        }{{ "," if not loop.last }}
+      {%- endfor %}
+    ];
+
+    const chatHistory = document.getElementById("chat-history");
+    const messageDiv = document.createElement("div");
+    messageDiv.classList.add("flex", isBot ? "justify-start" : "justify-end");
+
+    const emojis = ["🎉", "🚀", "✨", "📝", "📌", "📖", "🔖"];
+    const headerEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+
+    let cleaned = content
+      .replace(/^\s*\*?\s*Sumber:.*$/gim, "")
+      .replace(/\(Sumber:.*?\)/gi, "")
+      .trim();
+
+    cleaned = cleaned.replace(/^\s*\*+\s*$/gm, "");
+    cleaned = cleaned.replace(/,\s*halaman\s*\d+\)/g, "");
+    cleaned = cleaned.replace(/\.{3,}\s*\d+/g, '');
+    cleaned = cleaned.replace(/^(BAB\s+[IVXLC]+|[0-9]+\.[0-9]*)\.\s*/gm, '');
+
+    let sourceLine = "";
+    if (isBot && Array.isArray(sources) && sources.length) {
+      const byFile = {};
+      sources.forEach(s => {
+        if (!byFile[s.file]) byFile[s.file] = new Set();
+        if (s.page) byFile[s.file].add(s.page);
+      });
+
+      const items = Object.entries(byFile).map(([file, pages]) => {
+        const url = sourceDocs.find(d => d.title === file)?.previewUrl || "#";
+        return `<li class="flex items-start break-words mb-2">
+          <a href="${url}" target="_blank" class="italic underline hover:text-blue-800 break-all">› ${file}</a> </li>`;
+      }).join("");
+
+      sourceLine = `<div class="border-t border-gray-400 mt-8 pt-2 text-sm text-gray-700"><strong>Relevant Document:</strong><ul class="list-disc list-inside break-words max-w-[400px] mt-2 space-y-3">${items}</ul></div>`;
+    }
+
+    let full = cleaned + sourceLine;
+
+    full = full.replace(
+      /^#{1,5}\s*(.+)$/gm,
+      (_match, h) => `<strong>${headerEmoji} ${h.trim()}</strong>`
+    );
+
+    let initialTopicItems = "";
+    let initialTopicLines = [];
+
+    if (full.includes("Dokumen yang tersedia berisi informasi tentang:")) {
+      const parts = full.split("Dokumen yang tersedia berisi informasi tentang:");
+      const intro = parts[0].trim();
+      const topicList = parts[1].trim();
+
+      const topicLines = topicList.split("\n").filter(line => line.startsWith("-"));
+      initialTopicLines = topicLines.filter(line => !line.includes("Dan lainnya"));
+      const hasMoreLine = topicLines.find(line => line.includes("Dan lainnya"));
+      let remainingCount = 0;
+      let hasMore = false;
+
+      if (hasMoreLine) {
+        const match = hasMoreLine.match(/Dan lainnya \(\+(\d+)\)/);
+        if (match) {
+          remainingCount = parseInt(match[1], 10);
+          hasMore = true;
+        }
+      }
+
+      if (!hasMore && allTopics.length > 0) {
+        remainingCount = allTopics.length - initialTopicLines.length;
+        hasMore = remainingCount > 0;
+      }
+
+      initialTopicItems = initialTopicLines
+        .map(line => {
+          const topic = line.replace(/^-/, "").trim();
+          return `<li class="flex items-start space-x-2">
+            <span class="text-purple-500 text-lg"><i class="fas fa-heartbeat"></i></span>
+            <span class="text-gray-800">${topic}</span>
+          </li>`;
+        })
+        .join("");
+
+      let moreLink = "";
+      if (hasMore) {
+        moreLink = `<li class="flex items-start space-x-2 expand-topics-item">
+          <span class="text-purple-500 text-lg"><i class="fas fa-heartbeat"></i></span>
+          <a href="#" class="text-blue-600 hover:underline expand-topics" data-all-topics='${JSON.stringify(allTopics)}'>Dan lainnya (+${remainingCount})</a>
+        </li>`;
+      }
+
+      full = `${intro} Dokumen yang tersedia berisi informasi tentang:
+        <ul class="list-none mt-2 space-y-2 topic-list">${initialTopicItems}${moreLink}</ul>`;
+    } else {
+      const lines = full.split("\n");
+      const processedLines = lines.map(line => {
+        if (/^\d+\.\s[^:]+:/.test(line)) {
+          return line.replace(/^(\d+\.\s[^:]+:)/, "<strong>$1</strong>");
+        }
+        return line;
+      });
+      full = processedLines.join("\n");
+    }
+
+    const html = full
+      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+      .replace(/\n/g, "<br>");
+
+    const messageContent = `
+      <div class="flex items-center space-x-3">
+        <div class="${isBot ? "text-green-500" : "text-blue-500"} text-2xl">
+          <i class="fas ${isBot ? "fa-robot" : "fa-user"}"></i>
+        </div>
+        <div class="max-w-xs inline-block m-1 ${isBot ? "bg-gray-200" : "bg-blue-600 text-white"}
+                    p-4 rounded-lg shadow-md transform transition-transform duration-200
+                    hover:scale-[1.02] ${isError ? "bg-red-200 text-red-800" : ""}">
+          <p class="message-content">${html}</p>
+        </div>
+      </div>`;
+
+    messageDiv.innerHTML = messageContent;
+
+    if (full.includes("Dokumen yang tersedia berisi informasi tentang:")) {
+      const expandLink = messageDiv.querySelector(".expand-topics");
+      if (expandLink) {
+        expandLink.addEventListener("click", (e) => {
+          e.preventDefault();
+          const allTopics = JSON.parse(expandLink.getAttribute("data-all-topics"));
+          const topicList = messageDiv.querySelector(".topic-list");
+          const expandItem = messageDiv.querySelector(".expand-topics-item");
+
+          console.log("allTopics from data-all-topics:", allTopics);
+          console.log("initialTopicLines length:", initialTopicLines.length);
+          console.log("remainingCount:", allTopics.length - initialTopicLines.length);
+          console.log("additionalTopics:", allTopics.slice(initialTopicLines.length));
+
+          if (expandItem) {
+            expandItem.remove();
+          } else {
+            console.error("expand-topics-item not found");
+          }
+
+          if (!topicList) {
+            console.error("topic-list not found");
+            return;
+          }
+
+          if (!allTopics || allTopics.length === 0) {
+            console.error("allTopics is empty or invalid from data-all-topics");
+            return;
+          }
+
+          const additionalTopics = allTopics.slice(initialTopicLines.length);
+          if (additionalTopics.length === 0) {
+            console.warn("No additional topics to display");
+            return;
+          }
+          const additionalTopicItems = additionalTopics
+            .map(topic => `
+              <li class="flex items-start space-x-2 pl-2">
+                <span class="text-purple-500 text-lg"> <i class="fas fa-heartbeat"></i></span>
+                <span class="text-gray-800 break-words">
+                  ${topic || 'Unknown Topic'}
+                </span>
+              </li>
+            `).join("");
+
+          console.log("additionalTopicItems HTML:", additionalTopicItems);
+          topicList.insertAdjacentHTML("beforeend", additionalTopicItems);
+          console.log("Added additional topics to DOM");
+          console.log("Updated topicList HTML:", topicList.innerHTML);
+
+          chatHistory.scrollTop = chatHistory.scrollHeight;
+          saveChatHistory();
+        });
+      } else {
+        console.error("expand-topics link not found");
+      }
+    }
+    chatHistory.appendChild(messageDiv);
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+    saveChatHistory();
+  }
+
+  function showTypingIndicator() {
+    const chatHistory = document.getElementById("chat-history");
+    if (document.getElementById("typing-indicator")) return;
+
+    const wrapper = document.createElement("div");
+    wrapper.id = "typing-indicator";
+    wrapper.classList.add("flex", "justify-start", "mb-2");
+
+    const icon = document.createElement("div");
+    icon.className = "text-green-500 text-2xl mr-2";
+    icon.innerHTML = '<i class="fas fa-robot"></i>';
+
+    const bubble = document.createElement("div");
+    bubble.className =
+      "bg-gray-200 p-3 rounded-lg shadow-md inline-flex items-center";
+
+    const thinkingSpan = document.createElement("span");
+    thinkingSpan.className = "typing-text";
+    thinkingSpan.textContent = "Thinking";
+
+    const dotsContainer = document.createElement("div");
+    dotsContainer.className = "typing-dots";
+
+    for (let i = 0; i < 3; i++) {
+      const dot = document.createElement("span");
+      dotsContainer.appendChild(dot);
+    }
+
+    bubble.appendChild(thinkingSpan);
+    bubble.appendChild(dotsContainer);
+    wrapper.appendChild(icon);
+    wrapper.appendChild(bubble);
+    chatHistory.appendChild(wrapper);
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+  }
+
+  async function sendMessage() {
+    const chatInput = document.getElementById("chat-input");
+    const message = chatInput.value.trim();
+    console.log("Sending message:", message);
+
+    if (message) {
+      addMessageToChat(message, false);
+      chatInput.value = "";
+
+      showTypingIndicator();
+      chatInput.disabled = true;
+
+      try {
+        const response = await fetch(chatEndpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: message }),
+        });
+
+        console.log("Response status:", response.status);
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.log("Full error response:", errorText);
+          throw new Error("Server error: " + response.status);
+        }
+
+        const data = await response.json();
+
+        if (data && data.answer) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+
+          const typ = document.getElementById("typing-indicator");
+          if (typ) typ.remove();
+
+          addMessageToChat(
+            data.answer,
+            true,
+            false,
+            data.sources,
+            data.all_topics
+          );
+        } else {
+          const typ = document.getElementById("typing-indicator");
+          if (typ) typ.remove();
+
+          addMessageToChat(
+            "Maaf, terjadi kesalahan dalam mendapatkan jawaban.",
+            true,
+            true,
+            data.sources,
+            data.all_topics
+          );
+        }
+      } catch (error) {
+        console.error("Fetch error:", error);
+        const typ = document.getElementById("typing-indicator");
+        if (typ) typ.remove();
+
+        addMessageToChat(
+          `Kesalahan: ${error.message}`,
+          true,
+          true
+        );
+      } finally {
+        chatInput.disabled = false;
+      }
+    }
+  }
+</script>
+{% endblock %}

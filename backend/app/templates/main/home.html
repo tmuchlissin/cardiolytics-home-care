@@ -1,0 +1,384 @@
+{% extends "base.html" %} {% block content %}
+<div class="w-full max-w-3xl mx-auto px-4">
+  <!-- Flash Messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %} {% if
+  messages %}
+  <div class="mb-4">
+    {% for category, message in messages %}
+    <div
+      class="flash-message p-3 rounded-lg text-center font-semibold {% if category == 'success' %} bg-green-100 border border-green-400 text-green-700 {% elif category == 'warning' %} bg-yellow-100 border border-yellow-400 text-yellow-700 {% elif category == 'danger' %} bg-red-100 border border-red-400 text-red-700 {% elif category == 'attention' %} bg-gray-100 border border-gray-400 text-gray-700 {% endif %}"
+    >
+      {{ message }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %} {% endwith %}
+</div>
+<div class="px-5 py-1 max-w-7xl mx-auto">
+  <link
+    href="https://cdn.jsdelivr.net/npm/heroicons/2.0.18/dist/heroicons.min.css"
+    rel="stylesheet"
+  />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+
+  <!-- Personal Greeting -->
+  <div class="mb-12 animate-fade-in relative">
+    <h1
+      class="text-3xl sm:text-3xl font-bold mb-4 tracking-tight text-gray-800 flex items-center"
+    >
+      <svg
+        class="w-8 h-8 mr-3 text-blue-500"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M5 13l4 4L19 7"
+        ></path>
+      </svg>
+      Welcome, {{ current_user.full_name }}!
+    </h1>
+    <a
+      href="{{ url_for('main.edit_profile') }}"
+      class="absolute top-0 right-0 flex items-center text-blue-600 hover:text-blue-800 transition-colors duration-200"
+    >
+      <svg
+        class="w-5 h-5 mr-1"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+        ></path>
+      </svg>
+      Edit Profile
+    </a>
+    <p class="mt-2 text-lg text-gray-600">
+      Monitor your cardiovascular health easily and comfortably with
+      Cardiolytics.
+    </p>
+  </div>
+
+  <!-- Health Summary -->
+  <div
+    class="bg-white p-8 rounded-3xl shadow-lg mb-12 transform hover:scale-[1.01] transition-transform duration-300"
+  >
+    <h2 class="text-2xl font-semibold mb-6 flex items-center text-gray-800">
+      <svg
+        class="w-7 h-7 mr-3 text-red-500"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+        ></path>
+      </svg>
+      Health Summary
+    </h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <!-- Patient Profile -->
+      <div class="space-y-5">
+        <p class="flex items-center text-gray-700">
+          <svg
+            class="w-5 h-5 mr-2 text-blue-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+            ></path>
+          </svg>
+          <span class="font-medium">Age:</span>
+          <span class="ml-2">{{ age if age is not none else 'Not set' }}</span>
+        </p>
+        <p class="flex items-center text-gray-700">
+          <svg
+            class="w-5 h-5 mr-2 text-blue-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+            ></path>
+          </svg>
+          <span class="font-medium">Gender:</span>
+          <span class="ml-2">{{ profile.gender }}</span>
+        </p>
+        <p class="flex items-center text-gray-700">
+          <svg
+            class="w-5 h-5 mr-2 text-blue-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+            ></path>
+          </svg>
+          <span class="font-medium">Address:</span>
+          <span class="ml-2">
+            {% if profile.address and profile.city and profile.postal_code %} {{
+            profile.address }}, {{ profile.city }}, {{ profile.postal_code }} {%
+            else %} Not set {% endif %}
+          </span>
+        </p>
+      </div>
+      <!-- Latest Health Data -->
+      <div class="space-y-5">
+        {% if latest_patient_data %}
+        <p class="flex items-center text-gray-700">
+          <svg
+            class="w-5 h-5 mr-2 text-yellow-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M5 10l7-7m0 0l7 7m-7-7v18"
+            ></path>
+          </svg>
+          <span class="font-medium">Blood Pressure:</span>
+          <span class="ml-2"
+            >{{ latest_patient_data.systolic }}/{{ latest_patient_data.diastolic
+            }} mmHg</span
+          >
+        </p>
+        <p class="flex items-center text-gray-700">
+          <svg
+            class="w-5 h-5 mr-2 text-yellow-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 6h16M4 12h16M4 18h7"
+            ></path>
+          </svg>
+          <span class="font-medium">BMI:</span>
+          <span class="ml-2">{{ latest_patient_data.bmi }}</span>
+        </p>
+        <p class="flex items-center text-gray-700">
+          <svg
+            class="w-5 h-5 mr-2 {% if latest_patient_data.cardio %}text-yellow-600{% else %}text-green-600{% endif %}"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+            ></path>
+          </svg>
+          <span class="font-medium">CVD Risk:</span>
+          <span
+            class="ml-2 inline-block px-3 py-1 text-sm font-medium rounded-lg {% if latest_patient_data.cardio %} text-yellow-600 bg-yellow-100 {% else %} text-green-600 bg-green-100 {% endif %}"
+          >
+            {% if latest_patient_data.cardio %}At Risk{% else %}Healthy{% endif
+            %}
+          </span>
+        </p>
+        {% else %}
+        <p class="text-gray-600 flex items-center">
+          <svg
+            class="w-5 h-5 mr-2 text-gray-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            ></path>
+          </svg>
+          No examination data yet. Try the 
+          <a
+            href="{{ url_for('cvd_predict.menu') }}"
+            class="text-blue-600 hover:underline font-medium"
+            >CVD Predict</a
+          >.
+        </p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Health Tips -->
+  <div
+    class="bg-white p-8 rounded-3xl shadow-lg mb-12 transform hover:scale-[1.01] transition-transform duration-300"
+  >
+    <h2 class="text-2xl font-semibold mb-4 flex items-center text-gray-800">
+      <svg
+        class="w-7 h-7 mr-3 text-yellow-500"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+        ></path>
+      </svg>
+      Daily Health Tips
+    </h2>
+    <ul class="text-gray-700 space-y-3 list-disc list-inside">
+      <li>
+        Stay hydrated by drinking at least 8 glasses of water daily to support
+        heart health.
+      </li>
+      <li>Avoid high-sodium foods to maintain stable blood pressure.</li>
+      <li>
+        Engage in light exercise for 30 minutes, such as brisk walking, most
+        days of the week.
+      </li>
+    </ul>
+  </div>
+
+  <!-- Device Status -->
+  <div
+    class="bg-white p-8 rounded-3xl shadow-lg mb-12 transform hover:scale-[1.01] transition-transform duration-300"
+  >
+    <h2 class="text-2xl font-semibold mb-4 flex items-center text-gray-800">
+      <svg
+        class="w-7 h-7 mr-3 text-green-500"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+        ></path>
+      </svg>
+      Device Status
+    </h2>
+    <p class="text-gray-700 flex items-center">
+      {% if device_status == 'connected' %}
+      <svg
+        class="w-5 h-5 mr-2 text-green-600"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M5 13l4 4L19 7"
+        ></path>
+      </svg>
+      <span class="text-green-600 font-medium">Device Connected</span>
+      {% elif device_status == 'disconnected' %}
+      <svg
+        class="w-5 h-5 mr-2 text-red-600"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M6 18L18 6M6 6l12 12"
+        ></path>
+      </svg>
+      <span class="text-red-600 font-medium">Device Disconnected</span>
+      {% else %}
+      <svg
+        class="w-5 h-5 mr-2 text-gray-500"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M13 16h-1v-4h-1m1-4h.01M21 12"
+        ></path>
+      </svg>
+      <span class="text-gray-600">No device connected.</span>
+      {% endif %}
+    </p>
+  </div>
+</div>
+<style>
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .animate-fade-in {
+    animation: fadeIn 0.6s ease-out;
+  }
+</style>
+<script>
+  setTimeout(function () {
+    let flashMessages = document.querySelectorAll(".flash-message");
+    flashMessages.forEach(function (msg) {
+      msg.style.transition = "opacity 0.5s";
+      msg.style.opacity = "0";
+      setTimeout(() => msg.remove(), 500);
+    });
+  }, 2000);
+</script>
+{% endblock %}

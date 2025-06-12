@@ -42,11 +42,11 @@ def login():
             if user.role == UserRole.admin:
                 return redirect(url_for('admin.user_approval'))
             else:
-                return redirect(url_for('main.index'))
+                return redirect(url_for('main.home'))
         else:
             flash("❌ Patient ID or password is incorrect.", "danger")
             print("❌ Invalid sign in attempt!")  # Debug
-    return render_template('login.html', form=form)
+    return render_template('auth/login.html', form=form)
 
 @auth.route('/forgot_password', methods=['GET', 'POST'])
 def forgot_password():
@@ -71,7 +71,7 @@ def forgot_password():
         else:
             flash("❕ Email address not found.", "danger")
 
-    return render_template('forgot_password.html')
+    return render_template('auth/forgot_password.html')
 
 @auth.route('/reset_password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
@@ -86,10 +86,10 @@ def reset_password(token):
 
         if new_password != confirm_password:
             flash("❕ Passwords do not match.", "danger")
-            return render_template('reset_password.html', token=token)
+            return render_template('auth/reset_password.html', token=token)
         if len(new_password) < 8:
             flash("❕ Password must be at least 8 characters.", "danger")
-            return render_template('reset_password.html', token=token)
+            return render_template('auth/reset_password.html', token=token)
         
         user = User.query.filter_by(email=email).first()
         if user:
@@ -101,7 +101,7 @@ def reset_password(token):
             flash("❕ User not found.", "danger")
             return redirect(url_for('auth.forgot_password'))
     
-    return render_template('reset_password.html', token=token)
+    return render_template('auth/reset_password.html', token=token)
 
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
@@ -161,7 +161,7 @@ def register():
             for error in errors:
                 print(f"❌ Error in {field}: {error}")  # Debugging
 
-    return render_template('register.html', form=form)
+    return render_template('auth/register.html', form=form)
 
 @auth.route('/logout')
 @login_required

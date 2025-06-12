@@ -79,7 +79,7 @@
             />
           </div>
 
-          <hr class="border-white mx-4 mt-2" />
+          <hr class="border-white mx-4 mt-1 mb-3" />
 
           <nav class="flex-1 px-4 space-y-2 mt-4">
             {% if current_user.is_authenticated and current_user.role.name ==
@@ -116,7 +116,7 @@
             {% else %}
             <!-- Menu untuk User -->
             <a
-              href="{{ url_for('main.index') }}"
+              href="{{ url_for('main.home') }}"
               class="block py-2 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center text-base font-medium"
             >
               <i class="fas fa-home mr-2 text-xl"></i>

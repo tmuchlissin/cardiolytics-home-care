@@ -3,6 +3,7 @@ import pytz
 from dotenv import load_dotenv
 import re
 from langchain_huggingface import HuggingFaceEmbeddings
+import torch
 
 load_dotenv()
 
@@ -18,10 +19,11 @@ INDEX_NAME = "cardiolytics"
 NAMESPACE = "cardiobot"
 PINECONE_SPEC = {"cloud": "aws", "region": "us-east-1"}
 EMBEDDING_DIMENSION = 1024
-EMBEDDER= HuggingFaceEmbeddings(
+EMBEDDER = HuggingFaceEmbeddings(
     model_name="intfloat/multilingual-e5-large",
-    model_kwargs={'device': 'cpu'}
+    model_kwargs={'device': 'cuda' if torch.cuda.is_available() else 'cpu'}
 )
+
 
 # File settings
 ALLOWED_EXTENSIONS = {'pdf', 'docx', 'txt'}
@@ -88,45 +90,24 @@ GENERAL_QUERY_PATTERN = re.compile(
     )
 
 CHAT_PROMPT_TEMPLATE = """
-INSTRUKSI UNTUK LLM (WAJIB DIIKUTI):
-
-1. Jawablah **hanya berdasarkan informasi yang terdapat dalam bagian "Konteks Dokumen"**.
-2. **JANGAN** menambahkan informasi dari luar dokumen, asumsi, atau pendapat pribadi.
-3. Jika tidak ada informasi yang relevan secara spesifik dalam dokumen untuk menjawab pertanyaan, atau jika dokumen yang tersedia tidak cukup relevan dengan topik pertanyaan (misalnya, hanya mengandung kata kunci umum tanpa menjelaskan topik spesifik), jawab dengan sopan: "Maaf, informasi tidak ditemukan dalam dokumen yang tersedia."
-4. Gunakan **bahasa Indonesia** yang **sopan**, **jelas**, dan **mudah dipahami oleh pasien awam**.
-5. Gunakan format **Markdown**:
-    - Berikan heading untuk judul utama.
-    - Gunakan list bernomor (`1.`, `2.`, dst.) untuk menjelaskan poin atau langkah.
-6. Bila memungkinkan, **kutip langsung kalimat dari dokumen** sebagai bukti atau penegas jawaban, dan sebutkan sumbernya (misalnya, nama file dokumen).
-7. Perlakukan kata "Anda" sebagai merujuk pada **pengguna manusia** yang sedang bertanya.
-8. Setelah memberikan jawaban utama, **ajukan SATU pertanyaan lanjutan**:
+**INSTRUKSI:**
+- Jawab **hanya berdasarkan konteks dokumen** menggunakan **bahasa Indonesia yang sopan, jelas, dan mudah dipahami oleh pasien awam**.
+- Pahami maksud pertanyaan meskipun terdapat **kesalahan ketik (typo)**, ejaan tidak baku, atau struktur kalimat yang tidak sempurna.
+- Gunakan riwayat percakapan (terutama 3-5 pertanyaan terakhir) untuk memahami konteks pengguna secara dinamis.
+- Jika informasi tidak relevan atau tidak ditemukan, jawab: "Maaf, informasi tidak ditemukan dalam dokumen yang tersedia."
+- Gunakan format **Markdown** dengan heading dan list bernomor untuk poin atau langkah.
+- Setelah jawaban, tambahkan satu pertanyaan pancingan kepada pengguna (bersifat ya/tidak, relevan, dan memperdalam topik — bukan mengulang). Jangan berikan pertanyaan jika jawabannya "informasi tidak ditemukan".
     - ❗ **Pertanyaan harus relevan langsung dengan informasi yang baru Anda jelaskan dalam dokumen** dan harus dapat dijawab berdasarkan informasi dalam dokumen.
     - ❓ **Bentuk pertanyaan sebagai ajakan atau pilihan** yang spesifik, seperti:
         - "Apakah Anda ingin tahu lebih lanjut tentang [subtopik spesifik dari dokumen, misalnya 'profil lipid' atau 'pencegahan']?"
         - "Ingin saya jelaskan lebih lanjut tentang [topik spesifik, misalnya 'tes darah untuk kolesterol' atau 'pengobatan dengan statin']?"
         - "Perlu saya bantu jelaskan [aspek spesifik, misalnya 'faktor risiko yang dapat diubah']?"
-    - 🟢 Pertanyaan ini **harus bisa dijawab dengan 'ya', 'tidak', atau variasinya** (misalnya, "tentu", "tidak perlu", "kurang jelas").
-    - 🟡 Jika pengguna menjawab "ya" untuk pertanyaan lanjutan sebelumnya, **rujuk kembali ke riwayat percakapan atau konteks dokumen** untuk memilih satu subtopik spesifik (misalnya, gejala, pengobatan, atau faktor risiko yang disebutkan sebelumnya) dan ajukan pertanyaan lanjutan berdasarkan itu.
-    - 🚫 Hindari pertanyaan terbuka seperti "mengapa?" atau "menurut Anda bagaimana?".
-    - 🚫 Jangan ajukan pertanyaan lanjutan yang tidak dapat dijawab berdasarkan dokumen.
-    - Berikan jarak newline "\n" sebelum pertanyaan lanjutan
-9. Jika pengguna menjawab "ya" untuk pertanyaan lanjutan sebelumnya, **pilih satu subtopik spesifik** dari konteks dokumen atau riwayat percakapan (misalnya, 'profil lipid' atau 'tes darah' jika konteksnya tentang faktor risiko) dan berikan penjelasan lebih lanjut berdasarkan dokumen. Jika tidak ada subtopik yang jelas, pilih subtopik yang paling relevan dari dokumen.
-10. Jangan berimajinasi atau menyusun jawaban tambahan jika tidak ada informasi dalam dokumen.
-11. Jawaban Anda **harus memiliki kesamaan substansi yang kuat dengan dokumen** dan secara spesifik menjawab pertanyaan pengguna. Jika dokumen hanya mengandung informasi umum tanpa menjelaskan topik spesifik yang ditanyakan, kembalikan pesan: "Maaf, informasi tidak ditemukan dalam dokumen yang tersedia."
-12. Jika jawaban adalah "Maaf, informasi tidak ditemukan dalam dokumen yang tersedia," **jangan ajukan pertanyaan lanjutan**.
-13. Jika pertanyaan pengguna bersifat umum seperti "apa informasi yang Anda miliki?", berikan ringkasan singkat tentang topik utama yang dibahas dalam dokumen, seperti "Dokumen yang tersedia berisi informasi tentang dislipidemia, faktor risiko kardiovaskular, dan pengobatan jantung."
 
----
-
-**PERTANYAAN PENGGUNA:**  
-{question}
-
-**KONTEKS DOKUMEN:**  
-{context}
-
-**RIWAYAT PERCAKAPAN SEBELUMNYA:**  
-{chat_history}
+**PERTANYAAN:** {question}
+**KONTEKS:** {context}
+**RIWAYAT:** {chat_history}
 """
+
 
 CONVERSATION_CONTEXT = {
     "last_topic": None  

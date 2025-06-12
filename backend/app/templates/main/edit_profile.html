@@ -1,0 +1,233 @@
+{% extends "base.html" %} {% block content %}
+<div class="px-5 py-1 max-w-7xl mx-auto sm:px-6 lg:px-8">
+  <div class="w-full max-w-3xl mx-auto px-4">
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %} {% if
+    messages %}
+    <div class="mb-4">
+      {% for category, message in messages %}
+      <div
+        class="flash-message p-3 rounded-lg text-center font-semibold {% if category == 'success' %} bg-green-100 border border-green-400 text-green-700 {% elif category == 'warning' %} bg-yellow-100 border border-yellow-400 text-yellow-700 {% elif category == 'danger' %} bg-red-100 border border-red-400 text-red-700 {% elif category == 'attention' %} bg-gray-100 border border-gray-400 text-gray-700 {% endif %}"
+      >
+        {{ message }}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %} {% endwith %}
+
+    <div class="max-w-3xl w-full mx-auto space-y-10">
+      <div class="text-center">
+        <h1
+          class="text-xl sm:text-2xl font-bold mb-4 tracking-tight text-gray-800"
+        >
+          Complete Your Profile
+        </h1>
+        <p class="mt-2 text-lg text-gray-600">
+          Fill in your details to unlock all application features and
+          personalize your experience.
+        </p>
+      </div>
+
+      <form
+        method="POST"
+        class="bg-white p-6 rounded-2xl shadow-lg space-y-8 sm:p-8"
+        id="profileForm"
+      >
+        {{ form.hidden_tag() }}
+        <div
+          class="grid grid-cols-1 gap-y-6 sm:grid-cols-2 sm:gap-x-8 sm:gap-y-8"
+        >
+          <div class="space-y-2">
+            <label
+              for="{{ form.date_of_birth.id }}"
+              class="block text-sm font-semibold text-gray-700"
+            >
+              Date of Birth <span class="text-red-500">*</span>
+            </label>
+            {{ form.date_of_birth(class="w-full p-3 border border-gray-300
+            rounded-lg bg-gray-100 focus:ring-2 focus:ring-blue-500
+            focus:border-blue-500 transition duration-150 ease-in-out shadow-sm
+            " + ("border-red-500" if form.date_of_birth.errors else ""),
+            placeholder="YYYY-MM-DD, e.g., 1990-01-01") }} {% if
+            form.date_of_birth.errors %}
+            <div class="text-red-500 text-sm mt-1">
+              {% for error in form.date_of_birth.errors %} {{ error }}<br />
+              {% endfor %}
+            </div>
+            {% endif %}
+          </div>
+          <div class="space-y-2">
+            <label
+              for="{{ form.gender.id }}"
+              class="block text-sm font-semibold text-gray-700"
+            >
+              Gender <span class="text-red-500">*</span>
+            </label>
+            {{ form.gender(class="w-full p-3 border border-gray-300 rounded-lg
+            bg-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+            transition duration-150 ease-in-out shadow-sm " + ("border-red-500"
+            if form.gender.errors else "")) }} {% if form.gender.errors %}
+            <div class="text-red-500 text-sm mt-1">
+              {% for error in form.gender.errors %} {{ error }}<br />
+              {% endfor %}
+            </div>
+            {% endif %}
+          </div>
+          <div class="space-y-2">
+            <label
+              for="{{ form.national_id.id }}"
+              class="block text-sm font-semibold text-gray-700"
+            >
+              National ID <span class="text-red-500">*</span>
+            </label>
+            {{ form.national_id(class="w-full p-3 border border-gray-300
+            rounded-lg bg-gray-100 focus:ring-2 focus:ring-blue-500
+            focus:border-blue-500 transition duration-150 ease-in-out shadow-sm
+            " + ("border-red-500" if form.national_id.errors else ""),
+            placeholder="e.g., 1234567890123456") }} {% if
+            form.national_id.errors %}
+            <div class="text-red-500 text-sm mt-1">
+              {% for error in form.national_id.errors %} {{ error }}<br />
+              {% endfor %}
+            </div>
+            {% endif %}
+          </div>
+          <div class="space-y-2">
+            <label
+              for="{{ form.emergency_contact.id }}"
+              class="block text-sm font-semibold text-gray-700"
+            >
+              Emergency Contact <span class="text-red-500">*</span>
+            </label>
+            {{ form.emergency_contact(class="w-full p-3 border border-gray-300
+            rounded-lg bg-gray-100 focus:ring-2 focus:ring-blue-500
+            focus:border-blue-500 transition duration-150 ease-in-out shadow-sm
+            " + ("border-red-500" if form.emergency_contact.errors else ""),
+            placeholder="e.g., +62 812 3456 7890") }} {% if
+            form.emergency_contact.errors %}
+            <div class="text-red-500 text-sm mt-1">
+              {% for error in form.emergency_contact.errors %} {{ error }}<br />
+              {% endfor %}
+            </div>
+            {% endif %}
+          </div>
+          <div class="space-y-2">
+            <label
+              for="{{ form.address.id }}"
+              class="block text-sm font-semibold text-gray-700"
+            >
+              Address
+            </label>
+            {{ form.address(class="w-full p-3 border border-gray-300 rounded-lg
+            bg-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+            transition duration-150 ease-in-out shadow-sm " + ("border-red-500"
+            if form.address.errors else ""), placeholder="e.g., 123 Nangka Asem
+            Street") }} {% if form.address.errors %}
+            <div class="text-red-500 text-sm mt-1">
+              {% for error in form.address.errors %} {{ error }}<br />
+              {% endfor %}
+            </div>
+            {% endif %}
+          </div>
+          <div class="space-y-2">
+            <label
+              for="{{ form.city.id }}"
+              class="block text-sm font-semibold text-gray-700"
+            >
+              City
+            </label>
+            {{ form.city(class="w-full p-3 border border-gray-300 rounded-lg
+            bg-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+            transition duration-150 ease-in-out shadow-sm " + ("border-red-500"
+            if form.city.errors else ""), placeholder="e.g., Jakarta") }} {% if
+            form.city.errors %}
+            <div class="text-red-500 text-sm mt-1">
+              {% for error in form.city.errors %} {{ error }}<br />
+              {% endfor %}
+            </div>
+            {% endif %}
+          </div>
+          <div class="space-y-2">
+            <label
+              for="{{ form.postal_code.id }}"
+              class="block text-sm font-semibold text-gray-700"
+            >
+              Postal Code
+            </label>
+            {{ form.postal_code(class="w-full p-3 border border-gray-300
+            rounded-lg bg-gray-100 focus:ring-2 focus:ring-blue-500
+            focus:border-blue-500 transition duration-150 ease-in-out shadow-sm
+            " + ("border-red-500" if form.postal_code.errors else ""),
+            placeholder="e.g., 12345") }} {% if form.postal_code.errors %}
+            <div class="text-red-500 text-sm mt-1">
+              {% for error in form.postal_code.errors %} {{ error }}<br />
+              {% endfor %}
+            </div>
+            {% endif %}
+          </div>
+          <div class="space-y-2">
+            <label
+              for="{{ form.occupation.id }}"
+              class="block text-sm font-semibold text-gray-700"
+            >
+              Occupation
+            </label>
+            {{ form.occupation(class="w-full p-3 border border-gray-300
+            rounded-lg bg-gray-100 focus:ring-2 focus:ring-blue-500
+            focus:border-blue-500 transition duration-150 ease-in-out shadow-sm
+            " + ("border-red-500" if form.occupation.errors else ""),
+            placeholder="e.g., Software Engineer") }} {% if
+            form.occupation.errors %}
+            <div class="text-red-500 text-sm mt-1">
+              {% for error in form.occupation.errors %} {{ error }}<br />
+              {% endfor %}
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        <div class="flex justify-end space-x-4 pt-6">
+          <a
+            href="{{ url_for('main.home') }}"
+            class="inline-flex items-center px-6 py-3 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out shadow-sm"
+          >
+            Cancel
+          </a>
+          <button
+            type="submit"
+            id="saveButton"
+            class="inline-flex items-center px-6 py-3 rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out shadow-sm disabled:bg-gray-400 disabled:cursor-not-allowed"
+            disabled
+          >
+            Save Profile
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Handle form input changes for Save button
+    const form = document.getElementById("profileForm");
+    const saveButton = document.getElementById("saveButton");
+    const inputs = form.querySelectorAll("input, select");
+    inputs.forEach((input) => {
+      input.addEventListener("input", enableSaveButton);
+      input.addEventListener("change", enableSaveButton);
+    });
+
+    function enableSaveButton() {
+      saveButton.disabled = false;
+    }
+  });
+
+  setTimeout(function () {
+    let flashMessages = document.querySelectorAll(".flash-message");
+    flashMessages.forEach(function (msg) {
+      msg.style.transition = "opacity 0.5s";
+      msg.style.opacity = "0";
+      setTimeout(() => msg.remove(), 500);
+    });
+  }, 2000);
+</script>
+{% endblock %}

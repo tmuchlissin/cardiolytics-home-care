@@ -49,7 +49,7 @@ def menu():
         patients_with_age.append((patient, age))
     
     return render_template(
-        'cvd_predict.html',
+        'main/cvd_predict.html',
         navbar_title='CVD Predict',
         form=form,
         patients_with_age=patients_with_age,
@@ -182,7 +182,7 @@ def upload_menu():
     patients_with_age = [(patient, calculate_age(patient.user.profile.date_of_birth if patient.user and patient.user.profile else None)) for patient in patients]
     
     return render_template(
-        'cvd_predict.html',
+        'main/cvd_predict.html',
         form=form,
         navbar_title='CVD Predict',
         active_tab='predict',
@@ -263,7 +263,7 @@ def history_menu():
     
     form = PatientDataForm()
     return render_template(
-        'cvd_predict.html',
+        'main/cvd_predict.html',
         patients_with_age=patients_with_age,
         form=form,
         navbar_title='CVD History',

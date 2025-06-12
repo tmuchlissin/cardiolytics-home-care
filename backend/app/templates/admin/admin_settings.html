@@ -1,0 +1,1357 @@
+{% extends "base.html" %} {% block content %}
+<!-- Flash Messages Container -->
+<div class="w-full max-w-3xl mx-auto px-4">
+  {% with messages = get_flashed_messages(with_categories=true,
+  category_filter=['success', 'warning', 'error', 'attention']) %} {% if
+  messages %}
+  <div class="mb-4">
+    {% for category, message in messages %}
+    <div
+      class="flash-message p-3 rounded-lg text-center font-semibold {% if category == 'success' %} bg-green-100 border border-green-400 text-green-700 {% elif category == 'warning' %} bg-yellow-100 border border-yellow-400 text-yellow-700 {% elif category == 'error' %} bg-red-100 border border-red-400 text-red-700 {% elif category == 'attention' %} bg-gray-100 border border-gray-400 text-gray-700 {% endif %}"
+      role="alert"
+    >
+      <span class="block sm:inline">{{ message }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %} {% endwith %}
+</div>
+
+<div class="px-5 py-1">
+  <h1 class="text-2xl font-bold mb-4">Settings</h1>
+</div>
+
+<!-- Navbar -->
+<nav class="mb-4">
+  <div class="px-4">
+    <ul class="inline-flex space-x-3 border-b-2 border-gray-300 pb-3">
+      <!-- Models -->
+      <li>
+        <a
+          href="{{ url_for('admin.settings', tab='models') }}"
+          data-tab="models"
+          class="nav-item inline-flex items-center px-3 py-1.5 bg-white border border-gray-300 rounded-md shadow-sm transition-colors duration-200 ease-in-out text-gray-600 hover:text-gray-900 text-sm {% if active_tab=='models' %}font-semibold border-b-4 border-indigo-500 bg-indigo-50{% else %}font-medium{% endif %}"
+        >
+          <!-- Icon Model -->
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-4 w-4 mr-1"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M20 13V7a2 2 0 00-2-2h-4.586a2 2 0 01-1.414-.586l-2-2A2 2 0 007.586 2H5a2 2 0 00-2 2v4M4 21v-6a2 2 0 012-2h4.586a2 2 0 001.414-.586l2-2A2 2 0 0116.414 10H19a2 2 0 012 2v6"
+            />
+          </svg>
+          Model
+        </a>
+      </li>
+      <!-- Devices -->
+      <li>
+        <a
+          href="{{ url_for('admin.settings', tab='devices') }}"
+          data-tab="devices"
+          class="nav-item inline-flex items-center px-3 py-1.5 bg-white border border-gray-300 rounded-md shadow-sm transition-colors duration-200 ease-in-out text-gray-600 hover:text-gray-900 text-sm {% if active_tab=='devices' %}font-semibold border-b-4 border-indigo-500 bg-indigo-50{% else %}font-medium{% endif %}"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-4 w-4 mr-1"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9.75 17h4.5m-9 0h9a2.25 2.25 0 002.25-2.25V6A2.25 2.25 0 0016.5 3.75h-9A2.25 2.25 0 005.25 6v8.75A2.25 2.25 0 007.5 17z"
+            />
+          </svg>
+          Devices
+        </a>
+      </li>
+      <!-- Docs -->
+      <li>
+        <a
+          href="{{ url_for('admin.settings', tab='docs') }}"
+          data-tab="docs"
+          class="nav-item inline-flex items-center px-3 py-1.5 bg-white border border-gray-300 rounded-md shadow-sm transition-colors duration-200 ease-in-out text-gray-600 hover:text-gray-900 text-sm {% if active_tab=='docs' %}font-semibold border-b-4 border-indigo-500 bg-indigo-50{% else %}font-medium{% endif %}"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-4 w-4 mr-1"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M7 7h10M7 11h10M7 15h10M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"
+            />
+          </svg>
+          Docs
+        </a>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+<div class="px-5 py-2">
+  <!-- Models Content -->
+  <div
+    id="models-content"
+    class="tab-content {% if active_tab == 'models' %}block{% else %}hidden{% endif %}"
+  >
+    <!-- Model Setting Section -->
+    <div class="mb-6">
+      <div
+        class="text-sm text-gray-700 border border-gray-300 p-4 rounded-lg bg-gray-100 w-fit"
+      >
+        <p class="text-sm text-gray-800 mb-2"><strong>Model Setting</strong></p>
+        <p class="text-sm text-gray-700" style="text-align: justify">
+          Manage and update predictive models for cardiovascular patients.
+        </p>
+        <div style="text-align: justify" class="mt-3">
+          <strong>Instructions:</strong>
+          <ul class="list-disc list-inside ml-4 mt-1">
+            <li>
+              Click <strong>+</strong> to upload a new model if none exists.
+            </li>
+            <li>The uploaded model becomes active automatically.</li>
+            <li>Only one model can be active at a time.</li>
+            <li>
+              To replace, click <strong>Delete</strong> in the Actions column
+              first.
+            </li>
+            <li>Then click <strong>+</strong> to upload the new model.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    {% if not model %}
+    <div class="text-center py-8">
+      <p class="text-gray-600 mb-4">No model uploaded</p>
+      <button
+        id="openModalModelsBtn"
+        class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md text-xl font-semibold"
+      >
+        +
+      </button>
+    </div>
+    {% else %}
+    <div class="flex items-center gap-2 mb-4 justify-start">
+      <h2 class="text-lg font-semibold">Uploaded Model</h2>
+    </div>
+    <div class="overflow-hidden rounded-xl">
+      <table
+        class="min-w-full bg-white border border-gray-200 shadow-md text-center"
+      >
+        <thead class="bg-gray-50">
+          <tr>
+            <th
+              class="px-6 py-2 text-xs font-semibold text-gray-600 uppercase border-b border-gray-200 tracking-wider"
+            >
+              Name
+            </th>
+            <th
+              class="px-6 py-2 text-xs font-semibold text-gray-600 uppercase border-b border-gray-200 tracking-wider"
+            >
+              Model Name
+            </th>
+            <th
+              class="px-6 py-2 text-xs font-semibold text-gray-600 uppercase border-b border-gray-200 tracking-wider"
+            >
+              Uploaded At
+            </th>
+            <th
+              class="px-6 py-2 text-xs font-semibold text-gray-600 uppercase border-b border-gray-200 tracking-wider"
+            >
+              Status
+            </th>
+            <th
+              class="px-6 py-2 text-xs font-semibold text-gray-600 uppercase border-b border-gray-200 tracking-wider text-center"
+            >
+              Actions
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-300 text-sm text-center">
+          <tr class="odd:bg-blue-50 even:bg-white hover:bg-gray-100">
+            <td
+              class="px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-900"
+            >
+              <span
+                class="inline-block px-3 py-1 text-xs font-semibold rounded-full"
+              >
+                {{ model.name }}
+              </span>
+            </td>
+            <td class="px-6 py-2 whitespace-nowrap text-sm text-gray-700">
+              <span
+                class="inline-block px-3 py-1 text-xs font-medium rounded-full"
+              >
+                {{ model.filename }}
+              </span>
+            </td>
+            <td class="px-6 py-2 whitespace-nowrap text-sm text-gray-700">
+              <span
+                class="inline-block px-3 py-1 text-xs font-medium rounded-full"
+              >
+                {{ model.created_at.strftime('%Y-%m-%d %H:%M') }}
+              </span>
+            </td>
+            <td class="px-6 py-2 whitespace-nowrap">
+              {% if model.is_active %}
+              <span
+                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800"
+              >
+                Active
+              </span>
+              {% else %}
+              <span
+                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800"
+              >
+                Inactive
+              </span>
+              {% endif %}
+            </td>
+            <td class="px-6 py-2 whitespace-nowrap text-center">
+              <form
+                method="POST"
+                action="{{ url_for('admin.delete_model', model_id=model.id) }}"
+              >
+                <button
+                  type="submit"
+                  class="inline-flex items-center gap-1 text-sm bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-4 w-4 inline-block"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3m5 0H6"
+                    />
+                  </svg>
+                  <span>Delete</span>
+                </button>
+              </form>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Devices Content -->
+  <div
+    id="devices-content"
+    class="tab-content {% if active_tab == 'devices' %}block{% else %}hidden{% endif %}"
+  >
+    <!-- Devices Setting Section -->
+    <div class="mb-6">
+      <div
+        class="text-sm text-gray-700 border border-gray-300 p-4 rounded-lg bg-gray-100 w-fit"
+      >
+        <p class="text-sm text-gray-800 mb-1">
+          <strong>Devices Setting</strong>
+        </p>
+        <p class="text-sm text-gray-700" style="text-align: justify">
+          Manage IoT devices for patient monitoring.
+        </p>
+        <div style="text-align: justify" class="mt-3">
+          <strong>Instructions:</strong>
+          <ul class="list-disc list-inside ml-4 mt-1">
+            <li>Click <strong>+</strong> to add a device.</li>
+            <li>View devices and details in the table below.</li>
+            <li>Search by <strong>ID</strong> or <strong>Model</strong>.</li>
+            <li>
+              Use <strong>Edit</strong> or <strong>Delete</strong> on each row.
+            </li>
+            <li>Keep <strong>ID</strong> unique.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    {% if not devices or devices|length == 0 %}
+    <div class="flex flex-col items-center justify-center py-8 space-y-4">
+      <p class="text-gray-600 text-base">No device uploaded</p>
+      <button
+        id="openModalDevicesBtn"
+        class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md text-xl font-semibold"
+      >
+        +
+      </button>
+    </div>
+    {% else %}
+    <div class="flex items-center justify-between mb-2">
+      <div class="flex items-center mb-2">
+        <h2 class="text-lg font-semibold">Uploaded Devices</h2>
+        <button
+          id="openModalDevicesBtn"
+          class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 rounded-md text-lg font-semibold"
+        >
+          +
+        </button>
+      </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div>
+      <input
+        type="text"
+        id="searchInputDevice"
+        placeholder="Search..."
+        value="{{ search_query }}"
+        class="w-72 px-4 py-2 border border-gray-300 rounded-md focus:outline-none mb-4"
+      />
+    </div>
+
+    <div class="overflow-hidden rounded-xl">
+      <table
+        class="min-w-full bg-white border border-gray-200 shadow-md text-center"
+      >
+        <thead class="bg-gray-50">
+          <tr>
+            <th
+              class="px-6 py-2 text-xs font-semibold text-gray-700 uppercase border-b tracking-wider"
+            >
+              Device ID
+            </th>
+            <th
+              class="px-6 py-2 text-xs font-semibold text-gray-700 uppercase border-b tracking-wider"
+            >
+              Model
+            </th>
+            <th
+              class="px-6 py-2 text-xs font-semibold text-gray-700 uppercase border-b tracking-wider"
+            >
+              Registered At
+            </th>
+            <th
+              class="px-6 py-2 text-xs font-semibold text-gray-700 uppercase border-b tracking-wider"
+            >
+              Updated At
+            </th>
+            <th
+              class="px-6 py-2 text-xs font-semibold text-gray-700 uppercase border-b tracking-wider text-center"
+            >
+              Actions
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-300 text-sm text-center">
+          {% for dev in devices %}
+          <tr class="odd:bg-blue-50 even:bg-white hover:bg-gray-100">
+            <td
+              class="px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-900"
+            >
+              <span
+                class="inline-block px-3 py-1 text-xs font-semibold rounded-full"
+              >
+                {{ dev.id }}
+              </span>
+            </td>
+            <td class="px-6 py-2 whitespace-nowrap text-sm text-gray-700">
+              <span
+                class="inline-block px-3 py-1 text-xs font-medium rounded-full"
+              >
+                {{ dev.model }}
+              </span>
+            </td>
+            <td class="px-6 py-2 whitespace-nowrap text-sm text-gray-700">
+              <span
+                class="inline-block px-3 py-1 text-xs font-medium rounded-full"
+              >
+                {{ dev.registered_at.strftime('%Y-%m-%d %H:%M') }}
+              </span>
+            </td>
+            <td class="px-6 py-2 whitespace-nowrap text-sm text-gray-700">
+              <span
+                class="inline-block px-3 py-1 text-xs font-medium rounded-full"
+              >
+                {{ dev.updated_at.strftime('%Y-%m-%d %H:%M') }}
+              </span>
+            </td>
+            <td class="px-6 py-2 whitespace-nowrap text-center">
+              <!-- Tombol Edit Device -->
+              <button
+                type="button"
+                class="inline-flex items-center gap-1 text-sm bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-md"
+                data-device-id="{{ dev.id }}"
+                data-device-model="{{ dev.model }}"
+                onclick="openEditModalDevices(this)"
+              >
+                <!-- Icon Pencil -->
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-4 w-4 inline-block"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 
+                           2.5 0 113.536 3.536L7 21H3v-4L16.732 3.732z"
+                  />
+                </svg>
+                <span>Edit</span>
+              </button>
+
+              <!-- Tombol Delete Device -->
+              <form
+                method="POST"
+                action="{{ url_for('admin.delete_device', device_id=dev.id) }}"
+                class="inline-block ml-2"
+              >
+                <button
+                  type="submit"
+                  class="inline-flex items-center gap-1 text-sm bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md"
+                >
+                  <!-- Icon Trash -->
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-4 w-4 inline-block"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 
+                             2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 
+                             0 00-1-1h-4a1 1 0 00-1 1v3m5 0H6"
+                    />
+                  </svg>
+                  <span>Delete</span>
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination Navigation -->
+    <div class="flex justify-center mt-4">
+      <nav class="inline-flex">
+        {% if device_pagination.has_prev %}
+        <a
+          href="{{ url_for('admin.settings', tab='devices', page=device_pagination.prev_num) }}"
+          class="px-3 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50 transition duration-150"
+        >
+          Prev
+        </a>
+        {% else %}
+        <span
+          class="px-3 py-2 text-xs font-medium text-gray-500 bg-gray-100 border border-gray-300 rounded-l-md"
+        >
+          Prev
+        </span>
+        {% endif %} {% for p in device_pagination.iter_pages(left_edge=1,
+        right_edge=1, left_current=2, right_current=2) %} {% if p %} {% if p ==
+        device_pagination.page %}
+        <span
+          class="px-3 py-2 text-xs font-medium text-white bg-blue-600 border border-blue-600"
+        >
+          {{ p }}
+        </span>
+        {% else %}
+        <a
+          href="{{ url_for('admin.settings', tab='devices', page=p) }}"
+          class="px-3 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition duration-150"
+        >
+          {{ p }}
+        </a>
+        {% endif %} {% else %}
+        <span
+          class="px-3 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300"
+        >
+          …
+        </span>
+        {% endif %} {% endfor %} {% if device_pagination.has_next %}
+        <a
+          href="{{ url_for('admin.settings', tab='devices', page=device_pagination.next_num) }}"
+          class="px-4 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50 transition duration-150"
+        >
+          Next
+        </a>
+        {% else %}
+        <span
+          class="px-4 py-2 text-xs font-medium text-gray-500 bg-gray-100 border border-gray-300 rounded-r-md"
+        >
+          Next
+        </span>
+        {% endif %}
+      </nav>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Docs Content -->
+  <div
+    id="docs-content"
+    class="tab-content {% if active_tab == 'docs' %}block{% else %}hidden{% endif %}"
+  >
+    <div class="mb-6">
+      <div
+        class="text-sm text-gray-700 border border-gray-300 p-4 rounded-lg bg-gray-100 w-fit"
+      >
+        <p class="text-sm text-gray-800 mb-1">
+          <strong>Documents Setting</strong>
+        </p>
+        <p class="text-sm text-gray-700" style="text-align: justify">
+          This tab is for admin to manage source documents for patients to
+          access information using cardiobot.
+        </p>
+        <br />
+        <!-- list sekarang di luar <p> -->
+        <div style="text-align: justify">
+          <strong>Instructions:</strong>
+          <ul class="list-disc list-inside ml-4">
+            <li>
+              Upload a file via <strong>Upload Document</strong> or multiple via
+              <strong>Upload Folder</strong>.
+            </li>
+            <li>View new entries in the table below.</li>
+            <li>Search by <strong>Title</strong>.</li>
+            <li>
+              Click the <strong>Delete</strong> icon to remove a file, or
+              <strong>Delete All</strong> to clear all.
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="mb-6">
+      <h2 class="text-xl font-bold mb-4">Documents Management</h2>
+
+      <div class="mb-4 flex flex-wrap gap-3">
+        <!-- Upload Document -->
+        <button
+          onclick="openDocModal()"
+          class="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md shadow-md transition-all"
+          title="Upload Document"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 16v1a1 1 0 001 1h14a1 1 0 001-1v-1M12 12v9m0 0l-3-3m3 3l3-3M12 3v9"
+            />
+          </svg>
+          Upload Document
+        </button>
+
+        <!-- Upload Folder -->
+        <button
+          onclick="openDocFolderModal()"
+          class="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md shadow-md transition-all"
+          title="Upload Folder"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v1M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2 2z"
+            />
+          </svg>
+          Upload Folder
+        </button>
+
+        {% if documents_pagination and documents_pagination.items %}
+        <!-- Tombol Delete All -->
+        <form
+          action="{{ url_for('cardiobot.delete_all_documents') }}"
+          method="POST"
+          style="display: inline-block"
+          class="form-delete-all"
+        >
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <button
+            type="submit"
+            class="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md shadow-md transition-all"
+            title="Delete All Documents"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 
+            2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m2 0H7m1-4h8a1 1 0 
+            011 1v2H6V4a1 1 0 011-1z"
+              />
+            </svg>
+            Delete All
+          </button>
+        </form>
+        {% endif %}
+      </div>
+      <!-- Search Bar -->
+      <div class="mb-4 flex items-center">
+        <input
+          type="text"
+          id="searchInputDocs"
+          placeholder="Search documents..."
+          value="{{ search_query if active_tab=='docs' else '' }}"
+          class="w-72 px-4 py-2 border border-gray-300 rounded-md focus:outline-none"
+        />
+      </div>
+
+      <!-- Tabel Dokumen -->
+      {% if documents_pagination and documents_pagination.items %}
+      <div class="overflow-x-auto">
+        <table class="min-w-full bg-white border border-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th
+                class="px-6 py-2 text-xs font-semibold text-gray-700 uppercase border-b"
+              >
+                Title
+              </th>
+              <th
+                class="px-6 py-2 text-xs font-semibold text-gray-700 uppercase border-b"
+              >
+                Uploaded At
+              </th>
+
+              <th
+                class="px-6 py-2 text-xs font-semibold text-gray-700 uppercase border-b"
+              >
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-300 text-sm text-center">
+            {% for document in documents_pagination.items %}
+            <tr class="odd:bg-blue-50 even:bg-white hover:bg-gray-100">
+              <td class="px-6 py-2">{{ document.title_file }}</td>
+              <td class="px-6 py-2">
+                {{ document.created_at.strftime('%d %B %Y %H:%M:%S') }}
+              </td>
+
+              <td
+                class="px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-900 flex gap-1 justify-center"
+              >
+                <!-- View Button -->
+                <a
+                  href="{{ url_for('cardiobot.view_document', file_id=document.id) }}"
+                  class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded shadow transition"
+                  title="View Document"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-4 w-4 inline-block"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                    />
+                  </svg>
+                </a>
+
+                <!-- Delete Button -->
+                <form
+                  action="{{ url_for('cardiobot.delete_document', file_id=document.id) }}"
+                  method="POST"
+                  style="display: inline"
+                  class="form-delete"
+                >
+                  <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token() }}"
+                  />
+                  <button
+                    type="submit"
+                    class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded shadow transition"
+                    title="Delete Document"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-4 w-4 inline-block"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2
+                       2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1
+                       0 00-1-1h-4a1 1 0 00-1 1v3m5 0H6"
+                      />
+                    </svg>
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="flex justify-center mt-4">
+        <nav class="inline-flex">
+          {% if documents_pagination.has_prev %}
+          <a
+            href="{{ url_for('admin.settings', tab='docs', page=documents_pagination.prev_num, search=search_query) }}"
+            class="px-3 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50"
+            >Prev</a
+          >
+          {% else %}
+          <span
+            class="px-3 py-2 text-xs font-medium text-gray-500 bg-gray-100 border border-gray-300 rounded-l-md"
+            >Prev</span
+          >
+          {% endif %} {% for p in documents_pagination.iter_pages(left_edge=1,
+          right_edge=1, left_current=2, right_current=2) %} {% if p %} {% if p
+          == documents_pagination.page %}
+          <span
+            class="px-3 py-2 text-xs font-medium text-white bg-blue-600 border border-blue-600"
+            >{{ p }}</span
+          >
+          {% else %}
+          <a
+            href="{{ url_for('admin.settings', tab='docs', page=p, search=search_query) }}"
+            class="px-3 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50"
+            >{{ p }}</a
+          >
+          {% endif %} {% else %}
+          <span
+            class="px-3 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300"
+            >…</span
+          >
+          {% endif %} {% endfor %} {% if documents_pagination.has_next %}
+          <a
+            href="{{ url_for('admin.settings', tab='docs', page=documents_pagination.next_num, search=search_query) }}"
+            class="px-3 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50"
+            >Next</a
+          >
+          {% else %}
+          <span
+            class="px-3 py-2 text-xs font-medium text-gray-500 bg-gray-100 border border-gray-300 rounded-r-md"
+            >Next</span
+          >
+          {% endif %}
+        </nav>
+      </div>
+      {% else %}
+      <p class="text-gray-500 mt-4">No documents uploaded yet.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Modal Upload File -->
+  <div
+    id="docUploadModal"
+    class="fixed inset-0 hidden flex bg-black bg-opacity-50 justify-center items-center z-50"
+  >
+    <div class="relative bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+      <button
+        id="closeDocModal"
+        type="button"
+        class="absolute top-3 right-3 text-gray-600 hover:text-gray-800 text-2xl"
+        aria-label="Close modal"
+        onclick="closeDocModal()"
+      >
+        &times;
+      </button>
+
+      <h2 class="text-lg font-bold mb-4">Upload New Document</h2>
+      <form
+        method="POST"
+        action="{{ url_for('cardiobot.upload_documents') }}"
+        enctype="multipart/form-data"
+        class="space-y-4"
+      >
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <input
+          type="file"
+          name="files[]"
+          multiple
+          required
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg"
+        />
+        <div class="flex justify-end gap-2">
+          <button
+            type="submit"
+            class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          >
+            Upload
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Upload Folder -->
+  <div
+    id="docFolderModal"
+    class="fixed inset-0 hidden flex bg-black bg-opacity-50 justify-center items-center z-50"
+  >
+    <div class="relative bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+      <button
+        id="closeDocFolderModal"
+        type="button"
+        class="absolute top-3 right-3 text-gray-600 hover:text-gray-800 text-2xl"
+        aria-label="Close modal"
+        onclick="closeDocFolderModal()"
+      >
+        &times;
+      </button>
+
+      <h2 class="text-lg font-bold mb-4">Upload Folder</h2>
+      <form
+        method="POST"
+        action="{{ url_for('cardiobot.upload_documents') }}"
+        enctype="multipart/form-data"
+        class="space-y-4"
+      >
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <input
+          type="file"
+          name="files[]"
+          multiple
+          webkitdirectory
+          required
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg"
+        />
+
+        <div class="flex justify-end gap-2">
+          <button
+            type="submit"
+            class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          >
+            Upload
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal untuk menambahkan model baru -->
+  <div
+    id="uploadModalModels"
+    class="fixed inset-0 hidden flex bg-black bg-opacity-50 justify-center items-center z-50"
+  >
+    <div class="bg-white rounded-lg p-6 w-96">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-semibold">Upload New Model</h3>
+        <button
+          id="closeModalModelsBtn"
+          class="text-gray-500 hover:text-gray-700 text-2xl"
+        >
+          &times;
+        </button>
+      </div>
+      <form
+        method="POST"
+        action="{{ url_for('admin.upload_model') }}"
+        enctype="multipart/form-data"
+        onsubmit="console.log('uploadDeviceForm submit'); document.getElementById('uploadLoadingOverlay').classList.remove('hidden')"
+      >
+        <div class="mb-4">
+          <label for="name" class="block text-sm font-medium text-gray-700"
+            >Model Name</label
+          >
+          {{ form.name(class="mt-1 block w-full border border-gray-300
+          rounded-md p-2") }}
+        </div>
+        <div class="mb-4">
+          <label for="filename" class="block text-sm font-medium text-gray-700"
+            >Choose model file (.pkl)</label
+          >
+          {{ form.filename(class="mt-1 block w-full border border-gray-300
+          rounded-md p-2") }}
+        </div>
+        <button
+          type="submit"
+          class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md"
+        >
+          Upload
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal untuk Upload Device -->
+  <div
+    id="uploadDevicesModal"
+    class="fixed inset-0 hidden flex bg-black bg-opacity-50 justify-center items-center z-50"
+  >
+    <div class="flex items-center justify-center min-h-screen">
+      <div
+        class="bg-white p-6 rounded-lg shadow-lg relative w-[350px] min-h-[300px]"
+      >
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-semibold">Upload Device</h2>
+          <button
+            id="closeModalDevicesBtn"
+            class="text-gray-600 hover:text-gray-800 text-2xl"
+          >
+            &times;
+          </button>
+        </div>
+        <!-- Form Upload Device -->
+        <form id="uploadDeviceForm" action="/admin/upload_device" method="POST">
+          <div class="mb-4">
+            <label
+              for="device_id"
+              class="block text-sm font-medium text-gray-700"
+              >Device ID</label
+            >
+            <input
+              type="text"
+              name="device_id"
+              id="device_id"
+              class="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              required
+            />
+          </div>
+          <div class="mb-4">
+            <label for="model" class="block text-sm font-medium text-gray-700"
+              >Model</label
+            >
+            <input
+              type="text"
+              name="model"
+              id="model"
+              class="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              required
+            />
+          </div>
+          <div class="text-right">
+            <button
+              type="submit"
+              class="bg-blue-500 text-white px-3 py-1 rounded-md"
+            >
+              Upload
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Edit Device (disembunyikan dengan 'hidden') -->
+  <div
+    id="editDeviceModal"
+    class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden"
+  >
+    <div
+      class="bg-white p-6 rounded-lg shadow-lg relative w-[350px] min-h-[300px]"
+    >
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-semibold">Edit Device</h2>
+        <button
+          id="closeEditModalDevicesBtn"
+          type="button"
+          class="text-gray-600 hover:text-gray-800 text-2xl"
+        >
+          &times;
+        </button>
+      </div>
+
+      <!-- Form Edit Device -->
+      <form
+        id="editDeviceForm"
+        action="{{ url_for('admin.edit_device') }}"
+        method="POST"
+      >
+        <!-- Hidden input untuk menyimpan ID device asli -->
+        <input type="hidden" name="device_id" id="edit_device_id_hidden" />
+
+        <!-- Device ID -->
+        <div class="mb-4">
+          <label
+            for="edit_device_id_input"
+            class="block text-sm font-medium text-gray-700"
+          >
+            Device ID
+          </label>
+          <input
+            type="text"
+            id="edit_device_id_input"
+            name="edit_device_id"
+            class="mt-1 block w-full border border-gray-300 rounded-md p-2"
+            required
+          />
+        </div>
+
+        <!-- Model -->
+        <div class="mb-4">
+          <label
+            for="edit_model_input"
+            class="block text-sm font-medium text-gray-700"
+          >
+            Model
+          </label>
+          <input
+            type="text"
+            id="edit_model_input"
+            name="edit_model"
+            class="mt-1 block w-full border border-gray-300 rounded-md p-2"
+            required
+          />
+        </div>
+
+        <!-- Tombol Submit -->
+        <div class="text-right">
+          <button
+            type="submit"
+            class="bg-blue-500 text-white px-3 py-1 rounded-md"
+          >
+            Save
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<!-- 🌟 GLOBAL OVERLAYS (HARUS DI LUAR SEMUA MODAL) -->
+<!-- Uploading Overlay -->
+<div
+  id="uploadLoadingOverlay"
+  class="fixed inset-0 hidden z-[999] bg-black bg-opacity-60 flex items-center justify-center"
+>
+  <div class="flex flex-col items-center space-y-4 text-white">
+    <svg
+      class="animate-spin h-10 w-10"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+    >
+      <circle
+        class="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        stroke-width="4"
+      ></circle>
+      <path
+        class="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+      ></path>
+    </svg>
+    <p class="text-lg font-semibold">Uploading… Please wait</p>
+  </div>
+</div>
+
+<!-- Deleting Overlay -->
+<div
+  id="deleteLoadingOverlay"
+  class="fixed inset-0 hidden z-[1000] bg-black bg-opacity-60 flex items-center justify-center"
+>
+  <div class="flex flex-col items-center space-y-4 text-white">
+    <svg
+      class="animate-spin h-10 w-10"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+    >
+      <circle
+        class="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        stroke-width="4"
+      ></circle>
+      <path
+        class="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+      ></path>
+    </svg>
+    <p class="text-lg font-semibold">Deleting… Please wait</p>
+  </div>
+</div>
+<!-- JavaScript -->
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    //-------------Navbar Tab Navigation--------------------
+    const navLinks = document.querySelectorAll("a.nav-item");
+    const tabContents = document.querySelectorAll(".tab-content");
+    navLinks.forEach((link) => {
+      link.addEventListener("click", function (e) {
+        e.preventDefault();
+
+        const selectedTab = this.dataset.tab;
+
+        history.pushState(null, "", "?tab=" + selectedTab);
+
+        navLinks.forEach((item) => {
+          item.classList.remove(
+            "text-gray-900",
+            "font-semibold",
+            "border-indigo-500",
+            "bg-indigo-50",
+            "border-b-4"
+          );
+          item.classList.add("text-gray-600", "border-b-0");
+        });
+        this.classList.remove("text-gray-600", "border-b-0");
+        this.classList.add(
+          "text-gray-900",
+          "font-semibold",
+          "border-indigo-500",
+          "bg-indigo-50",
+          "border-b-4"
+        );
+
+        // 3) Show/Hide konten
+        tabContents.forEach((c) => c.classList.add("hidden"));
+        const target = document.getElementById(selectedTab + "-content");
+        if (target) target.classList.remove("hidden");
+      });
+    });
+
+    //-------------Modal Models--------------------
+    const openModalModelsBtn = document.getElementById("openModalModelsBtn");
+    const closeModalModelsBtn = document.getElementById("closeModalModelsBtn");
+    const modelsModal = document.getElementById("uploadModalModels");
+    if (openModalModelsBtn)
+      openModalModelsBtn.addEventListener("click", () =>
+        modelsModal.classList.remove("hidden")
+      );
+    if (closeModalModelsBtn)
+      closeModalModelsBtn.addEventListener("click", () =>
+        modelsModal.classList.add("hidden")
+      );
+    window.addEventListener("click", (e) => {
+      if (e.target === modelsModal) modelsModal.classList.add("hidden");
+    });
+
+    //-------------Modal Devices--------------------
+    const openModalDevicesBtn = document.getElementById("openModalDevicesBtn");
+    const closeModalDevicesBtn = document.getElementById(
+      "closeModalDevicesBtn"
+    );
+    const devicesModal = document.getElementById("uploadDevicesModal");
+    if (openModalDevicesBtn)
+      openModalDevicesBtn.addEventListener("click", () =>
+        devicesModal.classList.remove("hidden")
+      );
+    if (closeModalDevicesBtn)
+      closeModalDevicesBtn.addEventListener("click", () =>
+        devicesModal.classList.add("hidden")
+      );
+    window.addEventListener("click", (e) => {
+      if (e.target === devicesModal) devicesModal.classList.add("hidden");
+    });
+
+    //-------------Edit Device--------------------
+    window.openEditModalDevices = (btn) => {
+      const id = btn.dataset.deviceId;
+      const m = btn.dataset.deviceModel;
+      document.getElementById("edit_device_id_hidden").value = id;
+      document.getElementById("edit_device_id_input").value = id;
+      document.getElementById("edit_model_input").value = m;
+      document.getElementById("editDeviceModal").classList.remove("hidden");
+    };
+    const closeEditBtn = document.getElementById("closeEditModalDevicesBtn");
+    const editModal = document.getElementById("editDeviceModal");
+    if (closeEditBtn)
+      closeEditBtn.addEventListener("click", () =>
+        editModal.classList.add("hidden")
+      );
+    window.addEventListener("click", (e) => {
+      if (e.target === editModal) editModal.classList.add("hidden");
+    });
+
+    //-------------Search Devices--------------------
+    const searchInput = document.getElementById("searchInputDevice");
+    if (searchInput) {
+      let to;
+      searchInput.addEventListener("keyup", function () {
+        clearTimeout(to);
+        to = setTimeout(() => {
+          const q = this.value.trim();
+          const url = new URL(location);
+          if (q) url.searchParams.set("search", q);
+          else url.searchParams.delete("search");
+          url.searchParams.set("page", "1");
+          location.href = url.href;
+        }, 500);
+      });
+    }
+
+    //-------------Flash Messages--------------------
+    setTimeout(() => {
+      document.querySelectorAll(".flash-message").forEach((m) => {
+        m.style.transition = "opacity 0.5s";
+        m.style.opacity = "0";
+        setTimeout(() => m.remove(), 500);
+      });
+    }, 2000);
+
+    //-------------Modal Docs--------------------
+
+    // Open / Close Upload Document
+    window.openDocModal = () => {
+      const m = document.getElementById("docUploadModal");
+      m.classList.remove("hidden");
+    };
+    window.closeDocModal = () => {
+      const m = document.getElementById("docUploadModal");
+      m.classList.add("hidden");
+    };
+    const uploadModal = document.getElementById("docUploadModal");
+    if (uploadModal) {
+      uploadModal.addEventListener("click", (e) => {
+        if (e.target === uploadModal) uploadModal.classList.add("hidden");
+      });
+    }
+
+    // Open / Close Upload Folder
+    window.openDocFolderModal = () => {
+      const m = document.getElementById("docFolderModal");
+      m.classList.remove("hidden");
+    };
+    window.closeDocFolderModal = () => {
+      const m = document.getElementById("docFolderModal");
+      m.classList.add("hidden");
+    };
+    const folderModal = document.getElementById("docFolderModal");
+    if (folderModal) {
+      folderModal.addEventListener("click", (e) => {
+        if (e.target === folderModal) folderModal.classList.add("hidden");
+      });
+
+      folderModal.querySelectorAll(".cancel-folder-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          folderModal.classList.add("hidden");
+        });
+      });
+    }
+
+    //-------------Search Documents--------------------
+    const searchInputDocs = document.getElementById("searchInputDocs");
+    if (searchInputDocs) {
+      let toDocs;
+      searchInputDocs.addEventListener("keyup", function () {
+        clearTimeout(toDocs);
+        toDocs = setTimeout(() => {
+          const q = this.value.trim();
+          const url = new URL(location);
+
+          url.searchParams.set("tab", "docs");
+          if (q) url.searchParams.set("search", q);
+          else url.searchParams.delete("search");
+          url.searchParams.set("page", "1");
+          location.href = url.href;
+        }, 500);
+      });
+    }
+
+    //-------------Uploading Overlay--------------------
+    document
+      .querySelectorAll(
+        "#docUploadModal form, #docFolderModal form, #uploadModalModels form, #uploadDevicesModal form"
+      )
+      .forEach((f) => {
+        f.addEventListener("submit", () => {
+          document
+            .getElementById("uploadLoadingOverlay")
+            .classList.remove("hidden");
+        });
+      });
+
+    //-------------Deleting Overlay--------------------
+    document
+      .querySelectorAll(
+        "form[action*='delete_model'], form[action*='delete_device'], form.form-delete, form.form-delete-all"
+      )
+      .forEach((form) => {
+        form.addEventListener("submit", (e) => {
+          e.preventDefault();
+
+          const isDelete =
+            form.classList.contains("form-delete") ||
+            form.action.includes("delete_document");
+
+          const isDeleteAll =
+            form.classList.contains("form-delete-all") ||
+            form.action.includes("delete_all_documents");
+
+          let msg = "Are you sure you want to delete this item?";
+          if (isDeleteAll) {
+            msg =
+              "⚠️ Are you sure you want to delete all documents? This cannot be undone.";
+          } else if (isDelete) {
+            msg = "🗑️ Are you sure you want to delete this document?";
+          }
+
+          const ok = confirm(msg);
+          if (!ok) return;
+
+          document
+            .getElementById("deleteLoadingOverlay")
+            .classList.remove("hidden");
+
+          // Delay kecil agar overlay sempat tampil
+          setTimeout(() => form.submit(), 50);
+        });
+      });
+  });
+</script>
+
+{% endblock %}

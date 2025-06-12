@@ -1,0 +1,846 @@
+{% extends 'base.html' %} {% block content %}
+<style>
+  /* Disabled button: different background color and cursor not-allowed */
+  #submitBtn:disabled {
+    background: #a0aec0;
+    cursor: not-allowed;
+  }
+  /* Active (enabled) button will have hover effect to indicate interactivity */
+  #submitBtn:enabled:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  }
+  /* Transition for main content container on initial load */
+  .main-content.initial-load {
+    opacity: 0;
+    animation: fadeIn 0.5s ease-in forwards;
+  }
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  /* Responsive Table Styles */
+  .overflow-x-auto {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on touch devices */
+  }
+
+  .responsive-table {
+    min-width: 1200px; /* Ensures the table is wide enough to display all columns */
+  }
+
+  /* Adjust font size and padding for smaller screens */
+  @media (max-width: 768px) {
+    .responsive-table th,
+    .responsive-table td {
+      font-size: 0.75rem; /* Smaller font size for mobile */
+      padding: 0.5rem; /* Reduced padding */
+    }
+
+    .responsive-table span {
+      font-size: 0.7rem; /* Smaller font for spans inside table */
+      padding: 0.25rem 0.5rem; /* Adjust padding for rounded spans */
+    }
+
+    .responsive-table th {
+      white-space: nowrap; /* Prevent header text from wrapping */
+    }
+  }
+
+  /* Ensure table container takes full width on small screens */
+  @media (max-width: 640px) {
+    .overflow-x-auto {
+      margin-left: -1rem;
+      margin-right: -1rem;
+      padding-left: 1rem;
+      padding-right: 1rem;
+    }
+  }
+</style>
+
+<!-- Flash Messages Container -->
+<div class="w-full max-w-3xl mx-auto px-4">
+  {% with messages = get_flashed_messages(with_categories=true,
+  category_filter=['success', 'warning', 'error', 'attention']) %} {% if
+  messages %}
+  <div class="mb-4">
+    {% for category, message in messages %}
+    <div
+      class="flash-message p-3 rounded-lg text-center font-semibold {% if category == 'success' %} bg-green-100 border border-green-400 text-green-700 {% elif category == 'warning' %} bg-yellow-100 border border-yellow-400 text-yellow-700 {% elif category == 'error' %} bg-red-100 border border-red-400 text-red-700 {% elif category == 'attention' %} bg-gray-100 border border-gray-400 text-gray-700 {% endif %}"
+      role="alert"
+    >
+      <span class="block sm:inline">{{ message }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %} {% endwith %}
+</div>
+
+<!-- Main Content Container -->
+<div class="px-5 py-1 main-content initial-load">
+  <div class="mb-4">
+    <h1 class="text-2xl font-bold">CVD Predict</h1>
+  </div>
+
+  <!-- Navbar -->
+  <nav class="mb-4">
+    <div>
+      <ul class="inline-flex space-x-3 border-b-2 border-gray-300 pb-3">
+        <!-- Predict -->
+        <li>
+          <a
+            href="{{ url_for('cvd_predict.menu', tab='predict') }}"
+            data-tab="predict"
+            class="nav-item inline-flex items-center px-3 py-1.5 bg-white border border-gray-300 rounded-md shadow-sm transition-colors duration-200 ease-in-out text-sm {% if active_tab=='predict' %}font-semibold text-gray-800 border-b-4 border-indigo-500 bg-indigo-50{% else %}font-medium text-gray-600{% endif %}"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-4 w-4 mr-1"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.636l1.318-1.318a4.5 4.5 0 116.364 6.364L12 21l-7.682-7.682a4.5 4.5 0 010-6.364z"
+              />
+              <polyline
+                points="7 12 10 12 11 10 13 14 16 14"
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+              />
+            </svg>
+            Predict
+          </a>
+        </li>
+        <!-- History -->
+        <li>
+          <a
+            href="{{ url_for('cvd_predict.menu', tab='history') }}"
+            data-tab="history"
+            class="nav-item inline-flex items-center px-3 py-1.5 bg-white border border-gray-300 rounded-md shadow-sm transition-colors duration-200 ease-in-out text-sm {% if active_tab=='history' %}font-semibold text-gray-800 border-b-4 border-indigo-500 bg-indigo-50{% else %}font-medium text-gray-600{% endif %}"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-4 w-4 mr-1"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 8v4l3 3"
+              />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            History
+          </a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Tab Content Container -->
+  <div class="tab-content-container">
+    <!-- Predict Content -->
+    <div
+      id="predict-content"
+      class="tab-content {% if active_tab == 'predict' %}block{% else %}hidden{% endif %}"
+    >
+      <div class="flex justify-center">
+        <form
+          id="myForm"
+          method="POST"
+          action="{{ url_for('cvd_predict.upload_menu') }}"
+          class="relative w-full max-w-5xl mx-auto mt-4 bg-white shadow-lg rounded-2xl p-8 border border-gray-100 h-auto md:h-auto"
+          novalidate
+        >
+          {{ form.hidden_tag() }}
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Objective Feature Section -->
+            <div class="space-y-6">
+              <h2
+                class="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2 flex items-center"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-5 w-5 text-indigo-500 mr-2"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M5.121 17.804A13.937 13.937 0 0112 15c2.137 0 4.162.492 5.879 1.362M15 11a3 3 0 11-6 0 3 3 0 016 0zm6 11v-2a4 4 0 00-3-3.87M9 21v-2a4 4 0 013-3.87m5 5v-2a4 4 0 013-3.87m-2.121-2.196A8.966 8.966 0 0112 3c2.486 0 4.75.997 6.364 2.612"
+                  />
+                </svg>
+                Body Metrics
+              </h2>
+              <div class="space-y-5">
+                <div class="flex flex-col">
+                  <label class="text-sm font-semibold text-gray-600 mb-1.5"
+                    >{{ form.height.label }}</label
+                  >
+                  {{ form.height(class="bg-gray-100 border border-gray-300 p-3
+                  rounded-lg shadow-sm focus:outline-none focus:ring-2
+                  focus:ring-indigo-500 focus:border-indigo-500 transition-all
+                  duration-300 w-full text-gray-800 placeholder-gray-400",
+                  placeholder="Enter height in cm", required="required") }}
+                </div>
+                <div class="flex flex-col">
+                  <label class="text-sm font-semibold text-gray-600 mb-1.5"
+                    >{{ form.weight.label }}</label
+                  >
+                  {{ form.weight(class="bg-gray-100 border border-gray-300 p-3
+                  rounded-lg shadow-sm focus:outline-none focus:ring-2
+                  focus:ring-indigo-500 focus:border-indigo-500 transition-all
+                  duration-300 w-full text-gray-800 placeholder-gray-400",
+                  placeholder="Enter weight in kg", required="required") }}
+                </div>
+              </div>
+            </div>
+            <!-- Examination Feature Section -->
+            <div class="space-y-6">
+              <h2
+                class="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2 flex items-center"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-5 w-5 text-red-500 mr-2"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.636l1.318-1.318a4.5 4.5 0 116.364 6.364L12 21.364l-7.682-7.682a4.5 4.5 0 010-6.364z"
+                  />
+                </svg>
+                Clinical Measurements
+              </h2>
+              <div class="space-y-5">
+                <div class="flex flex-col">
+                  <label
+                    class="flex items-center text-sm font-semibold text-gray-600 mb-1.5"
+                  >
+                    {{ form.systolic.label }}
+                    <span class="relative group ml-1 flex-shrink-0">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-4 w-4 text-gray-400 hover:text-gray-600 cursor-pointer"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z"
+                        />
+                      </svg>
+                      <div
+                        class="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 w-48 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        Auto-filled from your last blood pressure measurement;
+                        you can edit if needed.
+                      </div>
+                    </span>
+                  </label>
+                  {{ form.systolic( class="bg-gray-100 border border-gray-300
+                  p-3 rounded-lg shadow-sm focus:outline-none focus:ring-2
+                  focus:ring-indigo-500 focus:border-indigo-500 transition-all
+                  duration-300 w-full text-gray-800 placeholder-gray-400",
+                  placeholder="e.g., 120", required="required" ) }}
+                </div>
+                <div class="flex flex-col">
+                  <label
+                    class="flex items-center text-sm font-semibold text-gray-600 mb-1.5"
+                  >
+                    {{ form.diastolic.label }}
+                    <span class="relative group ml-1 flex-shrink-0">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-4 w-4 text-gray-400 hover:text-gray-600 cursor-pointer"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z"
+                        />
+                      </svg>
+                      <div
+                        class="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 w-48 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        Auto-filled from your last blood pressure measurement;
+                        you can edit if needed.
+                      </div>
+                    </span>
+                  </label>
+                  {{ form.diastolic( class="bg-gray-100 border border-gray-300
+                  p-3 rounded-lg shadow-sm focus:outline-none focus:ring-2
+                  focus:ring-indigo-500 focus:border-indigo-500 transition-all
+                  duration-300 w-full text-gray-800 placeholder-gray-400",
+                  placeholder="e.g., 120", required="required" ) }}
+                </div>
+
+                <div class="flex flex-col">
+                  <label class="text-sm font-semibold text-gray-600 mb-1.5"
+                    >{{ form.cholesterol.label }}</label
+                  >
+                  {{ form.cholesterol(class="bg-gray-100 border border-gray-300
+                  p-3 rounded-lg shadow-sm focus:outline-none focus:ring-2
+                  focus:ring-indigo-500 focus:border-indigo-500 transition-all
+                  duration-300 w-full text-gray-800", required="required") }}
+                </div>
+                <div class="flex flex-col">
+                  <label class="text-sm font-semibold text-gray-600 mb-1.5"
+                    >{{ form.gluc.label }}</label
+                  >
+                  {{ form.gluc(class="bg-gray-100 border border-gray-300 p-3
+                  rounded-lg shadow-sm focus:outline-none focus:ring-2
+                  focus:ring-indigo-500 focus:border-indigo-500 transition-all
+                  duration-300 w-full text-gray-800", required="required") }}
+                </div>
+              </div>
+            </div>
+            <!-- Subjective Feature Section -->
+            <div class="space-y-6">
+              <h2
+                class="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2 flex items-center"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-5 w-5 text-yellow-500 mr-2"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M12 2C9.243 6.447 4 8 4 12a8 8 0 0016 0 7.972 7.972 0 00-1.262-3.903A5.5 5.5 0 0112 2zm0 18a6 6 0 01-6-6c0-1.633.668-3.118 1.757-4.18a.75.75 0 011.06 1.06A4.5 4.5 0 006 14a6 6 0 0012 0c0-1.43-.535-2.734-1.42-3.728a.75.75 0 011.106-.992A6 6 0 0112 20z"
+                  />
+                </svg>
+                Lifestyle Habits
+              </h2>
+              <div class="space-y-5">
+                <div class="flex flex-col">
+                  <label class="text-sm font-semibold text-gray-600 mb-1.5"
+                    >{{ form.smoke.label }}</label
+                  >
+                  {{ form.smoke(class="bg-gray-100 border border-gray-300 p-3
+                  rounded-lg shadow-sm focus:outline-none focus:ring-2
+                  focus:ring-indigo-500 focus:border-indigo-500 transition-all
+                  duration-300 w-full text-gray-800", required="required") }}
+                </div>
+                <div class="flex flex-col">
+                  <label class="text-sm font-semibold text-gray-600 mb-1.5"
+                    >{{ form.alco.label }}</label
+                  >
+                  {{ form.alco(class="bg-gray-100 border border-gray-300 p-3
+                  rounded-lg shadow-sm focus:outline-none focus:ring-2
+                  focus:ring-indigo-500 focus:border-indigo-500 transition-all
+                  duration-300 w-full text-gray-800", required="required") }}
+                </div>
+                <div class="flex flex-col">
+                  <label class="text-sm font-semibold text-gray-600 mb-1.5"
+                    >{{ form.active.label }}</label
+                  >
+                  {{ form.active(class="bg-gray-100 border border-gray-200 p-3
+                  rounded-lg shadow-sm focus:outline-none focus:ring-2
+                  focus:ring-indigo-500 focus:border-indigo-500 transition-all
+                  duration-300 w-full text-gray-800", required="required") }}
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Submit Button -->
+          <div class="mt-8 flex justify-center">
+            <button
+              type="submit"
+              id="submitBtn"
+              disabled
+              class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold py-3 px-12 rounded-xl shadow-md hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+            >
+              Submit
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- History Content -->
+    <div
+      id="history-content"
+      class="tab-content {% if active_tab == 'history' %}block{% else %}hidden{% endif %}"
+    >
+      <div class="mb-6">
+        <div class="border border-gray-300 p-4 rounded-lg bg-gray-100 w-fit">
+          <p class="text-sm text-gray-800 mb-2"><strong>History</strong></p>
+          <p class="text-sm text-gray-700" style="text-align: justify">
+            This tab displays the cardiovascular prediction data log for the
+            user.
+          </p>
+        </div>
+      </div>
+      <div class="overflow-x-auto rounded-xl">
+        <table
+          class="min-w-full bg-white border border-gray-200 shadow-md text-center responsive-table"
+        >
+          <thead class="bg-gray-50">
+            <tr>
+              <th
+                class="px-4 py-2 text-xs font-bold text-gray-600 uppercase border-b border-gray-200"
+              >
+                Timestamp
+              </th>
+              <th
+                class="px-4 py-2 text-xs font-bold text-gray-600 uppercase border-b border-gray-200"
+              >
+                Patient ID
+              </th>
+              <th
+                class="px-4 py-2 text-xs font-bold text-gray-600 uppercase border-b border-gray-200"
+              >
+                Age
+              </th>
+              <th
+                class="px-4 py-2 text-xs font-bold text-gray-600 uppercase border-b border-gray-200"
+              >
+                Height
+              </th>
+              <th
+                class="px-4 py-2 text-xs font-bold text-gray-600 uppercase border-b border-gray-200"
+              >
+                Weight
+              </th>
+              <th
+                class="px-4 py-2 text-xs font-bold text-gray-600 uppercase border-b border-gray-200"
+              >
+                Gender
+              </th>
+              <th
+                class="px-4 py-2 text-xs font-bold text-gray-600 uppercase border-b border-gray-200"
+              >
+                Sys
+              </th>
+              <th
+                class="px-4 py-2 text-xs font-bold text-gray-600 uppercase border-b border-gray-200"
+              >
+                Dia
+              </th>
+              <th
+                class="px-4 py-2 text-xs font-bold text-gray-600 uppercase border-b border-gray-200"
+              >
+                Chol
+              </th>
+              <th
+                class="px-4 py-2 text-xs font-bold text-gray-600 uppercase border-b border-gray-200"
+              >
+                Gluc
+              </th>
+              <th
+                class="px-4 py-2 text-xs font-bold text-gray-600 uppercase border-b border-gray-200"
+              >
+                Smoke
+              </th>
+              <th
+                class="px-4 py-2 text-xs font-bold text-gray-600 uppercase border-b border-gray-200"
+              >
+                Alco
+              </th>
+              <th
+                class="px-4 py-2 text-xs font-bold text-gray-600 uppercase border-b border-gray-200"
+              >
+                Active
+              </th>
+              <th
+                class="px-4 py-2 text-xs font-bold text-gray-600 uppercase border-b border-gray-200"
+              >
+                Cardio
+              </th>
+              <th
+                class="px-4 py-2 text-xs font-bold text-gray-600 uppercase border-b border-gray-200"
+              >
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-300 text-sm text-center">
+            {% for data, age in patients_with_age %}
+            <tr class="odd:bg-blue-50 even:bg-white hover:bg-gray-100">
+              <td class="px-4 py-2 border-gray-200">
+                <span
+                  class="inline-block px-3 py-1 text-xs font-semibold rounded-full"
+                >
+                  {{ data.submitted_at.strftime('%Y-%m-%d %H:%M') if
+                  data.submitted_at else '-' }}
+                </span>
+              </td>
+              <td class="px-4 py-2 border-gray-200">
+                <span
+                  class="inline-block px-3 py-1 text-xs font-semibold rounded-full"
+                >
+                  {{ data.user_id }}
+                </span>
+              </td>
+              <td class="px-4 py-2 border-gray-200">
+                <span
+                  class="inline-block px-3 py-1 text-xs font-medium rounded-full"
+                >
+                  {{ age if age is not none else '-' }}
+                </span>
+              </td>
+              <td class="px-4 py-2 border-gray-200">
+                <span
+                  class="inline-block px-3 py-1 text-xs font-medium rounded-full"
+                >
+                  {{ data.height }}
+                </span>
+              </td>
+              <td class="px-4 py-2 border-gray-200">
+                <span
+                  class="inline-block px-3 py-1 text-xs font-medium rounded-full"
+                >
+                  {{ data.weight|int }}
+                </span>
+              </td>
+              <td class="px-4 py-2 border-gray-200">
+                {% if data.user.profile and data.user.profile.gender %} {% if
+                data.user.profile.gender.lower() == 'male' %}
+                <span
+                  class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-cyan-100 text-cyan-600"
+                >
+                  Male
+                </span>
+                {% elif data.user.profile.gender.lower() == 'female' %}
+                <span
+                  class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-fuchsia-100 text-fuchsia-600"
+                >
+                  Female
+                </span>
+                {% else %}
+                <span
+                  class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-600"
+                >
+                  Other
+                </span>
+                {% endif %} {% else %}
+                <span
+                  class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-600"
+                >
+                  -
+                </span>
+                {% endif %}
+              </td>
+              <td class="px-4 py-2 border-gray-200">
+                <span
+                  class="inline-block px-3 py-1 text-xs font-medium rounded-full"
+                >
+                  {{ data.systolic }}
+                </span>
+              </td>
+              <td class="px-4 py-2 border-gray-200">
+                <span
+                  class="inline-block px-3 py-1 text-xs font-medium rounded-full"
+                >
+                  {{ data.diastolic }}
+                </span>
+              </td>
+              <td class="px-4 py-2 border-gray-200">
+                {% if data.cholesterol == 0 %}
+                <span
+                  class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-teal-100 text-teal-600"
+                >
+                  Normal
+                </span>
+                {% elif data.cholesterol == 1 %}
+                <span
+                  class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-600"
+                >
+                  Above Normal
+                </span>
+                {% else %}
+                <span
+                  class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-600"
+                >
+                  Well Above Normal
+                </span>
+                {% endif %}
+              </td>
+              <td class="px-4 py-2 border-gray-200">
+                {% if data.gluc == 0 %}
+                <span
+                  class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-teal-100 text-teal-600"
+                >
+                  Normal
+                </span>
+                {% elif data.gluc == 1 %}
+                <span
+                  class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-600"
+                >
+                  Above Normal
+                </span>
+                {% else %}
+                <span
+                  class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-600"
+                >
+                  Well Above Normal
+                </span>
+                {% endif %}
+              </td>
+              <td class="px-4 py-2 border-gray-200">
+                {% if data.smoke == True %}
+                <span
+                  class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-lime-100 text-lime-600"
+                >
+                  Yes
+                </span>
+                {% else %}
+                <span
+                  class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-violet-100 text-violet-600"
+                >
+                  No
+                </span>
+                {% endif %}
+              </td>
+              <td class="px-4 py-2 border-gray-200">
+                {% if data.alco == True %}
+                <span
+                  class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-lime-100 text-lime-600"
+                >
+                  Yes
+                </span>
+                {% else %}
+                <span
+                  class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-violet-100 text-violet-600"
+                >
+                  No
+                </span>
+                {% endif %}
+              </td>
+              <td class="px-4 py-2 border-gray-200">
+                {% if data.active == True %}
+                <span
+                  class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-lime-100 text-lime-600"
+                >
+                  Yes
+                </span>
+                {% else %}
+                <span
+                  class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-violet-100 text-violet-600"
+                >
+                  No
+                </span>
+                {% endif %}
+              </td>
+              <td class="px-4 py-2 border-gray-200">
+                {% if data.cardio == True %}
+                <span
+                  class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-600"
+                >
+                  At Risk
+                </span>
+                {% else %}
+                <span
+                  class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-600"
+                >
+                  Healthy
+                </span>
+                {% endif %}
+              </td>
+              <td class="px-4 py-2 border-gray-200">
+                <a
+                  href="{{ url_for('cvd_predict.download_patient_pdf', patient_id=data.id) }}"
+                  class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded shadow transition"
+                  title="Download PDF Patient Data"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-4 w-4 inline-block"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M4 4v16h16V4H4zm6 8l4-4m0 0l4 4m-4-4v10"
+                    />
+                  </svg>
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Uploading Overlay -->
+<div
+  id="predictOverlay"
+  class="fixed inset-0 hidden z-[999] bg-black bg-opacity-60 flex items-center justify-center"
+>
+  <div class="flex flex-col items-center space-y-4 text-white">
+    <svg
+      class="animate-spin h-10 w-10"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+    >
+      <circle
+        class="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        stroke-width="4"
+      ></circle>
+      <path
+        class="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+      ></path>
+    </svg>
+    <p class="text-lg font-semibold">Predicting… Please wait</p>
+  </div>
+</div>
+
+<!-- JavaScript -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Remove initial-load class after animation
+    const mainContent = document.querySelector(".main-content");
+    if (mainContent) {
+      mainContent.addEventListener("animationend", () => {
+        mainContent.classList.remove("initial-load");
+      });
+    }
+
+    const navLinks = document.querySelectorAll("a.nav-item");
+    const tabContents = document.querySelectorAll(".tab-content");
+
+    navLinks.forEach((link) => {
+      link.addEventListener("click", function (e) {
+        const selectedTab = this.getAttribute("data-tab");
+        console.log("Selected Tab:", selectedTab);
+
+        history.pushState(null, "", "?tab=" + selectedTab);
+
+        navLinks.forEach((item) => {
+          item.classList.remove(
+            "text-gray-900",
+            "font-semibold",
+            "border-indigo-500",
+            "bg-indigo-50",
+            "border-b-4"
+          );
+          item.classList.add("text-gray-600", "border-b-0");
+        });
+
+        this.classList.remove("text-gray-600", "border-b-0");
+        this.classList.add(
+          "text-gray-900",
+          "font-semibold",
+          "border-indigo-500",
+          "bg-indigo-50",
+          "border-b-4"
+        );
+
+        tabContents.forEach((content) => {
+          content.classList.add("hidden");
+          content.classList.remove("block");
+        });
+
+        const targetContent = document.getElementById(selectedTab + "-content");
+        if (targetContent) {
+          targetContent.classList.remove("hidden");
+          targetContent.classList.add("block");
+        } else {
+          console.error("Content not found for tab:", selectedTab);
+        }
+      });
+    });
+
+    const form = document.getElementById("myForm");
+    const submitBtn = document.getElementById("submitBtn");
+    const requiredElements = form.querySelectorAll(
+      "input[required], select[required], textarea[required]"
+    );
+
+    function checkForm() {
+      let allFilled = true;
+      requiredElements.forEach(function (element) {
+        if (!element.value.trim()) {
+          allFilled = false;
+        }
+      });
+      submitBtn.disabled = !allFilled;
+    }
+
+    requiredElements.forEach(function (element) {
+      element.addEventListener("input", checkForm);
+      element.addEventListener("change", checkForm);
+    });
+
+    checkForm();
+
+    setTimeout(function () {
+      let flashMessages = document.querySelectorAll(".flash-message");
+      flashMessages.forEach(function (msg) {
+        msg.style.transition = "opacity 0.5s";
+        msg.style.opacity = "0";
+        setTimeout(() => msg.remove(), 500);
+      });
+    }, 5000);
+
+    const predictOverlay = document.getElementById("predictOverlay");
+    [...document.querySelectorAll("#myForm")].forEach((f) => {
+      f.addEventListener("submit", (e) => {
+        if (
+          f.id === "myForm" &&
+          !confirm("Are you sure that the entered data is correct?")
+        ) {
+          e.preventDefault();
+          return;
+        }
+        predictOverlay.classList.remove("hidden");
+      });
+    });
+  });
+</script>
+{% endblock %}

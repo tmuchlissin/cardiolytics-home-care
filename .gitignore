@@ -3,7 +3,5 @@
 .env
 **/migrations/
 **/__pycache__/
-**/chroma_db/
 **/catboost_info
-.codegpt
 test/

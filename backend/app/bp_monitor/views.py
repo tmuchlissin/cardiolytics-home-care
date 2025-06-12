@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 bp_monitor = Blueprint('bp_monitor', __name__, url_prefix='/bp-monitor')
 
 MQTT_BROKER = "192.168.0.111"
+# MQTT_BROKER = "192.168.1.200"
 MQTT_PORT = 1883
 MQTT_USERNAME = "espuser"
 MQTT_PASSWORD = "esp32mqtt!"
@@ -30,9 +31,6 @@ def parse_iso_to_wib(timestamp_str):
 
 def update_device_status(device_id, status):
     try:
-        if last_status_cache.get(device_id) == status:
-            return 
-
         device = Device.query.get(device_id)
         if not device:
             logger.warning(f"Device {device_id} not found")
@@ -46,7 +44,7 @@ def update_device_status(device_id, status):
         else:
             logger.info(f"Device {device_id} status unchanged: still {status}")
 
-        last_status_cache[device_id] = status
+        last_status_cache[device_id] = device.status
 
     except Exception as e:
         logger.error(f"Error updating device status: {e}")
@@ -99,7 +97,7 @@ def monitor():
         .first()
     if not current_user.device_id:
         flash('⏳ Device not set, please contact admin.', 'attention')
-    return render_template('bp_monitor.html', navbar_title='BP Monitor', data=data, user=current_user)
+    return render_template('main/bp_monitor.html', navbar_title='BP Monitor', data=data, user=current_user)
 
 @bp_monitor.route('/check_connection', methods=['POST'])
 @login_required

@@ -1,18 +1,19 @@
 from flask import Blueprint, render_template, redirect, url_for, flash
 from flask_login import current_user, login_required
-from app.models import PatientProfile, PatientData, BloodPressureRecord
+from app.models import PatientProfile, PatientData, BloodPressureRecord, db
 from datetime import datetime
+from app.forms import PatientProfileForm
 
-main = Blueprint('main', __name__)
+main = Blueprint('main', __name__, url_prefix='/main')
 
-@main.route('/index')
+@main.route('/home')
 @login_required
-def index():
+def home():
     profile = PatientProfile.query.filter_by(user_id=current_user.id).first()
 
     if not profile or not all([profile.date_of_birth, profile.gender, profile.national_id, profile.emergency_contact]):
         flash('⚠️ Please complete your profile before using the app features.', 'warning')
-        return redirect(url_for('profile.edit_profile')) 
+        return redirect(url_for('main.edit_profile')) 
 
     latest_patient_data = PatientData.query.filter_by(user_id=current_user.id)\
                                         .order_by(PatientData.submitted_at.desc()).first()
@@ -29,11 +30,38 @@ def index():
         )
 
     return render_template(
-        'index.html',
+        'main/home.html',
         navbar_title='Home',
         profile=profile,
         age=age,
         latest_patient_data=latest_patient_data,
         latest_bp_record=latest_bp_record,
         device_status=current_user.device.status if current_user.device else 'No device connected'
+    )
+
+
+@main.route('/home/edit-profile', methods=['GET', 'POST'])
+@login_required
+def edit_profile():
+    user_profile = PatientProfile.query.filter_by(user_id=current_user.id).first()
+    form = PatientProfileForm(obj=user_profile)
+
+    if form.validate_on_submit():
+        if not user_profile:
+            user_profile = PatientProfile(user_id=current_user.id)
+        
+        form.populate_obj(user_profile)
+        db.session.add(user_profile)
+        db.session.commit()
+        flash('✅ Profil has been updated.', 'success')
+        return redirect(url_for('main.home'))
+    else:
+        for field, errors in form.errors.items():
+            for error in errors:
+                flash(f"Error in {form[field].label.text}: {error}", 'danger')
+
+    return render_template(
+        'main/edit_profile.html',
+        form=form,
+        navbar_title='Edit Profile'
     )

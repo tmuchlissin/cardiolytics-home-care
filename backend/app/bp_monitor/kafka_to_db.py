@@ -3,6 +3,7 @@ from kafka import KafkaConsumer
 import json
 import time
 import logging
+from flask import current_app
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -12,8 +13,8 @@ logger = logging.getLogger(__name__)
 KAFKA_BROKER = "localhost:9092"
 KAFKA_TOPIC = "bp_data"
 
-# Flask endpoint
-FLASK_ENDPOINT = "http://localhost:5000/bp-monitor/api/blood_pressure"
+# BP endpoint
+BLOOD_PRESSURE_ENDPOINT = f"http://localhost:5000/bp-monitor/api/blood_pressure"
 
 def main():
     max_retries = 5
@@ -42,7 +43,7 @@ def main():
         logger.info(f"Consumed from Kafka: {data}")
         try:
             response = requests.post(
-                FLASK_ENDPOINT,
+                BLOOD_PRESSURE_ENDPOINT,
                 json=data,
                 headers={'Content-Type': 'application/json'}
             )

@@ -1,8 +1,8 @@
 from functools import wraps
 from flask import Blueprint, render_template, redirect, url_for, flash, abort, request, current_app, send_file
-from flask_login import login_user, logout_user, current_user, login_required
+from flask_login import logout_user, current_user, login_required
 from app.models import UserRole, User, Models, Device, PatientData, Document
-from app.extensions import db, mail 
+from app.extensions import db
 from app.forms import EditUserForm, ModelForm, DeviceForm
 from sqlalchemy import or_
 from werkzeug.utils import secure_filename
@@ -13,12 +13,12 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY
 from reportlab.lib.units import inch
-from reportlab.platypus import KeepInFrame
 from sqlalchemy.orm import joinedload
 import os
 from datetime import datetime
-
-admin = Blueprint('admin', __name__)
+from sqlalchemy import case
+    
+admin = Blueprint('admin', __name__, url_prefix='/admin')
 
 def calculate_age(date_of_birth):
     if date_of_birth is None:
@@ -39,7 +39,7 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-@admin.route('/admin/logout')
+@admin.route('/logout')
 @login_required
 def logout():
     logout_user() 
@@ -50,16 +50,16 @@ def logout():
 ####################### USER APPROVAL #####################
 ###########################################################
 
-@admin.route('/admin/user-approval')
+@admin.route('/user-approval')
 @login_required
 @admin_required
 def user_approval():
     pending_users = User.query.filter(
         or_(User.approved == None, User.approved == False)
     ).all()
-    return render_template('user_approval.html', navbar_title="User Approval", pending_users=pending_users)
+    return render_template('admin/user_approval.html', navbar_title="User Approval", pending_users=pending_users)
 
-@admin.route('/admin/approve-user/<user_id>', methods=['POST'])
+@admin.route('/approve-user/<user_id>', methods=['POST'])
 @login_required
 def approve_user(user_id):
     user = User.query.get(user_id)
@@ -74,8 +74,7 @@ def approve_user(user_id):
 ###########################################################
 ##################### MANAGE USER #########################
 ###########################################################
-
-@admin.route('/admin/user-management')
+@admin.route('/user-management')
 @login_required
 @admin_required
 def user_management():
@@ -84,6 +83,7 @@ def user_management():
     search_query = request.args.get('search', '')
     
     query = User.query.filter(User.approved == True)
+    
     if search_query:
         search_pattern = f"%{search_query}%"
         query = query.filter(
@@ -95,12 +95,18 @@ def user_management():
             (User.role.ilike(search_pattern)) |
             (User.approved.ilike(search_pattern))
         )
+
+    query = query.order_by(
+        case((User.role == 'admin', 1), else_=2).asc(), 
+        User.device_id.isnot(None).desc(),  
+        User.created_at.asc()
+    )
     
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
     users = pagination.items
 
     devices = Device.query.order_by(Device.id).all()
-    assigned_device_ids = { str(u.device_id) for u in User.query.filter(User.device_id.isnot(None)).all() }
+    assigned_device_ids = {str(u.device_id) for u in User.query.filter(User.device_id.isnot(None)).all()}
     available_devices = [d for d in devices if str(d.id) not in assigned_device_ids]
 
     device_choices = [('none', 'None')] + [(str(d.id), f"{d.id}") for d in available_devices]
@@ -109,7 +115,7 @@ def user_management():
     form.device_id.choices = device_choices
 
     return render_template(
-        'user_management.html',
+        'admin/user_management.html',
         navbar_title="Manage Users",
         users=users,
         devices=devices,
@@ -119,7 +125,7 @@ def user_management():
         search_query=search_query  
     )
 
-@admin.route("/admin/user-management/edit-user/<string:user_id>", methods=["GET", "POST"])
+@admin.route("/user-management/edit-user/<string:user_id>", methods=["GET", "POST"])
 @login_required
 def edit_user(user_id):
     user = User.query.get_or_404(user_id)
@@ -186,7 +192,7 @@ def edit_user(user_id):
         return redirect(url_for("admin.user_management", page=page, per_page=per_page, search=search_query))
     
     return render_template(
-        "user_management.html",
+        "admin/user_management.html",
         user=user,
         devices=devices,
         device_choices=device_choices,
@@ -195,7 +201,7 @@ def edit_user(user_id):
         search=search_query
     )
 
-@admin.route("/admin/user-management/delete-user/<string:user_id>", methods=["POST"])
+@admin.route("/user-management/delete-user/<string:user_id>", methods=["POST"])
 @login_required
 def delete_user(user_id):
     user = User.query.get(user_id)
@@ -215,7 +221,7 @@ def delete_user(user_id):
 ####################### PATIENT DATA ######################
 ###########################################################
 
-@admin.route('/admin/patient_data')
+@admin.route('/patient_data')
 @login_required
 def patient_data():
     page = request.args.get('page', 1, type=int)
@@ -245,7 +251,7 @@ def patient_data():
     #     print(f"Patient ID: {data['patient'].user_id}, Gender: {data['gender']}")
     
     return render_template(
-        'patient_data.html', 
+        'admin/patient_data.html', 
         navbar_title="Patient Data", 
         patient_data=patient_data_with_details,
         pagination=pagination,
@@ -571,7 +577,7 @@ def settings():
     form            = ModelForm()
 
     return render_template(
-        'admin_settings.html',
+        'admin/admin_settings.html',
         active_tab=active_tab,
         search_query=search_query,
         model=model,
@@ -636,11 +642,11 @@ def upload_model():
             flash('No file selected or file type not allowed.', 'warning')
             return redirect(url_for('admin.settings', tab='models'))
     
-    return render_template('admin_settings.html', tab='models', model=None, form=form, navbar_title="Settings")
+    return render_template('admin/admin_settings.html', tab='models', model=None, form=form, navbar_title="Settings")
 
 #------------------------ Device --------------------------#
 
-@admin.route('/admin/upload_device', methods=['GET', 'POST'])
+@admin.route('/upload_device', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def upload_device():
@@ -659,7 +665,7 @@ def upload_device():
         flash('✅ Device successfully added!', 'success')
         return redirect(url_for('admin.settings', tab='devices'))
         
-    return render_template('admin_settings.html', tab='devices', form=form, navbar_title="Settings")
+    return render_template('admin/admin_settings.html', tab='devices', form=form, navbar_title="Settings")
 
 @admin.route('/delete_device/<string:device_id>', methods=['POST'])
 @login_required
@@ -691,5 +697,3 @@ def edit_device():
 
     flash("✅ Device successfully updated!", "success")
     return redirect(url_for('admin.settings', tab='devices'))
-
-#------------------------- Docs --------------------------#

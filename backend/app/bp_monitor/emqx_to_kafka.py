@@ -3,6 +3,7 @@ from kafka import KafkaProducer
 import json
 import time
 import logging
+from flask import current_app
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -10,9 +11,10 @@ logger = logging.getLogger(__name__)
 
 # MQTT settings
 MQTT_BROKER = "192.168.0.111"
+# MQTT_BROKER = "192.168.1.200"
 MQTT_PORT = 1883
 MQTT_TOPIC = "bp_monitor/BP0001"
-MQTT_USERNAME = "espuser"
+MQTT_USERNAME = "espuser" 
 MQTT_PASSWORD = "esp32mqtt!"
 
 KAFKA_BROKER = "localhost:9092"
