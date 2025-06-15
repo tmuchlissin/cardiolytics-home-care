@@ -3,7 +3,6 @@ from kafka import KafkaProducer
 import json
 import time
 import logging
-from flask import current_app
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -13,8 +12,8 @@ logger = logging.getLogger(__name__)
 MQTT_BROKER = "192.168.0.111"
 # MQTT_BROKER = "192.168.1.200"
 MQTT_PORT = 1883
-MQTT_TOPIC = "bp_monitor/BP0001"
-MQTT_USERNAME = "espuser" 
+MQTT_TOPIC = "bp_monitor/#"  # Wildcard to subscribe to all bp_monitor/BPXXXX topics
+MQTT_USERNAME = "espuser"
 MQTT_PASSWORD = "esp32mqtt!"
 
 KAFKA_BROKER = "localhost:9092"
@@ -43,6 +42,8 @@ def on_message(client, userdata, msg):
         payload = msg.payload.decode('utf-8')
         logger.info(f"Received message on {msg.topic}: {payload}")
         data = json.loads(payload)
+        # Optionally, add topic info to data for context
+        data['mqtt_topic'] = msg.topic
         producer.send(KAFKA_TOPIC, data)
         producer.flush()
         logger.info(f"Sent to Kafka topic {KAFKA_TOPIC}: {data}")

@@ -10,10 +10,6 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
     />
-    <script
-      src="https://kit.fontawesome.com/yourkitid.js"
-      crossorigin="anonymous"
-    ></script>
     <style>
       /* Import font Poppins */
       @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap");
@@ -49,21 +45,52 @@
   </head>
   <body class="text-gray-800 flex flex-col min-h-screen">
     <!-- NAVBAR -->
-    <nav class="bg-white shadow-md fixed top-0 w-full z-50">
+    <nav class="bg-white shadow-md fixed top-0 w-full h-auto z-50">
       <div
-        class="container mx-auto px-6 py-4 max-w-7xl flex justify-between items-center"
+        class="container mx-auto px-4 sm:px-6 py-4 max-w-7xl flex justify-between items-center"
       >
         <a href="{{ url_for('auth.landing_page') }}" class="text-xl font-bold">
           <img
             src="{{ url_for('static', filename='img/cardiolytics.png') }}"
             alt="Cardiolytics Logo"
-            class="h-10"
+            class="h-8 sm:h-10"
             draggable="false"
             oncontextmenu="return false;"
           />
         </a>
+        <div class="md:hidden">
+          <button
+            id="menu-toggle"
+            class="text-gray-600 focus:outline-none"
+            aria-label="Toggle menu"
+          >
+            <i class="fas fa-bars text-2xl"></i>
+          </button>
+        </div>
         <div
-          class="hidden md:flex items-center space-x-10 justify-end font-semibold"
+          id="nav-menu"
+          class="hidden md:flex md:items-center md:space-x-6 lg:space-x-10 justify-end font-semibold text-sm sm:text-base"
+        >
+          <a href="#home" class="hover:text-teal-600 transition">Home</a>
+          <a href="#about" class="hover:text-teal-600 transition">About Us</a>
+          <a href="#services" class="hover:text-teal-600 transition"
+            >Services</a
+          >
+          <a href="#testimoni" class="hover:text-teal-600 transition"
+            >Testimonials</a
+          >
+          <a href="#faq" class="hover:text-teal-600 transition">FAQ</a>
+          <a
+            href="{{ url_for('auth.login') }}"
+            class="text-teal-600 font-semibold px-3 py-1.5 sm:px-4 sm:py-2 border border-teal-600 rounded-lg hover:bg-teal-600 hover:text-white transition"
+            >Sign in</a
+          >
+        </div>
+      </div>
+      <!-- Mobile Menu -->
+      <div id="mobile-menu" class="hidden md:hidden bg-white shadow-md w-full">
+        <div
+          class="flex flex-col items-center space-y-4 py-4 font-semibold text-sm"
         >
           <a href="#home" class="hover:text-teal-600 transition">Home</a>
           <a href="#about" class="hover:text-teal-600 transition">About Us</a>
@@ -86,15 +113,15 @@
     <!-- SECTION 1: HOME (Teal) -->
     <section
       id="home"
-      class="relative pt-32 pb-32 bg-gradient-to-r from-teal-700 to-teal-500 text-white overflow-hidden"
+      class="relative w-full min-h-[60vh] md:min-h-[80vh] pt-24 sm:pt-32 pb-16 sm:pb-32 bg-gradient-to-r from-teal-700 to-teal-500 text-white overflow-hidden"
     >
       <div
         class="pointer-events-none absolute"
         style="
           top: 10%;
           left: 5%;
-          width: 30px;
-          height: 30px;
+          width: 20px;
+          height: 20px;
           background: rgba(255, 255, 255, 0.3);
           border-radius: 50%;
           filter: blur(2px);
@@ -106,8 +133,8 @@
         style="
           top: 50%;
           left: 80%;
-          width: 40px;
-          height: 40px;
+          width: 30px;
+          height: 30px;
           background: rgba(255, 255, 255, 0.3);
           border-radius: 50%;
           filter: blur(2px);
@@ -120,8 +147,8 @@
         style="
           top: 70%;
           left: 20%;
-          width: 25px;
-          height: 25px;
+          width: 15px;
+          height: 15px;
           background: rgba(255, 255, 255, 0.3);
           border-radius: 50%;
           filter: blur(2px);
@@ -134,8 +161,8 @@
         style="
           top: 30%;
           left: 60%;
-          width: 35px;
-          height: 35px;
+          width: 25px;
+          height: 25px;
           background: rgba(255, 255, 255, 0.3);
           border-radius: 50%;
           filter: blur(2px);
@@ -145,14 +172,14 @@
       ></div>
 
       <div
-        class="pointer-events-none absolute -top-16 -left-16 w-72 h-72 bg-teal-300 opacity-30 rounded-full blur-3xl mix-blend-multiply animate-float"
+        class="pointer-events-none absolute -top-12 -left-12 w-48 h-48 sm:w-64 sm:h-64 bg-teal-300 opacity-30 rounded-full blur-3xl mix-blend-multiply animate-float"
       ></div>
       <div
-        class="pointer-events-none absolute top-1/3 right-0 w-80 h-80 bg-teal-400 opacity-30 rounded-full blur-3xl mix-blend-multiply animate-float"
+        class="pointer-events-none absolute top-1/3 right-0 w-56 h-56 sm:w-72 sm:h-72 bg-teal-400 opacity-30 rounded-full blur-3xl mix-blend-multiply animate-float"
         style="animation-delay: 2s"
       ></div>
       <div
-        class="pointer-events-none absolute bottom-0 left-1/4 w-64 h-64 bg-teal-600 opacity-30 rounded-full blur-3xl mix-blend-multiply animate-float"
+        class="pointer-events-none absolute bottom-0 left-1/4 w-40 h-40 sm:w-56 sm:h-56 bg-teal-600 opacity-30 rounded-full blur-3xl mix-blend-multiply animate-float"
         style="animation-delay: 4s"
       ></div>
 
@@ -162,7 +189,7 @@
           preserveAspectRatio="none"
           fill="none"
           stroke="rgba(255,255,255,0.2)"
-          stroke-width="2"
+          stroke-width="1.5"
           stroke-dasharray="6 6"
           viewBox="0 0 1440 600"
         >
@@ -173,27 +200,34 @@
       </div>
 
       <div
-        class="relative z-10 container mx-auto px-6 max-w-7xl flex flex-col md:flex-row items-center"
+        class="relative z-10 container mx-auto px-4 sm:px-6 max-w-7xl flex flex-col md:flex-row items-center gap-6 md:gap-10"
       >
-        <div class="md:w-[720px]">
-          <h1 class="text-4xl md:text-5xl font-bold drop-shadow-lg">
-            Welcome to Cardiolytics Home Care
+        <div class="w-full md:w-1/2 lg:w-[720px]">
+          <h1
+            class="text-3xl mt-10 sm:text-3xl md:text-4xl font-bold drop-shadow-lg"
+          >
+            Welcome to Cardiolytics <br />
+            Home Care
           </h1>
-          <p class="mt-4 max-w-xl text-lg text-gray-100">
+          <p
+            class="mt-4 text-base sm:text-lg text-gray-100 max-w-md sm:max-w-lg"
+          >
             Comprehensive cardiovascular analytics and personalized health
             monitoring from the comfort of your home.
           </p>
           <a
             href="{{ url_for('auth.register') }}"
-            class="inline-block mt-8 bg-white text-teal-600 px-6 py-3 rounded-lg font-semibold hover:bg-teal-500 hover:text-white hover:shadow-lg hover:scale-105 transition-transform duration-300 ease-in-out"
+            class="inline-block mt-6 sm:mt-8 bg-white text-teal-600 px-5 py-2.5 sm:px-6 sm:py-3 rounded-lg font-semibold text-sm sm:text-base hover:bg-teal-500 hover:text-white hover:shadow-lg hover:scale-105 transition-transform duration-300 ease-in-out"
           >
             Get Started
           </a>
         </div>
-        <div class="md:w-[720px] mt-8 md:mt-0 flex justify-center">
+        <div
+          class="w-full md:w-1/2 lg:w-[780px] mt-10 md:mt-0 flex justify-center"
+        >
           <img
             src="{{ url_for('static', filename='img/2.gif') }}"
-            class="w-full"
+            class="w-full max-w-xs sm:max-w-md md:max-w-xl"
             draggable="false"
             oncontextmenu="return false;"
             ondragstart="return false;"
@@ -204,14 +238,17 @@
     </section>
 
     <!-- SECTION 2: ABOUT US (White) -->
-    <section id="about" class="relative bg-white text-gray-800 pt-16 pb-24">
+    <section
+      id="about"
+      class="relative w-full h-auto min-h-[50vh] bg-white text-gray-800 pt-16 pb-24"
+    >
       <div
         class="pointer-events-none absolute"
         style="
           top: 15%;
           left: 80%;
-          width: 30px;
-          height: 30px;
+          width: 20px;
+          height: 20px;
           background: rgba(20, 184, 166, 0.2);
           border-radius: 50%;
           filter: blur(2px);
@@ -223,8 +260,8 @@
         style="
           top: 60%;
           left: 10%;
-          width: 35px;
-          height: 35px;
+          width: 25px;
+          height: 25px;
           background: rgba(20, 184, 166, 0.2);
           border-radius: 50%;
           filter: blur(2px);
@@ -237,8 +274,8 @@
         style="
           top: 40%;
           left: 50%;
-          width: 25px;
-          height: 25px;
+          width: 15px;
+          height: 15px;
           background: rgba(20, 184, 166, 0.2);
           border-radius: 50%;
           filter: blur(2px);
@@ -253,7 +290,7 @@
           preserveAspectRatio="none"
           fill="none"
           stroke="rgba(20,184,166,0.3)"
-          stroke-width="2"
+          stroke-width="1.5"
           stroke-dasharray="6 6"
           viewBox="0 0 1440 600"
         >
@@ -263,21 +300,25 @@
         </svg>
       </div>
 
-      <div class="container mx-auto px-6 max-w-7xl relative z-10">
-        <h2 class="text-3xl font-bold text-teal-600 text-center">About Us</h2>
-        <p class="mt-4 max-w-xl mx-auto text-center text-gray-600">
+      <div class="container mx-auto px-4 sm:px-6 max-w-7xl relative z-10">
+        <h2 class="text-2xl sm:text-3xl font-bold text-teal-600 text-center">
+          About Us
+        </h2>
+        <p
+          class="mt-4 text-base sm:text-lg text-gray-600 max-w-md sm:max-w-xl mx-auto text-center"
+        >
           Cardiolytics Home Care is dedicated to providing remote cardiovascular
           monitoring and expert medical insights for better heart health.
         </p>
 
         <div
-          class="mt-8 flex flex-col md:flex-row items-center justify-center gap-8"
+          class="mt-8 flex flex-col md:flex-row items-center justify-center gap-6 md:gap-8"
         >
-          <div class="w-full md:w-[480px] flex justify-center">
+          <div class="w-full md:w-1/2 lg:w-[480px] flex justify-center">
             <img
               src="{{ url_for('static', filename='img/5.png') }}"
               alt="About Us Image"
-              class="w-3/4 md:w-full rounded-lg shadow-lg"
+              class="w-3/4 sm:w-2/3 md:w-full max-w-xs sm:max-w-sm rounded-lg shadow-lg"
               draggable="false"
               oncontextmenu="return false;"
               ondragstart="return false;"
@@ -286,8 +327,10 @@
           </div>
 
           <div class="w-full md:w-1/2 text-center md:text-left">
-            <h3 class="text-2xl font-semibold text-teal-600">Our Mission</h3>
-            <p class="mt-2 text-gray-600">
+            <h3 class="text-xl sm:text-2xl font-semibold text-teal-600">
+              Our Mission
+            </h3>
+            <p class="mt-2 text-base sm:text-lg text-gray-600">
               We empower individuals to manage their heart health while staying
               connected with healthcare professionals from anywhere.
             </p>
@@ -299,15 +342,15 @@
     <!-- SECTION 3: SERVICES (Teal) -->
     <section
       id="services"
-      class="relative pt-16 pb-24 bg-gradient-to-r from-teal-700 to-teal-500 text-white overflow-hidden"
+      class="relative w-full h-auto min-h-[70vh] pt-16 pb-24 bg-gradient-to-r from-teal-700 to-teal-500 text-white overflow-hidden"
     >
       <div
         class="pointer-events-none absolute"
         style="
           top: 5%;
           left: 70%;
-          width: 30px;
-          height: 30px;
+          width: 20px;
+          height: 20px;
           background: rgba(255, 255, 255, 0.3);
           border-radius: 50%;
           filter: blur(2px);
@@ -319,8 +362,8 @@
         style="
           top: 55%;
           left: 15%;
-          width: 40px;
-          height: 40px;
+          width: 30px;
+          height: 30px;
           background: rgba(255, 255, 255, 0.3);
           border-radius: 50%;
           filter: blur(2px);
@@ -333,8 +376,8 @@
         style="
           top: 80%;
           left: 50%;
-          width: 25px;
-          height: 25px;
+          width: 15px;
+          height: 15px;
           background: rgba(255, 255, 255, 0.3);
           border-radius: 50%;
           filter: blur(2px);
@@ -349,7 +392,7 @@
           preserveAspectRatio="none"
           fill="none"
           stroke="rgba(255,255,255,0.2)"
-          stroke-width="2"
+          stroke-width="1.5"
           stroke-dasharray="6 6"
           viewBox="0 0 1440 600"
         >
@@ -359,28 +402,38 @@
         </svg>
       </div>
 
-      <div class="relative z-10 container mx-auto px-6 max-w-7xl">
-        <h2 class="text-3xl font-bold text-white text-center">Our Services</h2>
-        <p class="mt-4 max-w-xl mx-auto text-center text-white">
+      <div class="relative z-10 container mx-auto px-4 sm:px-6 max-w-7xl">
+        <h2 class="text-2xl sm:text-3xl font-bold text-white text-center">
+          Our Services
+        </h2>
+        <p
+          class="mt-4 text-base sm:text-lg text-white max-w-md sm:max-w-xl mx-auto text-center"
+        >
           We offer a range of services to help you maintain optimal heart health
           and stay connected with your healthcare team, anytime, anywhere.
         </p>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-10">
+        <div
+          class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8 mt-8 sm:mt-10"
+        >
           <div
             class="bg-white rounded-xl shadow-lg overflow-hidden transform transition duration-300 hover:scale-105 hover:shadow-2xl"
           >
-            <div class="p-6">
+            <div class="p-4 sm:p-6">
               <div class="flex justify-center">
                 <img
                   src="{{ url_for('static', filename='img/6.png') }}"
                   alt="Real-time Blood Pressure Monitoring"
-                  class="w-48 h-48 object-cover"
+                  class="w-32 h-32 sm:w-40 sm:h-40 object-cover"
                 />
               </div>
-              <h3 class="mt-6 text-xl font-semibold text-center text-gray-800">
+              <h3
+                class="mt-4 sm:mt-6 text-lg sm:text-xl font-semibold text-center text-gray-800"
+              >
                 Real-time Blood Pressure Monitoring
               </h3>
-              <p class="mt-4 text-center text-gray-600">
+              <p
+                class="mt-3 sm:mt-4 text-sm sm:text-base text-center text-gray-600"
+              >
                 Monitor your blood pressure continuously with our real-time
                 analytics, enabling early detection of abnormalities and prompt
                 medical intervention.
@@ -390,18 +443,22 @@
           <div
             class="bg-white rounded-xl shadow-lg overflow-hidden transform transition duration-300 hover:scale-105 hover:shadow-2xl"
           >
-            <div class="p-6">
+            <div class="p-4 sm:p-6">
               <div class="flex justify-center">
                 <img
                   src="{{ url_for('static', filename='img/7.png') }}"
                   alt="Cardiovascular Prediction"
-                  class="w-48 h-48 object-cover"
+                  class="w-32 h-32 sm:w-40 sm:h-40 object-cover"
                 />
               </div>
-              <h3 class="mt-6 text-xl font-semibold text-center text-gray-800">
+              <h3
+                class="mt-4 sm:mt-6 text-lg sm:text-xl font-semibold text-center text-gray-800"
+              >
                 Cardiovascular Prediction
               </h3>
-              <p class="mt-4 text-center text-gray-600">
+              <p
+                class="mt-3 sm:mt-4 text-sm sm:text-base text-center text-gray-600"
+              >
                 Leverage our advanced predictive algorithms to assess your
                 cardiovascular risk and receive personalized recommendations
                 from leading experts.
@@ -411,18 +468,22 @@
           <div
             class="bg-white rounded-xl shadow-lg overflow-hidden transform transition duration-300 hover:scale-105 hover:shadow-2xl"
           >
-            <div class="p-6">
+            <div class="p-4 sm:p-6">
               <div class="flex justify-center">
                 <img
                   src="{{ url_for('static', filename='img/8.png') }}"
                   alt="Cardiobot"
-                  class="w-48 h-48 object-cover"
+                  class="w-32 h-32 sm:w-40 sm:h-40 object-cover"
                 />
               </div>
-              <h3 class="mt-6 text-xl font-semibold text-center text-gray-800">
+              <h3
+                class="mt-4 sm:mt-6 text-lg sm:text-xl font-semibold text-center text-gray-800"
+              >
                 Cardiobot
               </h3>
-              <p class="mt-4 text-center text-gray-600">
+              <p
+                class="mt-3 sm:mt-4 text-sm sm:text-base text-center text-gray-600"
+              >
                 Meet Cardiobot – an AI-powered cardiovascular assistant designed
                 to answer your questions, provide trusted heart health insights,
                 and guide you in making informed decisions.
@@ -434,14 +495,17 @@
     </section>
 
     <!-- SECTION 4: TESTIMONIALS (White) -->
-    <section id="testimoni" class="relative bg-white text-gray-800 pt-16 pb-24">
+    <section
+      id="testimoni"
+      class="relative w-full h-auto min-h-[60vh] bg-white text-gray-800 pt-16 pb-24"
+    >
       <div
         class="pointer-events-none absolute"
         style="
           top: 20%;
           left: 70%;
-          width: 30px;
-          height: 30px;
+          width: 20px;
+          height: 20px;
           background: rgba(20, 184, 166, 0.2);
           border-radius: 50%;
           filter: blur(2px);
@@ -453,8 +517,8 @@
         style="
           top: 65%;
           left: 15%;
-          width: 35px;
-          height: 35px;
+          width: 25px;
+          height: 25px;
           background: rgba(20, 184, 166, 0.2);
           border-radius: 50%;
           filter: blur(2px);
@@ -469,7 +533,7 @@
           preserveAspectRatio="none"
           fill="none"
           stroke="rgba(20,184,166,0.3)"
-          stroke-width="2"
+          stroke-width="1.5"
           stroke-dasharray="6 6"
           viewBox="0 0 1440 600"
         >
@@ -480,41 +544,47 @@
       </div>
       <div class="relative py-12 overflow-hidden">
         <div
-          class="absolute -top-10 -left-20 w-56 h-56 bg-teal-200 rounded-full opacity-50 z-[-1]"
+          class="absolute -top-10 -left-16 w-40 h-40 sm:w-48 sm:h-48 bg-teal-200 rounded-full opacity-50 z-[-1]"
         ></div>
         <div
-          class="absolute bottom-0 -right-20 w-56 h-56 bg-teal-100 rounded-full opacity-50 z-[-1]"
+          class="absolute bottom-0 -right-16 w-40 h-40 sm:w-48 sm:h-48 bg-teal-100 rounded-full opacity-50 z-[-1]"
         ></div>
 
-        <div class="container mx-auto px-6 max-w-7xl relative z-10">
-          <h2 class="text-3xl font-bold text-teal-600 text-center">
+        <div class="container mx-auto px-4 sm:px-6 max-w-7xl relative z-10">
+          <h2 class="text-2xl sm:text-3xl font-bold text-teal-600 text-center">
             Testimonials
           </h2>
-          <p class="mt-4 max-w-xl mx-auto text-center text-gray-600">
+          <p
+            class="mt-4 text-base sm:text-lg text-gray-600 max-w-md sm:max-w-xl mx-auto text-center"
+          >
             Hear stories from Cardiolytics Home Care users about how our
             features help them maintain their heart health.
           </p>
 
-          <div class="swiper testimonialSwiper mt-5 overflow-hidden">
+          <div class="swiper testimonialSwiper mt-6 sm:mt-8 overflow-hidden">
             <div class="swiper-wrapper">
               <div class="swiper-slide flex justify-center overflow-hidden">
                 <div
-                  class="w-full md:w-3/4 lg:w-2/3 h-60 bg-teal-100 border border-teal-300 rounded-xl p-6 shadow-md flex flex-col items-center justify-center transform transition duration-300 hover:scale-102 hover:shadow-xl overflow-hidden will-change-transform"
+                  class="w-full sm:w-3/4 md:w-2/3 h-auto min-h-[16rem] sm:min-h-[18rem] bg-teal-100 border border-teal-300 rounded-xl p-4 sm:p-6 shadow-md flex flex-col items-center justify-between transform transition duration-300 hover:scale-102 hover:shadow-xl overflow-hidden will-change-transform"
                 >
-                  <p class="text-gray-700 italic text-center">
+                  <p
+                    class="text-gray-700 italic text-center text-sm sm:text-base"
+                  >
                     "The Blood Pressure Monitor feature has been incredibly
                     helpful in tracking my blood pressure daily. The dashboard
                     is clear and easy to understand, making me more aware of my
                     heart condition."
                   </p>
-                  <div class="mt-10 flex items-center space-x-3">
+                  <div class="mt-4 sm:mt-6 flex items-center space-x-3">
                     <img
                       src="https://i.pravatar.cc/50?img=3"
                       alt="User"
-                      class="w-10 h-10 rounded-full"
+                      class="w-8 h-8 sm:w-10 sm:h-10 rounded-full"
                     />
                     <div>
-                      <h4 class="text-sm font-semibold text-teal-600">
+                      <h4
+                        class="text-xs sm:text-sm font-semibold text-teal-600"
+                      >
                         John Smith
                       </h4>
                       <span class="text-xs text-gray-500">User since 2024</span>
@@ -524,21 +594,25 @@
               </div>
               <div class="swiper-slide flex justify-center overflow-hidden">
                 <div
-                  class="w-full md:w-3/4 lg:w-2/3 h-60 bg-teal-100 border border-teal-300 rounded-xl p-6 shadow-md flex flex-col items-center justify-center transform transition duration-300 hover:scale-102 hover:shadow-xl overflow-hidden will-change-transform"
+                  class="w-full sm:w-3/4 md:w-2/3 h-auto min-h-[16rem] sm:min-h-[18rem] bg-teal-100 border border-teal-300 rounded-xl p-4 sm:p-6 shadow-md flex flex-col items-center justify-between transform transition duration-300 hover:scale-102 hover:shadow-xl overflow-hidden will-change-transform"
                 >
-                  <p class="text-gray-700 italic text-center">
+                  <p
+                    class="text-gray-700 italic text-center text-sm sm:text-base"
+                  >
                     "Cardiovascular Predict gave me a clear picture of my heart
                     risk. The personalized recommendations from the AI truly
                     helped me take early preventive steps."
                   </p>
-                  <div class="mt-10 flex items-center space-x-3">
+                  <div class="mt-4 sm:mt-6 flex items-center space-x-3">
                     <img
                       src="https://i.pravatar.cc/50?img=5"
                       alt="User"
-                      class="w-10 h-10 rounded-full"
+                      class="w-8 h-8 sm:w-10 sm:h-10 rounded-full"
                     />
                     <div>
-                      <h4 class="text-sm font-semibold text-teal-600">
+                      <h4
+                        class="text-xs sm:text-sm font-semibold text-teal-600"
+                      >
                         Jane Doe
                       </h4>
                       <span class="text-xs text-gray-500">User since 2025</span>
@@ -548,21 +622,25 @@
               </div>
               <div class="swiper-slide flex justify-center overflow-hidden">
                 <div
-                  class="w-full md:w-3/4 lg:w-2/3 h-60 bg-teal-100 border border-teal-300 rounded-xl p-6 shadow-md flex flex-col items-center justify-center transform transition duration-300 hover:scale-102 hover:shadow-xl overflow-hidden will-change-transform"
+                  class="w-full sm:w-3/4 md:w-2/3 h-auto min-h-[16rem] sm:min-h-[18rem] bg-teal-100 border border-teal-300 rounded-xl p-4 sm:p-6 shadow-md flex flex-col items-center justify-between transform transition duration-300 hover:scale-102 hover:shadow-xl overflow-hidden will-change-transform"
                 >
-                  <p class="text-gray-700 italic text-center">
+                  <p
+                    class="text-gray-700 italic text-center text-sm sm:text-base"
+                  >
                     "Cardiobot is so helpful! I can ask about heart health
                     anytime, and the answers are always clear and based on
                     trusted medical information."
                   </p>
-                  <div class="mt-10 flex items-center space-x-3">
+                  <div class="mt-4 sm:mt-6 flex items-center space-x-3">
                     <img
                       src="https://i.pravatar.cc/50?img=8"
                       alt="User"
-                      class="w-10 h-10 rounded-full"
+                      class="w-8 h-8 sm:w-10 sm:h-10 rounded-full"
                     />
                     <div>
-                      <h4 class="text-sm font-semibold text-teal-600">
+                      <h4
+                        class="text-xs sm:text-sm font-semibold text-teal-600"
+                      >
                         Emily Johnson
                       </h4>
                       <span class="text-xs text-gray-500">User since 2025</span>
@@ -572,21 +650,25 @@
               </div>
               <div class="swiper-slide flex justify-center overflow-hidden">
                 <div
-                  class="w-full md:w-3/4 lg:w-2/3 h-60 bg-teal-100 border border-teal-300 rounded-xl p-6 shadow-md flex flex-col items-center justify-center transform transition duration-300 hover:scale-102 hover:shadow-xl overflow-hidden will-change-transform"
+                  class="w-full sm:w-3/4 md:w-2/3 h-auto min-h-[16rem] sm:min-h-[18rem] bg-teal-100 border border-teal-300 rounded-xl p-4 sm:p-6 shadow-md flex flex-col items-center justify-between transform transition duration-300 hover:scale-102 hover:shadow-xl overflow-hidden will-change-transform"
                 >
-                  <p class="text-gray-700 italic text-center">
+                  <p
+                    class="text-gray-700 italic text-center text-sm sm:text-base"
+                  >
                     "The combination of Blood Pressure Monitor and Cardiobot
                     makes me feel more at ease. I can track my blood pressure
                     and consult Cardiobot immediately if I have questions."
                   </p>
-                  <div class="mt-10 flex items-center space-x-3">
+                  <div class="mt-4 sm:mt-6 flex items-center space-x-3">
                     <img
                       src="https://i.pravatar.cc/50?img=12"
                       alt="User"
-                      class="w-10 h-10 rounded-full"
+                      class="w-8 h-8 sm:w-10 sm:h-10 rounded-full"
                     />
                     <div>
-                      <h4 class="text-sm font-semibold text-teal-600">
+                      <h4
+                        class="text-xs sm:text-sm font-semibold text-teal-600"
+                      >
                         Michael Brown
                       </h4>
                       <span class="text-xs text-gray-500">User since 2023</span>
@@ -596,21 +678,25 @@
               </div>
               <div class="swiper-slide flex justify-center overflow-hidden">
                 <div
-                  class="w-full md:w-3/4 lg:w-2/3 h-60 bg-teal-100 border border-teal-300 rounded-xl p-6 shadow-md flex flex-col items-center justify-center transform transition duration-300 hover:scale-102 hover:shadow-xl overflow-hidden will-change-transform"
+                  class="w-full sm:w-3/4 md:w-2/3 h-auto min-h-[16rem] sm:min-h-[18rem] bg-teal-100 border border-teal-300 rounded-xl p-4 sm:p-6 shadow-md flex flex-col items-center justify-between transform transition duration-300 hover:scale-102 hover:shadow-xl overflow-hidden will-change-transform"
                 >
-                  <p class="text-gray-700 italic text-center">
+                  <p
+                    class="text-gray-700 italic text-center text-sm sm:text-base"
+                  >
                     "The Cardiovascular Predict feature is highly accurate! I
                     can understand my heart risk and get easy-to-understand
                     advice for a healthier life."
                   </p>
-                  <div class="mt-10 flex items-center space-x-3">
+                  <div class="mt-4 sm:mt-6 flex items-center space-x-3">
                     <img
                       src="https://i.pravatar.cc/50?img=15"
                       alt="User"
-                      class="w-10 h-10 rounded-full"
+                      class="w-8 h-8 sm:w-10 sm:h-10 rounded-full"
                     />
                     <div>
-                      <h4 class="text-sm font-semibold text-teal-600">
+                      <h4
+                        class="text-xs sm:text-sm font-semibold text-teal-600"
+                      >
                         Sarah Williams
                       </h4>
                       <span class="text-xs text-gray-500">User since 2022</span>
@@ -629,15 +715,15 @@
     <!-- SECTION 5: FAQ (Teal) -->
     <section
       id="faq"
-      class="relative pt-16 pb-24 bg-gradient-to-r from-teal-700 to-teal-500 text-white overflow-hidden"
+      class="relative w-full h-auto min-h-[70vh] pt-16 pb-24 bg-gradient-to-r from-teal-700 to-teal-500 text-white overflow-hidden"
     >
       <div
         class="pointer-events-none absolute"
         style="
           top: 12%;
           left: 10%;
-          width: 30px;
-          height: 30px;
+          width: 20px;
+          height: 20px;
           background: rgba(255, 255, 255, 0.3);
           border-radius: 50%;
           filter: blur(2px);
@@ -649,8 +735,8 @@
         style="
           top: 50%;
           left: 75%;
-          width: 35px;
-          height: 35px;
+          width: 25px;
+          height: 25px;
           background: rgba(255, 255, 255, 0.3);
           border-radius: 50%;
           filter: blur(2px);
@@ -663,8 +749,8 @@
         style="
           top: 80%;
           left: 30%;
-          width: 25px;
-          height: 25px;
+          width: 15px;
+          height: 15px;
           background: rgba(255, 255, 255, 0.3);
           border-radius: 50%;
           filter: blur(2px);
@@ -679,7 +765,7 @@
           preserveAspectRatio="none"
           fill="none"
           stroke="rgba(255,255,255,0.2)"
-          stroke-width="2"
+          stroke-width="1.5"
           stroke-dasharray="6 6"
           viewBox="0 0 1440 600"
         >
@@ -690,20 +776,24 @@
       </div>
 
       <!-- FAQ Section -->
-      <div class="relative z-10 container mx-auto px-6 max-w-7xl">
-        <h2 class="text-3xl font-bold text-center">
+      <div class="relative z-10 container mx-auto px-4 sm:px-6 max-w-7xl">
+        <h2 class="text-2xl sm:text-3xl font-bold text-center">
           Frequently Asked Questions
         </h2>
-        <p class="mt-4 max-w-xl mx-auto text-center text-gray-100">
+        <p
+          class="mt-4 text-base sm:text-lg text-gray-100 max-w-md sm:max-w-xl mx-auto text-center"
+        >
           Answers to common questions about Cardiolytics Home Care features and
           services.
         </p>
-        <div class="mt-8 space-y-6">
-          <details class="bg-white text-gray-800 rounded-lg p-4">
-            <summary class="cursor-pointer font-semibold text-teal-600">
+        <div class="mt-6 sm:mt-8 space-y-4 sm:space-y-6">
+          <details class="bg-white text-gray-800 rounded-lg p-3 sm:p-4">
+            <summary
+              class="cursor-pointer font-semibold text-teal-600 text-sm sm:text-base"
+            >
               How does the Blood Pressure Monitor work?
             </summary>
-            <p class="mt-2 text-gray-700">
+            <p class="mt-2 text-gray-700 text-sm sm:text-base">
               The Blood Pressure Monitor feature allows you to track your blood
               pressure in real-time using a compatible device. The data is
               displayed in an easy-to-read integrated dashboard, helping you
@@ -711,12 +801,14 @@
             </p>
           </details>
 
-          <details class="bg-white text-gray-800 rounded-lg p-4">
-            <summary class="cursor-pointer font-semibold text-teal-600">
+          <details class="bg-white text-gray-800 rounded-lg p-3 sm:p-4">
+            <summary
+              class="cursor-pointer font-semibold text-teal-600 text-sm sm:text-base"
+            >
               What is Cardiovascular Predict, and how accurate are its
               predictions?
             </summary>
-            <p class="mt-2 text-gray-700">
+            <p class="mt-2 text-gray-700 text-sm sm:text-base">
               Cardiovascular Predict uses advanced AI models to analyze your
               health data and predict cardiovascular risks. The model is trained
               with trusted medical data to provide accurate results and
@@ -724,11 +816,13 @@
             </p>
           </details>
 
-          <details class="bg-white text-gray-800 rounded-lg p-4">
-            <summary class="cursor-pointer font-semibold text-teal-600">
+          <details class="bg-white text-gray-800 rounded-lg p-3 sm:p-4">
+            <summary
+              class="cursor-pointer font-semibold text-teal-600 text-sm sm:text-base"
+            >
               How does Cardiobot help me understand my heart health?
             </summary>
-            <p class="mt-2 text-gray-700">
+            <p class="mt-2 text-gray-700 text-sm sm:text-base">
               Cardiobot is an AI-powered assistant that provides quick and
               reliable answers to your questions about heart health. Based on
               documents from medical institutions, Cardiobot explains
@@ -736,11 +830,13 @@
             </p>
           </details>
 
-          <details class="bg-white text-gray-800 rounded-lg p-4">
-            <summary class="cursor-pointer font-semibold text-teal-600">
+          <details class="bg-white text-gray-800 rounded-lg p-3 sm:p-4">
+            <summary
+              class="cursor-pointer font-semibold text-teal-600 text-sm sm:text-base"
+            >
               Is my health data secure on the Cardiolytics platform?
             </summary>
-            <p class="mt-2 text-gray-700">
+            <p class="mt-2 text-gray-700 text-sm sm:text-base">
               We use high-level encryption and comply with international privacy
               standards to protect your health data. All information is securely
               stored and accessible only to you and the medical professionals
@@ -748,11 +844,13 @@
             </p>
           </details>
 
-          <details class="bg-white text-gray-800 rounded-lg p-4">
-            <summary class="cursor-pointer font-semibold text-teal-600">
+          <details class="bg-white text-gray-800 rounded-lg p-3 sm:p-4">
+            <summary
+              class="cursor-pointer font-semibold text-teal-600 text-sm sm:text-base"
+            >
               Do I need special equipment to use these services?
             </summary>
-            <p class="mt-2 text-gray-700">
+            <p class="mt-2 text-gray-700 text-sm sm:text-base">
               For the Blood Pressure Monitor feature, you need a blood pressure
               measuring device compatible with our app. Cardiovascular Predict
               and Cardiobot can be used directly through the website or app
@@ -764,14 +862,17 @@
     </section>
 
     <!-- Office Section -->
-    <section id="office" class="relative bg-white text-gray-800 pt-16 pb-24">
+    <section
+      id="office"
+      class="relative w-full h-auto min-h-[50vh] bg-white text-gray-800 pt-16 pb-24"
+    >
       <div
         class="pointer-events-none absolute"
         style="
           top: 20%;
           left: 70%;
-          width: 30px;
-          height: 30px;
+          width: 20px;
+          height: 20px;
           background: rgba(20, 184, 166, 0.2);
           border-radius: 50%;
           filter: blur(2px);
@@ -783,8 +884,8 @@
         style="
           top: 65%;
           left: 15%;
-          width: 35px;
-          height: 35px;
+          width: 25px;
+          height: 25px;
           background: rgba(20, 184, 166, 0.2);
           border-radius: 50%;
           filter: blur(2px);
@@ -799,7 +900,7 @@
           preserveAspectRatio="none"
           fill="none"
           stroke="rgba(20,184,166,0.3)"
-          stroke-width="2"
+          stroke-width="1.5"
           stroke-dasharray="6 6"
           viewBox="0 0 1440 600"
         >
@@ -809,16 +910,16 @@
         </svg>
       </div>
 
-      <div class="container mx-auto px-6 max-w-7xl relative z-10">
-        <h2 class="text-3xl font-bold text-teal-600 text-center">
+      <div class="container mx-auto px-4 sm:px-6 max-w-7xl relative z-10">
+        <h2 class="text-2xl sm:text-3xl font-bold text-teal-600 text-center">
           Additional Information
         </h2>
 
-        <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-          <!-- Left Column: Map & Title -->
+        <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+          <!-- Left Column: Map -->
           <div>
             <iframe
-              class="w-full h-64 rounded-lg"
+              class="w-full h-56 sm:h-64 rounded-lg"
               src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d909.2430041751471!2d112.79360754554914!3d-7.276433980140686!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2dd7fa10ebfbf931%3A0x2eb0a9059e0c4559!2sPusat%20Unggulan%20Teknologi%20PENS!5e1!3m2!1sen!2sus!4v1740657095439!5m2!1sen!2sus"
               style="border: 0"
               allowfullscreen=""
@@ -827,24 +928,26 @@
             ></iframe>
           </div>
 
-          <!-- Top Row: Office Address, Our Services, Others -->
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <!-- Right Column: Info -->
+          <div
+            class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8"
+          >
             <!-- Office Address -->
             <div>
-              <h3 class="text-lg font-semibold mb-2 text-teal-600">
+              <h3 class="text-base sm:text-lg font-semibold mb-2 text-teal-600">
                 Office Address
               </h3>
-              <p class="text-sm text-gray-700">
+              <p class="text-xs sm:text-sm text-gray-700">
                 Surabaya - Jl. Raya ITS, Keputih, Sukolilo District, Surabaya,
                 East Java 60111
               </p>
             </div>
             <!-- Our Services -->
             <div>
-              <h3 class="text-lg font-semibold mb-2 text-teal-600">
+              <h3 class="text-base sm:text-lg font-semibold mb-2 text-teal-600">
                 Our Services
               </h3>
-              <ul class="space-y-1 text-sm">
+              <ul class="space-y-1 text-xs sm:text-sm">
                 <li class="text-gray-700">
                   Real-time Blood Pressure Monitoring
                 </li>
@@ -854,8 +957,10 @@
             </div>
             <!-- Others -->
             <div>
-              <h3 class="text-lg font-semibold mb-2 text-teal-600">Others</h3>
-              <ul class="space-y-1 text-sm">
+              <h3 class="text-base sm:text-lg font-semibold mb-2 text-teal-600">
+                Others
+              </h3>
+              <ul class="space-y-1 text-xs sm:text-sm">
                 <li class="text-gray-700">About Us</li>
                 <li class="text-gray-700">Testimonials</li>
                 <li class="text-gray-700">Frequently Asked Questions</li>
@@ -863,10 +968,10 @@
             </div>
             <!-- Contact Us -->
             <div>
-              <h3 class="text-lg font-semibold mb-2 text-teal-600">
+              <h3 class="text-base sm:text-lg font-semibold mb-2 text-teal-600">
                 Contact Us
               </h3>
-              <ul class="space-y-1 text-sm">
+              <ul class="space-y-1 text-xs sm:text-sm">
                 <li class="text-gray-700">081233585500 - CS</li>
                 <li class="text-gray-700">Cardiolytics</li>
                 <li class="text-gray-700">info@cardiolytics.com</li>
@@ -874,18 +979,32 @@
             </div>
             <!-- Media -->
             <div>
-              <h3 class="text-lg font-semibold mb-2 text-teal-600">Media</h3>
-              <div class="flex space-x-4">
-                <a href="#" class="text-gray-600 hover:text-gray-800">
+              <h3 class="text-base sm:text-lg font-semibold mb-2 text-teal-600">
+                Media
+              </h3>
+              <div class="flex space-x-3 sm:space-x-4">
+                <a
+                  href="#"
+                  class="text-gray-600 hover:text-gray-800 text-sm sm:text-base"
+                >
                   <i class="fab fa-facebook-f"></i>
                 </a>
-                <a href="#" class="text-gray-600 hover:text-gray-800">
+                <a
+                  href="#"
+                  class="text-gray-600 hover:text-gray-800 text-sm sm:text-base"
+                >
                   <i class="fab fa-instagram"></i>
                 </a>
-                <a href="#" class="text-gray-600 hover:text-gray-800">
+                <a
+                  href="#"
+                  class="text-gray-600 hover:text-gray-800 text-sm sm:text-base"
+                >
                   <i class="fab fa-twitter"></i>
                 </a>
-                <a href="#" class="text-gray-600 hover:text-gray-800">
+                <a
+                  href="#"
+                  class="text-gray-600 hover:text-gray-800 text-sm sm:text-base"
+                >
                   <i class="fab fa-linkedin-in"></i>
                 </a>
               </div>
@@ -897,14 +1016,17 @@
 
     <hr />
     <!-- Footer -->
-    <footer class="bg-white text-center py-3">
-      <div class="container mx-auto max-w-4xl px-6">
-        <p class="text-gray-700">© 2025 Cardiolytics. All Rights Reserved.</p>
+    <footer class="bg-white text-center py-3 w-full h-auto">
+      <div class="container mx-auto max-w-4xl px-4 sm:px-6">
+        <p class="text-gray-700 text-xs sm:text-sm">
+          © 2025 Cardiolytics. All Rights Reserved.
+        </p>
       </div>
     </footer>
 
     <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
     <script>
+      // Swiper initialization
       var swiper = new Swiper(".testimonialSwiper", {
         loop: true,
         effect: "fade",
@@ -916,10 +1038,16 @@
           el: ".swiper-pagination",
           clickable: true,
         },
-        navigation: {
-          nextEl: ".swiper-button-next",
-          prevEl: ".swiper-button-prev",
-        },
+        slidesPerView: 1,
+        spaceBetween: 20,
+      });
+
+      // Mobile menu toggle
+      const menuToggle = document.getElementById("menu-toggle");
+      const mobileMenu = document.getElementById("mobile-menu");
+
+      menuToggle.addEventListener("click", () => {
+        mobileMenu.classList.toggle("hidden");
       });
     </script>
   </body>

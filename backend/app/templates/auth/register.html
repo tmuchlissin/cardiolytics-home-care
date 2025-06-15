@@ -34,13 +34,15 @@
   <body
     class="bg-gray-200 flex flex-col items-center justify-center min-h-screen"
   >
-    <!-- 🔹 Flash Messages - Appear Above the Registration Container -->
+    <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %} {% if
     messages %}
-    <div class="absolute top-5 w-11/12 max-w-lg">
+    <div
+      class="absolute top-4 sm:top-5 w-full max-w-xs sm:max-w-lg px-4 sm:px-6"
+    >
       {% for category, message in messages %}
       <div
-        class="flash-message p-3 rounded-lg text-center font-semibold {% if category == 'success' %} bg-green-100 border border-green-400 text-green-700 {% elif category == 'warning' %} bg-yellow-100 border border-yellow-400 text-yellow-700 {% elif category == 'danger' %} bg-red-100 border border-red-400 text-red-700 {% elif category == 'attention' %} bg-gray-100 border border-gray-400 text-gray-700 {% endif %}"
+        class="flash-message p-2 sm:p-3 rounded-lg text-center font-semibold {% if category == 'success' %} bg-green-100 border border-green-400 text-green-700 {% elif category == 'warning' %} bg-yellow-100 border border-yellow-400 text-yellow-700 {% elif category == 'danger' %} bg-red-100 border border-red-400 text-red-700 {% elif category == 'attention' %} bg-gray-100 border border-gray-400 text-gray-700 {% endif %} text-xs sm:text-sm"
       >
         {{ message }}
       </div>
@@ -48,12 +50,14 @@
     </div>
     {% endif %} {% endwith %}
 
-    <div class="bg-white shadow-lg rounded-lg w-full max-w-lg p-8">
+    <div
+      class="bg-white shadow-lg rounded-lg w-full max-w-xs sm:max-w-sm md:max-w-lg mx-4 sm:mx-6 p-4 sm:p-6 lg:p-8"
+    >
       <!-- Logo (Clickable) -->
       <a href="{{ url_for('auth.landing_page') }}">
         <img
           src="{{ url_for('static', filename='img/cardiolytics.png') }}"
-          class="w-48 h-auto mb-4 mx-auto"
+          class="w-28 sm:w-36 md:w-48 h-auto mb-4 mx-auto"
           draggable="false"
           oncontextmenu="return false;"
           ondragstart="return false;"
@@ -61,10 +65,10 @@
           alt="Cardiolytics Logo"
         />
       </a>
-      <h2 class="text-2xl font-bold text-teal-600 text-center">
+      <h2 class="text-xl sm:text-2xl font-bold text-teal-600 text-center">
         Create Account
       </h2>
-      <p class="text-gray-600 mt-2 mb-3 text-center">
+      <p class="text-gray-600 mt-2 mb-3 text-center text-xs sm:text-sm">
         Fill in the details to create your account.
       </p>
 
@@ -73,8 +77,12 @@
         <!-- CSRF Protection -->
 
         <!-- Patient ID -->
-        <div class="mb-2">
-          <label for="patient_id" class="block text-gray-700">Patient ID</label>
+        <div class="mb-2 sm:mb-3">
+          <label
+            for="patient_id"
+            class="block text-gray-700 text-sm sm:text-base"
+            >Patient ID</label
+          >
           <input
             type="text"
             name="patient_id"
@@ -84,52 +92,60 @@
             maxlength="10"
             title="Patient ID must be 10 digits"
             required
-            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+            class="w-full px-3 sm:px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300 text-sm sm:text-base"
           />
         </div>
 
         <!-- Full Name -->
-        <div class="mb-2">
-          <label for="fullname" class="block text-gray-700">Full Name</label>
+        <div class="mb-2 sm:mb-3">
+          <label for="fullname" class="block text-gray-700 text-sm sm:text-base"
+            >Full Name</label
+          >
           <input
             type="text"
             name="full_name"
             id="full_name"
             placeholder="Enter your full name"
             required
-            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+            class="w-full px-3 sm:px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300 text-sm sm:text-base"
           />
         </div>
 
         <!-- Nickname -->
-        <div class="mb-2">
-          <label for="nickname" class="block text-gray-700">Nickname</label>
+        <div class="mb-2 sm:mb-3">
+          <label for="nickname" class="block text-gray-700 text-sm sm:text-base"
+            >Nickname</label
+          >
           <input
             type="text"
             name="nickname"
             id="nickname"
             placeholder="Enter your nickname"
             required
-            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+            class="w-full px-3 sm:px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300 text-sm sm:text-base"
           />
         </div>
 
         <!-- Email -->
-        <div class="mb-2">
-          <label for="email" class="block text-gray-700">Email</label>
+        <div class="mb-2 sm:mb-3">
+          <label for="email" class="block text-gray-700 text-sm sm:text-base"
+            >Email</label
+          >
           <input
             type="email"
             name="email"
             id="email"
             placeholder="example@domain.com"
             required
-            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+            class="w-full px-3 sm:px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300 text-sm sm:text-base"
           />
         </div>
 
         <!-- Phone Number -->
-        <div class="mb-2">
-          <label for="phone_number" class="block text-gray-700"
+        <div class="mb-2 sm:mb-3">
+          <label
+            for="phone_number"
+            class="block text-gray-700 text-sm sm:text-base"
             >Phone Number</label
           >
           <input
@@ -141,17 +157,22 @@
             maxlength="13"
             title="Phone number must be 10-13 digits"
             required
-            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+            class="w-full px-3 sm:px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300 text-sm sm:text-base"
           />
         </div>
 
         <!-- Password Label with Info Icon -->
-        <label for="password" class="block text-gray-700 flex items-center">
+        <label
+          for="password"
+          class="block text-gray-700 flex items-center text-sm sm:text-base"
+        >
           Password
           <span class="ml-2 relative group">
-            <i class="fa-solid fa-circle-info text-gray-500 cursor-pointer"></i>
+            <i
+              class="fa-solid fa-circle-info text-gray-500 cursor-pointer text-sm"
+            ></i>
             <span
-              class="absolute left-0 bottom-5 hidden group-hover:block bg-black text-white text-xs px-4 py-2 rounded-lg w-60 shadow-lg"
+              class="absolute left-0 bottom-5 hidden group-hover:block sm:group-hover:block bg-black text-white text-xs px-2 sm:px-4 py-1 sm:py-2 rounded-lg w-48 sm:w-60 shadow-lg z-10"
             >
               ✅ Minimum 8 characters<br />
               ✅ At least one uppercase letter (A-Z)<br />
@@ -163,7 +184,7 @@
         </label>
 
         <!-- Password Input with Strength Indicator -->
-        <div class="mb-2 relative">
+        <div class="mb-2 sm:mb-3 relative">
           <div class="relative">
             <input
               type="password"
@@ -171,7 +192,7 @@
               id="password"
               placeholder="Enter your password"
               required
-              class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300 pr-10"
+              class="w-full px-3 sm:px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300 pr-10 text-sm sm:text-base"
               onkeyup="checkPasswordStrength()"
             />
             <button
@@ -179,15 +200,20 @@
               id="togglePassword"
               class="absolute inset-y-0 right-3 flex items-center"
             >
-              <i id="eyeIconPassword" class="fa-solid fa-eye text-gray-500"></i>
+              <i
+                id="eyeIconPassword"
+                class="fa-solid fa-eye text-gray-500 text-sm"
+              ></i>
             </button>
           </div>
-          <p id="password-strength" class="mt-1 text-xs"></p>
+          <p id="password-strength" class="mt-1 text-xs sm:text-sm"></p>
         </div>
 
         <!-- Confirm Password -->
-        <div class="mb-4 relative">
-          <label for="confirm_password" class="block text-gray-700"
+        <div class="mb-4 sm:mb-6 relative">
+          <label
+            for="confirm_password"
+            class="block text-gray-700 text-sm sm:text-base"
             >Confirm Password</label
           >
           <div class="relative">
@@ -197,7 +223,7 @@
               id="confirm_password"
               placeholder="Retype your password"
               required
-              class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300 pr-10"
+              class="w-full px-3 sm:px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300 pr-10 text-sm sm:text-base"
               onkeyup="checkPasswordMatch()"
             />
             <button
@@ -207,25 +233,25 @@
             >
               <i
                 id="eyeIconConfirmPassword"
-                class="fa-solid fa-eye text-gray-500"
+                class="fa-solid fa-eye text-gray-500 text-sm"
               ></i>
             </button>
           </div>
-          <p id="confirm-password-message" class="mt-1 text-xs"></p>
+          <p id="confirm-password-message" class="mt-1 text-xs sm:text-sm"></p>
         </div>
 
         <!-- Register Button (Disabled Initially) -->
         <button
           type="submit"
           id="register-btn"
-          class="w-full bg-teal-400 text-white py-2 rounded-lg transition opacity-50 cursor-not-allowed relative"
+          class="w-full bg-teal-400 text-white py-2 rounded-lg transition opacity-50 cursor-not-allowed relative text-sm sm:text-base"
           disabled
         >
           Sign up
         </button>
       </form>
 
-      <p class="mt-3 text-center text-gray-500">
+      <p class="mt-3 text-center text-gray-500 text-xs sm:text-sm">
         Already have an account?
         <a
           href="{{ url_for('auth.login') }}"
@@ -235,7 +261,7 @@
       </p>
     </div>
 
-    <!-- JavaScript for Password Toggle -->
+    <!-- JavaScript for Password Toggle and Validation -->
     <script>
       let isPasswordStrong = false;
       let doPasswordsMatch = false;
@@ -249,16 +275,16 @@
 
         if (password.length < 8) {
           strengthBar.innerHTML = "❌ Too short (minimum 8 characters)";
-          strengthBar.className = "text-red-500";
+          strengthBar.className = "text-red-500 text-xs sm:text-sm";
           isPasswordStrong = false;
         } else if (!strongPassword.test(password)) {
           strengthBar.innerHTML =
             "⚠ Weak password (must include uppercase, lowercase, number, and special character)";
-          strengthBar.className = "text-yellow-500";
+          strengthBar.className = "text-yellow-500 text-xs sm:text-sm";
           isPasswordStrong = false;
         } else {
           strengthBar.innerHTML = "✅ Strong password!";
-          strengthBar.className = "text-green-500";
+          strengthBar.className = "text-green-500 text-xs sm:text-sm";
           isPasswordStrong = true;
         }
 
@@ -276,11 +302,11 @@
           doPasswordsMatch = false;
         } else if (password !== confirmPassword) {
           message.innerHTML = "❌ Passwords do not match!";
-          message.className = "text-red-500";
+          message.className = "text-red-500 text-xs sm:text-sm";
           doPasswordsMatch = false;
         } else {
           message.innerHTML = "✅ Passwords match!";
-          message.className = "text-green-500";
+          message.className = "text-green-500 text-xs sm:text-sm";
           doPasswordsMatch = true;
         }
 
@@ -332,7 +358,7 @@
 
         document
           .getElementById("password")
-          .addEventListener("inputdiagnostic message", checkPasswordStrength);
+          .addEventListener("input", checkPasswordStrength);
 
         document
           .getElementById("confirm_password")

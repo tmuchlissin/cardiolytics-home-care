@@ -1,23 +1,27 @@
+import os
 from functools import wraps
-from flask import Blueprint, render_template, redirect, url_for, flash, abort, request, current_app, send_file
-from flask_login import logout_user, current_user, login_required
-from app.models import UserRole, User, Models, Device, PatientData, Document
-from app.extensions import db
-from app.forms import EditUserForm, ModelForm, DeviceForm
-from sqlalchemy import or_
+from datetime import datetime
 from werkzeug.utils import secure_filename
 from io import BytesIO
+
+from flask import Blueprint, render_template, redirect, url_for, flash, abort, request, current_app, send_file
+from flask_login import logout_user, current_user, login_required
+
+from app.models import UserRole, User, Models, Device, PatientData, Document, BloodPressureRecord
+from app.extensions import db
+from app.forms import EditUserForm, ModelForm, DeviceForm
+
+from sqlalchemy import or_
+from sqlalchemy.orm import joinedload
+from sqlalchemy import case
+
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Image, Spacer
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY
 from reportlab.lib.units import inch
-from sqlalchemy.orm import joinedload
-import os
-from datetime import datetime
-from sqlalchemy import case
-    
+
 admin = Blueprint('admin', __name__, url_prefix='/admin')
 
 def calculate_age(date_of_birth):
@@ -26,6 +30,37 @@ def calculate_age(date_of_birth):
     today = datetime.today()
     age = today.year - date_of_birth.year - ((today.month, today.day) < (date_of_birth.month, date_of_birth.day))
     return age if age >= 0 else None  
+
+def get_bp_status(systolic, diastolic):
+    if systolic < 90 or diastolic < 60:
+        return 'Hypotension'
+    elif systolic <= 120 and diastolic <= 80:
+        return 'Normal'
+    elif (systolic <= 139 and diastolic <= 89) or (systolic > 120 and diastolic <= 80):
+        return 'Prehypertension'
+    elif systolic <= 159 or diastolic <= 99:
+        return 'Stage 1 Hypertension'
+    else:
+        return 'Stage 2 Hypertension'
+
+def get_hr_status(pulse_rate):
+    if pulse_rate < 60:
+        return 'Bradycardia'
+    elif 60 <= pulse_rate <= 100:
+        return 'Normal'
+    else:
+        return 'Tachycardia'
+
+def serialize_bp_record(record):
+    return {
+        'id': record.id,
+        'device_id': record.device_id,
+        'systolic': record.systolic,
+        'diastolic': record.diastolic,
+        'pulse_rate': record.pulse_rate,
+        'timestamp': record.timestamp.strftime('%d-%m-%Y, %H:%M:%S WIB') if record.timestamp else None,
+    }
+
 
 ###########################################################
 ######################### AUTH ############################
@@ -143,7 +178,7 @@ def edit_user(user_id):
             (User.user_name.ilike(search_pattern)) |
             (User.email.ilike(search_pattern)) |
             (User.phone_number.ilike(search_pattern)) |
-            (User.role.ilike(search_pattern)) |
+            (User.role.ilike(search_pattern)) | 
             (User.approved.ilike(search_pattern))
         )
     
@@ -224,35 +259,67 @@ def delete_user(user_id):
 @admin.route('/patient_data')
 @login_required
 def patient_data():
+    tab = request.args.get('tab', 'bp-monitor')
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
-    search_query = request.args.get('search', '')
-    
+    search_query = request.args.get('search', '').strip()
+    user_id = request.args.get('user_id', '').strip()
+
+    users_with_devices = User.query.filter(User.device_id != None).all()
+
+    data = None
+    status = 'N/A'
+    hrStatus = 'N/A'
+    serialized_records = [] 
+
+    if tab == 'bp-monitor' and user_id:
+        bp_records = BloodPressureRecord.query\
+            .join(Device, BloodPressureRecord.device_id == Device.id)\
+            .join(User, Device.id == User.device_id)\
+            .filter(User.id == user_id)\
+            .order_by(BloodPressureRecord.timestamp.desc())\
+            .limit(30)\
+            .all()
+
+        data = bp_records[0] if bp_records else None
+        if data:
+            status = get_bp_status(data.systolic, data.diastolic)
+            hrStatus = get_hr_status(data.pulse_rate)
+        else:
+            status = 'N/A'
+            hrStatus = 'N/A'
+
+        serialized_records = [serialize_bp_record(r) for r in bp_records]
+
+
     query = PatientData.query.options(joinedload(PatientData.user).joinedload(User.profile))\
                             .order_by(PatientData.submitted_at.desc())
     
-    if search_query:
+    if search_query and tab == 'cvd-predict':
         query = query.filter(PatientData.user_id.contains(search_query))
     
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
     patient_data_list = pagination.items
     
-
     patient_data_with_details = [
-    {
-        'patient': patient,
-        'age': calculate_age(patient.user.profile.date_of_birth if patient.user and patient.user.profile else None),
-        'gender': True if patient.user.profile.gender == "Male" else False if patient.user.profile.gender == "Female" else None
-    }
-    for patient in patient_data_list
+        {
+            'patient': patient,
+            'age': calculate_age(patient.user.profile.date_of_birth if patient.user and patient.user.profile else None),
+            'gender': True if patient.user.profile.gender == "Male" else False if patient.user.profile.gender == "Female" else None
+        }
+        for patient in patient_data_list
     ]
 
-    # for data in patient_data_with_details:
-    #     print(f"Patient ID: {data['patient'].user_id}, Gender: {data['gender']}")
-    
     return render_template(
         'admin/patient_data.html', 
         navbar_title="Patient Data", 
+        active_tab=tab,
+        users_with_devices=users_with_devices,
+        user_id=user_id,
+        data=data,
+        records=serialized_records, 
+        status=status,
+        hrStatus=hrStatus,
         patient_data=patient_data_with_details,
         pagination=pagination,
         entries_per_page=per_page,

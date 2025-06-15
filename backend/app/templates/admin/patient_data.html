@@ -1,374 +1,1032 @@
-{% extends "base.html" %} {% block content %}
+{% extends "base.html" %}
+{% block content %}
+
 <div class="px-5 py-1">
   <h1 class="text-2xl font-bold mb-4">Patient Data</h1>
+</div>
 
-  <div class="mb-4">
-    <input
-      type="text"
-      id="searchInput"
-      name="search"
-      placeholder="Search by Patient ID..."
-      value="{{ request.args.get('search', '') }}"
-      class="w-72 px-4 py-2 border border-gray-300 rounded-md font-medium focus:outline-none"
-    />
+
+<!-- Navbar -->
+<nav class="mb-4">
+  <div class="px-4">
+    <ul class="inline-flex space-x-3 border-b-2 border-gray-300 pb-3">
+      <!-- BP Monitor -->
+      <li>
+        <a
+          href="{{ url_for('admin.patient_data', tab='bp-monitor') }}"
+          data-tab="bp-monitor"
+          class="nav-item inline-flex items-center px-3 py-1.5 bg-white border border-gray-300 rounded-md shadow-sm transition-colors duration-200 ease-in-out text-gray-600 hover:text-gray-900 text-sm {% if active_tab=='bp-monitor' or active_tab is not defined %}font-semibold border-b-4 border-indigo-500 bg-indigo-50{% else %}font-medium{% endif %}"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-4 w-4 mr-1"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+            />
+          </svg>
+          BP Monitor
+        </a>
+      </li>
+      <!-- CVD Predict -->
+      <li>
+        <a
+          href="{{ url_for('admin.patient_data', tab='cvd-predict') }}"
+          data-tab="cvd-predict"
+          class="nav-item inline-flex items-center px-3 py-1.5 bg-white border border-gray-300 rounded-md shadow-sm transition-colors duration-200 ease-in-out text-gray-600 hover:text-gray-900 text-sm {% if active_tab=='cvd-predict' %}font-semibold border-b-4 border-indigo-500 bg-indigo-50{% else %}font-medium{% endif %}"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-4 w-4 mr-1"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M3 3v18h18V3H3zm6 14H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"
+            />
+          </svg>
+          CVD Predict
+        </a>
+      </li>
+    </ul>
   </div>
+</nav>
 
-  <div class="overflow-hidden rounded-xl">
-    <table
-      class="min-w-full bg-white border border-gray-200 shadow-md text-center"
-    >
-      <thead class="bg-gray-50">
-        <tr>
-          <th
-            class="px-4 py-2 text-xs font-bold text-gray-600 uppercase border-b border-gray-200"
-          >
-            Timestamp
-          </th>
-          <th
-            class="px-4 py-2 text-xs font-bold text-gray-600 uppercase border-b border-gray-200"
-          >
-            Patient ID
-          </th>
-          <th
-            class="px-4 py-2 text-xs font-bold text-gray-600 uppercase border-b border-gray-200"
-          >
-            Age
-          </th>
-          <th
-            class="px-4 py-2 text-xs font-bold text-gray-600 uppercase border-b border-gray-200"
-          >
-            Height
-          </th>
-          <th
-            class="px-4 py-2 text-xs font-bold text-gray-600 uppercase border-b border-gray-200"
-          >
-            Weight
-          </th>
-          <th
-            class="px-4 py-2 text-xs font-bold text-gray-600 uppercase border-b border-gray-200"
-          >
-            Gender
-          </th>
-          <th
-            class="px-4 py-2 text-xs font-bold text-gray-600 uppercase border-b border-gray-200"
-          >
-            Sys
-          </th>
-          <th
-            class="px-4 py-2 text-xs font-bold text-gray-600 uppercase border-b border-gray-200"
-          >
-            Dia
-          </th>
-          <th
-            class="px-4 py-2 text-xs font-bold text-gray-600 uppercase border-b border-gray-200"
-          >
-            Chol
-          </th>
-          <th
-            class="px-4 py-2 text-xs font-bold text-gray-600 uppercase border-b border-gray-200"
-          >
-            Gluc
-          </th>
-          <th
-            class="px-4 py-2 text-xs font-bold text-gray-600 uppercase border-b border-gray-200"
-          >
-            Smoke
-          </th>
-          <th
-            class="px-4 py-2 text-xs font-bold text-gray-600 uppercase border-b border-gray-200"
-          >
-            Alco
-          </th>
-          <th
-            class="px-4 py-2 text-xs font-bold text-gray-600 uppercase border-b border-gray-200"
-          >
-            Active
-          </th>
-          <th
-            class="px-4 py-2 text-xs font-bold text-gray-600 uppercase border-b border-gray-200"
-          >
-            Cardio
-          </th>
-          <th
-            class="px-4 py-2 text-xs font-bold text-gray-600 uppercase border-b border-gray-200"
-          >
-            Actions
-          </th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-gray-300 text-sm text-center">
-        {% for data in patient_data %}
-        <tr class="odd:bg-blue-50 even:bg-white hover:bg-gray-100">
-          <td class="px-4 py-2 border-gray-200">
-            <span
-              class="inline-block px-3 py-1 text-xs font-semibold rounded-full"
-            >
-              {{ data.patient.submitted_at.strftime('%Y-%m-%d %H:%M') if
-              data.patient.submitted_at else '-' }}
-            </span>
-          </td>
-          <td class="px-4 py-2 border-gray-200">
-            <span
-              class="inline-block px-3 py-1 text-xs font-semibold rounded-full"
-            >
-              {{ data.patient.user_id }}
-            </span>
-          </td>
-          <td class="px-4 py-2 border-gray-200">
-            <span
-              class="inline-block px-3 py-1 text-xs font-medium rounded-full"
-            >
-              {{ data.age or 'N/A' }}
-            </span>
-          </td>
-          <td class="px-4 py-2 border-gray-200">
-            <span
-              class="inline-block px-3 py-1 text-xs font-medium rounded-full"
-            >
-              {{ data.patient.height }}
-            </span>
-          </td>
-          <td class="px-4 py-2 border-gray-200">
-            <span
-              class="inline-block px-3 py-1 text-xs font-medium rounded-full"
-            >
-              {{ data.patient.weight|int }}
-            </span>
-          </td>
-          <td class="px-4 py-2 border-gray-200">
-            {% if data.gender == True %}
-            <span
-              class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-cyan-100 text-cyan-600"
-            >
-              Male
-            </span>
-            {% else %}
-            <span
-              class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-fuchsia-100 text-fuchsia-600"
-            >
-              Female
-            </span>
-            {% endif %}
-          </td>
-          <td class="px-4 py-2 border-gray-200">
-            <span
-              class="inline-block px-3 py-1 text-xs font-medium rounded-full"
-            >
-              {{ data.patient.systolic }}
-            </span>
-          </td>
-          <td class="px-4 py-2 border-gray-200">
-            <span
-              class="inline-block px-3 py-1 text-xs font-medium rounded-full"
-            >
-              {{ data.patient.diastolic }}
-            </span>
-          </td>
-          <td class="px-4 py-2 border-gray-200">
-            {% if data.patient.cholesterol == 0 %}
-            <span
-              class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-teal-100 text-teal-600"
-            >
-              Normal
-            </span>
-            {% elif data.patient.cholesterol == 1 %}
-            <span
-              class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-600"
-            >
-              Above Normal
-            </span>
-            {% else %}
-            <span
-              class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-600"
-            >
-              Well Above Normal
-            </span>
-            {% endif %}
-          </td>
-          <td class="px-4 py-2 border-gray-200">
-            {% if data.patient.gluc == 0 %}
-            <span
-              class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-teal-100 text-teal-600"
-            >
-              Normal
-            </span>
-            {% elif data.patient.gluc == 1 %}
-            <span
-              class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-600"
-            >
-              Above Normal
-            </span>
-            {% else %}
-            <span
-              class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-600"
-            >
-              Well Above Normal
-            </span>
-            {% endif %}
-          </td>
-          <td class="px-4 py-2 border-gray-200">
-            {% if data.patient.smoke == True %}
-            <span
-              class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-lime-100 text-lime-600"
-            >
-              Yes
-            </span>
-            {% else %}
-            <span
-              class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-violet-100 text-violet-600"
-            >
-              No
-            </span>
-            {% endif %}
-          </td>
-          <td class="px-4 py-2 border-gray-200">
-            {% if data.patient.alco == True %}
-            <span
-              class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-lime-100 text-lime-600"
-            >
-              Yes
-            </span>
-            {% else %}
-            <span
-              class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-violet-100 text-violet-600"
-            >
-              No
-            </span>
-            {% endif %}
-          </td>
-          <td class="px-4 py-2 border-gray-200">
-            {% if data.patient.active == True %}
-            <span
-              class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-lime-100 text-lime-600"
-            >
-              Yes
-            </span>
-            {% else %}
-            <span
-              class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-violet-100 text-violet-600"
-            >
-              No
-            </span>
-            {% endif %}
-          </td>
-          <td class="px-4 py-2 border-gray-200">
-            {% if data.patient.cardio == True %}
-            <span
-              class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-600"
-            >
-              At Risk
-            </span>
-            {% else %}
-            <span
-              class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-600"
-            >
-              Healthy
-            </span>
-            {% endif %}
-          </td>
-          <td class="px-4 py-2 border-gray-200">
-            <a
-              href="{{ url_for('admin.download_patient_pdf', patient_id=data.patient.id) }}"
-              class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded shadow transition"
-              title="Download PDF Patient Data"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-4 w-4 inline-block"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M4 4v16h16V4H4zm6 8l4-4m0 0l4 4m-4-4v10"
-                />
-              </svg>
-            </a>
-          </td>
-        </tr>
+<div class="px-5 py-1">
+  <!-- BP Monitor Content -->
+  <div
+    id="bp-monitor-content"
+    class="tab-content {% if active_tab == 'bp-monitor' or active_tab is not defined %}block{% else %}hidden{% endif %}"
+  >
+    <div class="mb-4">
+      <!-- Filter by User ID -->
+      <select
+        id="userIdFilter"
+        name="user_id"
+        class="w-80 px-4 py-2 bg-gray-50  border border-gray-400 rounded-md font-medium focus:outline-none"
+      >
+        <option value="">Select User ID</option>
+        {% for user in users_with_devices %}
+        <option value="{{ user.id }}" {% if user_id == user.id %}selected{% endif %}>
+          {{ user.id }} ({{ user.full_name }})
+        </option>
         {% endfor %}
-      </tbody>
-    </table>
+      </select>
+    </div>
+
+    {% if not user_id %}
+      <div class="text-center text-gray-600 text-base mt-20">
+        No user ID selected
+      </div>
+    {% else %}
+      <div class="mb-4">
+        <!-- Main Layout -->
+        <div class="mt-3 space-y-6">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div
+              class="bg-blue-400 hover:bg-blue-500 transition-colors duration-300 rounded-xl shadow-md p-4 text-white flex flex-col items-center"
+            >
+              <i class="fas fa-clock text-xl sm:text-2xl opacity-90"></i>
+              <h3 class="text-xs sm:text-sm font-semibold mt-2">Timestamp</h3>
+              <p class="text-base sm:text-lg font-bold" id="currentDatetime">
+                {{ data.timestamp.strftime('%d-%m-%Y, %H:%M:%S WIB') if data else 'N/A' }}
+              </p>
+            </div>
+            <div
+              class="bg-pink-200 hover:bg-pink-300 transition-colors duration-300 rounded-xl shadow-md p-4 text-pink-800 flex flex-col items-center"
+            >
+              <i class="fas fa-heart text-xl sm:text-2xl opacity-90"></i>
+              <h3 class="text-xs sm:text-sm font-semibold mt-2">Pulse Pressure</h3>
+              <p class="text-base sm:text-lg font-bold" id="pulsePressure">
+                {{ (data.systolic - data.diastolic) if data else 'N/A' }} mmHg
+              </p>
+            </div>
+            <div
+              class="bg-purple-200 hover:bg-purple-300 transition-colors duration-300 rounded-xl shadow-md p-4 text-purple-800 flex flex-col items-center"
+            >
+              <i class="fas fa-tachometer-alt text-xl sm:text-2xl opacity-90"></i>
+              <h3 class="text-xs sm:text-sm font-semibold mt-2">Mean Arterial Pressure</h3>
+              <p class="text-base sm:text-lg font-bold" id="map">
+                {{ ((data.systolic + 2 * data.diastolic) / 3) | int if data else 'N/A' }} mmHg
+              </p>
+            </div>
+            <div
+              class="bg-teal-200 hover:bg-teal-300 transition-colors duration-300 rounded-xl shadow-md p-4 text-teal-800 flex flex-col items-center"
+            >
+              <i class="fas fa-balance-scale text-xl sm:text-2xl opacity-90"></i>
+              <h3 class="text-xs sm:text-sm font-semibold mt-2">Sys/Dia Ratio</h3>
+              <p class="text-base sm:text-lg font-bold" id="ratio">
+                {{ (data.systolic / data.diastolic) | round(1) if data else 'N/A' }}
+              </p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div class="lg:col-span-2 flex">
+              <div
+                class="bg-white border border-gray-100 rounded-xl shadow-sm lg:p-6 p-4 flex flex-col items-center justify-end w-full h-full"
+              >
+                <div class="text-center mb-2">
+                  <p class="text-sm sm:text-base font-semibold text-gray-800">
+                    AVG. BLOOD PRESSURE =
+                    <span class="text-sm sm:text-base font-semibold text-gray-800" id="avgBloodPressure">
+                      {{ data.systolic if data else 'N/A' }}/{{ data.diastolic if data else 'N/A' }} mmHg
+                    </span>
+                  </p>
+                  <p
+                    id="bpStatus"
+                    class="text-sm sm:text-base font-semibold mb-4"
+                    style="{% if status == 'Hypotension' %}color: #3B82F6;{% elif status == 'Normal' %}color: #10B981;{% elif status == 'Prehypertension' %}color: #FBBF24;{% elif status == 'Stage 1 Hypertension' %}color: #F97316;{% elif status == 'Stage 2 Hypertension' %}color: #DC2626;{% else %}color: #6B7280;{% endif %}"
+                  >
+                    {{ status }}
+                  </p>
+                </div>
+                <div class="grid grid-cols-2 gap-4 w-full">
+                  <div class="flex flex-col items-center">
+                    <h3 class="text-sm font-bold text-gray-800 mb-0">Systolic</h3>
+                    <div id="systolicChart" class="w-full sm:max-w-[360px] h-[200px] sm:h-[220px]"></div>
+                  </div>
+                  <div class="flex flex-col items-center">
+                    <h3 class="text-sm font-bold text-gray-800 mb-0">Diastolic</h3>
+                    <div id="diastolicChart" class="w-full sm:max-w-[360px] h-[200px] sm:h-[220px]"></div>
+                  </div>
+                </div>
+              </div>
+              <div id="combinedLegend" class="mt-4 flex flex-wrap justify-center gap-6"></div>
+            </div>
+
+            <div class="lg:col-span-1 flex">
+              <div
+                class="bg-white border border-gray-100 rounded-xl shadow-sm lg:p-6 p-4 flex flex-col items-center justify-end w-full h-full"
+              >
+                <div class="text-center mb-2">
+                  <p class="text-sm sm:text-base font-semibold text-gray-800">PULSE</p>
+                  <p
+                    id="hrStatus"
+                    class="text-sm sm:text-base font-semibold mb-4"
+                    style="{% if hrStatus == 'Bradycardia' %}color: #3B82F6;{% elif hrStatus == 'Normal' %}color: #10B981;{% elif hrStatus == 'Tachycardia' %}color: #EF4444;{% else %}color: #6B7280;{% endif %}"
+                  >
+                    {{ hrStatus }}
+                  </p>
+                </div>
+                <h3 class="text-sm font-bold text-gray-800 mb-0">Heart Rate</h3>
+                <div id="heartRateChart" class="w-full sm:max-w-[360px] h-[200px] sm:h-[220px]"></div>
+              </div>
+            </div>
+
+            <div class="lg:col-span-3">
+              <div
+                class="bg-white border border-gray-100 rounded-xl shadow-sm p-4 lg:p-6 h-[250px] sm:h-[300px] lg:h-[350px]"
+              >
+                <h3 class="text-base sm:text-lg font-semibold text-center text-gray-800 mb-3">
+                  Blood Pressure & Heart Rate Trend
+                </h3>
+                <canvas id="trendChart" class="w-full h-full mb-5"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endif %}
   </div>
 
-  <div class="flex justify-center mt-4">
-    <nav class="inline-flex">
-      {% if pagination.has_prev %}
-      <a
-        href="{{ url_for('admin.patient_data', page=pagination.prev_num, per_page=entries_per_page, search=search_query) }}"
-        class="px-3 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50 transition duration-150"
-      >
-        Prev
-      </a>
-      {% else %}
-      <span
-        class="px-3 py-1 text-xs font-medium text-gray-500 bg-gray-100 border border-gray-300 rounded-l-md"
-      >
-        Prev
-      </span>
-      {% endif %} {% for page_num in pagination.iter_pages(left_edge=1,
-      right_edge=1, left_current=2, right_current=2) %} {% if page_num %} {% if
-      page_num == pagination.page %}
-      <span
-        class="px-3 py-1 text-xs font-medium text-white bg-blue-600 border border-blue-600"
-      >
-        {{ page_num }}
-      </span>
-      {% else %}
-      <a
-        href="{{ url_for('admin.patient_data', page=page_num, per_page=entries_per_page, search=search_query) }}"
-        class="px-3 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition duration-150"
-      >
-        {{ page_num }}
-      </a>
-      {% endif %} {% else %}
-      <span
-        class="px-3 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300"
-      >
-        …
-      </span>
-      {% endif %} {% endfor %} {% if pagination.has_next %}
-      <a
-        href="{{ url_for('admin.patient_data', page=pagination.next_num, per_page=entries_per_page, search=search_query) }}"
-        class="px-4 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50 transition duration-150"
-      >
-        Next
-      </a>
-      {% else %}
-      <span
-        class="px-4 py-1 text-xs font-medium text-gray-500 bg-gray-100 border border-gray-300 rounded-r-md"
-      >
-        Next
-      </span>
-      {% endif %}
-    </nav>
+  <!-- CVD Predict Content -->
+  <div
+    id="cvd-predict-content"
+    class="tab-content {% if active_tab == 'cvd-predict' %}block{% else %}hidden{% endif %}"
+  >
+    <div class="mb-4">
+      <input
+        type="text"
+        id="searchInput"
+        name="search"
+        placeholder="Search by Patient ID..."
+        value="{{ search_query }}"
+        class="w-72 px-4 py-2 border border-gray-300 rounded-md font-medium focus:outline-none"
+      />
+    </div>
+
+    <div class="overflow-hidden rounded-xl">
+      <table class="min-w-full bg-white border border-gray-200 shadow-md text-center">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-4 py-2 text-xs font-bold text-gray-600 uppercase border-b border-gray-200">Timestamp</th>
+            <th class="px-4 py-2 text-xs font-bold text-gray-600 uppercase border-b border-gray-200">Patient ID</th>
+            <th class="px-4 py-2 text-xs font-bold text-gray-600 uppercase border-b border-gray-200">Age</th>
+            <th class="px-4 py-2 text-xs font-bold text-gray-600 uppercase border-b border-gray-200">Height</th>
+            <th class="px-4 py-2 text-xs font-bold text-gray-600 uppercase border-b border-gray-200">Weight</th>
+            <th class="px-4 py-2 text-xs font-bold text-gray-600 uppercase border-b border-gray-200">Gender</th>
+            <th class="px-4 py-2 text-xs font-bold text-gray-600 uppercase border-b border-gray-200">Sys</th>
+            <th class="px-4 py-2 text-xs font-bold text-gray-600 uppercase border-b border-gray-200">Dia</th>
+            <th class="px-4 py-2 text-xs font-bold text-gray-600 uppercase border-b border-gray-200">Chol</th>
+            <th class="px-4 py-2 text-xs font-bold text-gray-600 uppercase border-b border-gray-200">Gluc</th>
+            <th class="px-4 py-2 text-xs font-bold text-gray-600 uppercase border-b border-gray-200">Smoke</th>
+            <th class="px-4 py-2 text-xs font-bold text-gray-600 uppercase border-b border-gray-200">Alco</th>
+            <th class="px-4 py-2 text-xs font-bold text-gray-600 uppercase border-b border-gray-200">Active</th>
+            <th class="px-4 py-2 text-xs font-bold text-gray-600 uppercase border-b border-gray-200">Cardio</th>
+            <th class="px-4 py-2 text-xs font-bold text-gray-600 uppercase border-b border-gray-200">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-300 text-sm text-center">
+          {% for data in patient_data %}
+          <tr class="odd:bg-blue-50 even:bg-white hover:bg-gray-100">
+            <td class="px-4 py-2 border-gray-200">
+              <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full">
+                {{ data.patient.submitted_at.strftime('%Y-%m-%d %H:%M') if data.patient.submitted_at else '-' }}
+              </span>
+            </td>
+            <td class="px-4 py-2 border-gray-200">
+              <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full">
+                {{ data.patient.user_id }}
+              </span>
+            </td>
+            <td class="px-4 py-2 border-gray-200">
+              <span class="inline-block px-3 py-1 text-xs font-medium rounded-full">
+                {{ data.age or 'N/A' }}
+              </span>
+            </td>
+            <td class="px-4 py-2 border-gray-200">
+              <span class="inline-block px-3 py-1 text-xs font-medium rounded-full">
+                {{ data.patient.height }}
+              </span>
+            </td>
+            <td class="px-4 py-2 border-gray-200">
+              <span class="inline-block px-3 py-1 text-xs font-medium rounded-full">
+                {{ data.patient.weight|int }}
+              </span>
+            </td>
+            <td class="px-4 py-2 border-gray-200">
+              {% if data.gender == True %}
+              <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-cyan-100 text-cyan-600">Male</span>
+              {% else %}
+              <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-fuchsia-100 text-fuchsia-600">Female</span>
+              {% endif %}
+            </td>
+            <td class="px-4 py-2 border-gray-200">
+              <span class="inline-block px-3 py-1 text-xs font-medium rounded-full">
+                {{ data.patient.systolic }}
+              </span>
+            </td>
+            <td class="px-4 py-2 border-gray-200">
+              <span class="inline-block px-3 py-1 text-xs font-medium rounded-full">
+                {{ data.patient.diastolic }}
+              </span>
+            </td>
+            <td class="px-4 py-2 border-gray-200">
+              {% if data.patient.cholesterol == 0 %}
+              <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-teal-100 text-teal-600">Normal</span>
+              {% elif data.patient.cholesterol == 1 %}
+              <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-600">Above Normal</span>
+              {% else %}
+              <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-600">Well Above Normal</span>
+              {% endif %}
+            </td>
+            <td class="px-4 py-2 border-gray-200">
+              {% if data.patient.gluc == 0 %}
+              <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-teal-100 text-teal-600">Normal</span>
+              {% elif data.patient.gluc == 1 %}
+              <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-600">Above Normal</span>
+              {% else %}
+              <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-600">Well Above Normal</span>
+              {% endif %}
+            </td>
+            <td class="px-4 py-2 border-gray-200">
+              {% if data.patient.smoke == True %}
+              <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-lime-100 text-lime-600">Yes</span>
+              {% else %}
+              <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-violet-100 text-violet-600">No</span>
+              {% endif %}
+            </td>
+            <td class="px-4 py-2 border-gray-200">
+              {% if data.patient.alco == True %}
+              <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-lime-100 text-lime-600">Yes</span>
+              {% else %}
+              <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-violet-100 text-violet-600">No</span>
+              {% endif %}
+            </td>
+            <td class="px-4 py-2 border-gray-200">
+              {% if data.patient.active == True %}
+              <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-lime-100 text-lime-600">Yes</span>
+              {% else %}
+              <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-violet-100 text-violet-600">No</span>
+              {% endif %}
+            </td>
+            <td class="px-4 py-2 border-gray-200">
+              {% if data.patient.cardio == True %}
+              <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-600">At Risk</span>
+              {% else %}
+              <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-600">Healthy</span>
+              {% endif %}
+            </td>
+            <td class="px-4 py-2 border-gray-200">
+              <a
+                href="{{ url_for('admin.download_patient_pdf', patient_id=data.patient.id) }}"
+                class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded shadow transition"
+                title="Download PDF Patient Data"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-4 w-4 inline-block"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v16h16V4H4zm6 8l4-4m0 0l4 4m-4-4v10" />
+                </svg>
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="flex justify-center mt-4">
+      <nav class="inline-flex">
+        {% if pagination.has_prev %}
+        <a
+          href="{{ url_for('admin.patient_data', tab='cvd-predict', page=pagination.prev_num, per_page=entries_per_page, search=search_query) }}"
+          class="px-3 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50 transition duration-150"
+        >Prev</a>
+        {% else %}
+        <span class="px-3 py-1 text-xs font-medium text-gray-500 bg-gray-100 border border-gray-300 rounded-l-md">Prev</span>
+        {% endif %}
+        {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+        {% if page_num %}
+        {% if page_num == pagination.page %}
+        <span class="px-3 py-1 text-xs font-medium text-white bg-blue-600 border border-blue-600">{{ page_num }}</span>
+        {% else %}
+        <a
+          href="{{ url_for('admin.patient_data', tab='cvd-predict', page=page_num, per_page=entries_per_page, search=search_query) }}"
+          class="px-3 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition duration-150"
+        >{{ page_num }}</a>
+        {% endif %}
+        {% else %}
+        <span class="px-3 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300">…</span>
+        {% endif %}
+        {% endfor %}
+        {% if pagination.has_next %}
+        <a
+          href="{{ url_for('admin.patient_data', tab='cvd-predict', page=pagination.next_num, per_page=entries_per_page, search=search_query) }}"
+          class="px-4 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50 transition duration-150"
+        >Next</a>
+        {% else %}
+        <span class="px-4 py-1 text-xs font-medium text-gray-500 bg-gray-100 border border-gray-300 rounded-r-md">Next</span>
+        {% endif %}
+      </nav>
+    </div>
   </div>
 </div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.3.0/raphael.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/justgage/1.6.1/justgage.min.js"></script>
 <script>
-  let searchTimeout;
-  document.getElementById("searchInput").addEventListener("keyup", function () {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
-      const searchValue = this.value.trim();
-      const url = new URL(window.location.href);
-      if (searchValue) {
-        url.searchParams.set("search", searchValue);
-      } else {
-        url.searchParams.delete("search");
+  const initialRecords = {{ records | tojson | safe }};
+
+  document.addEventListener("DOMContentLoaded", () => {
+    //-------------Navbar Tab Navigation--------------------
+    const navLinks = document.querySelectorAll("a.nav-item");
+    const tabContents = document.querySelectorAll(".tab-content");
+
+    // Set default tab based on active_tab from backend
+    const defaultTab = "{{ active_tab }}";
+    if (defaultTab === 'bp-monitor' || !defaultTab) {
+      const bpMonitorLink = document.querySelector("a[data-tab='bp-monitor']");
+      if (bpMonitorLink) {
+        bpMonitorLink.classList.remove("text-gray-600", "border-b-0");
+        bpMonitorLink.classList.add(
+          "text-gray-900",
+          "font-semibold",
+          "border-indigo-500",
+          "bg-indigo-50",
+          "border-b-4"
+        );
       }
-      url.searchParams.set("page", 1);
-      window.location.href = url.href;
-    }, 500);
+      const bpMonitorContent = document.getElementById("bp-monitor-content");
+      if (bpMonitorContent) bpMonitorContent.classList.remove("hidden");
+    } else if (defaultTab === 'cvd-predict') {
+      const cvdPredictLink = document.querySelector("a[data-tab='cvd-predict']");
+      if (cvdPredictLink) {
+        cvdPredictLink.classList.remove("text-gray-600", "border-b-0");
+        cvdPredictLink.classList.add(
+          "text-gray-900",
+          "font-semibold",
+          "border-indigo-500",
+          "bg-indigo-50",
+          "border-b-4"
+        );
+      }
+      const cvdPredictContent = document.getElementById("cvd-predict-content");
+      if (cvdPredictContent) cvdPredictContent.classList.remove("hidden");
+    }
+
+    // Handle click events
+    navLinks.forEach((link) => {
+      link.addEventListener("click", function (e) {
+        e.preventDefault();
+        const selectedTab = this.dataset.tab;
+        history.pushState(null, "", "?tab=" + selectedTab);
+        navLinks.forEach((item) => {
+          item.classList.remove(
+            "text-gray-900",
+            "font-semibold",
+            "border-indigo-500",
+            "bg-indigo-50",
+            "border-b-4"
+          );
+          item.classList.add("text-gray-600", "border-b-0");
+        });
+        this.classList.remove("text-gray-600", "border-b-0");
+        this.classList.add(
+          "text-gray-900",
+          "font-semibold",
+          "border-indigo-500",
+          "bg-indigo-50",
+          "border-b-4"
+        );
+        tabContents.forEach((c) => c.classList.add("hidden"));
+        const target = document.getElementById(selectedTab + "-content");
+        if (target) target.classList.remove("hidden");
+      });
+    });
+
+    //-------------Flash Messages--------------------
+    setTimeout(() => {
+      document.querySelectorAll(".flash-message").forEach((m) => {
+        m.style.transition = "opacity 0.5s";
+        m.style.opacity = "0";
+        setTimeout(() => m.remove(), 500);
+      });
+    }, 2000);
+
+    //-------------Search CVD Predict--------------------
+    const searchInput = document.getElementById("searchInput");
+    if (searchInput) {
+      let searchTimeout;
+      searchInput.addEventListener("keyup", function () {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+          const searchValue = this.value.trim();
+          const url = new URL(window.location.href);
+          url.searchParams.set("tab", "cvd-predict");
+          if (searchValue) {
+            url.searchParams.set("search", searchValue);
+          } else {
+            url.searchParams.delete("search");
+          }
+          url.searchParams.set("page", "1");
+          window.location.href = url.href;
+        }, 500);
+      });
+    }
+
+    //-------------Filter User ID for BP Monitor--------------------
+    const userIdFilter = document.getElementById("userIdFilter");
+    if (userIdFilter) {
+      userIdFilter.addEventListener("change", function () {
+        const userId = this.value;
+        const url = new URL(window.location.href);
+        url.searchParams.set("tab", "bp-monitor");
+        if (userId) {
+          url.searchParams.set("user_id", userId);
+        } else {
+          url.searchParams.delete("user_id");
+        }
+        window.location.href = url.href;
+      });
+    }
+
+    //-------------Chart Settings--------------------
+    const state = {
+      isConnected: false,
+      isMeasuring: false,
+      latestData: null,
+      trendData: {
+        labels: [],
+        systolic: [],
+        diastolic: [],
+        pulse_rate: [],
+      },
+    };
+
+    const utils = {
+      validateData(data) {
+        if (!data) return false;
+        const systolic = Number(data.systolic);
+        const diastolic = Number(data.diastolic);
+        const pulse_rate = Number(data.pulse_rate);
+        return (
+          !isNaN(systolic) &&
+          systolic >= 70 &&
+          systolic <= 181 &&
+          !isNaN(diastolic) &&
+          diastolic >= 40 &&
+          diastolic <= 111 &&
+          !isNaN(pulse_rate) &&
+          pulse_rate >= 40 &&
+          pulse_rate <= 140 &&
+          data.timestamp
+        );
+      },
+
+      getBPStatus(systolic, diastolic) {
+        if (isNaN(systolic) || isNaN(diastolic)) return "N/A";
+        if (systolic < 90 || diastolic < 60) return "Hypotension";
+        if (systolic >= 160 || diastolic >= 100) return "Stage 2 Hypertension";
+        if (systolic >= 140 || diastolic >= 90) return "Stage 1 Hypertension";
+        if (systolic >= 120 || diastolic >= 80) return "Prehypertension";
+        return "Normal";
+      },
+
+      getHRStatus(pulseRate) {
+        if (isNaN(pulseRate)) return "N/A";
+        return pulseRate < 60
+          ? "Bradycardia"
+          : pulseRate > 100
+          ? "Tachycardia"
+          : "Normal";
+      },
+
+      formatTimestamp(timestamp) {
+        if (!timestamp || timestamp === "N/A") return "N/A";
+        const parts = timestamp.split(", ");
+        const date = parts[0];
+        const timeParts = parts[1].split(":");
+        const time = `${timeParts[0]}:${timeParts[1]} ${timeParts[2].split(" ")[1]}`;
+        return `${date}\n${time}`;
+      },
+
+      getGaugeColor(value, ranges) {
+        if (isNaN(value)) return ranges[0].color;
+        for (const range of ranges) {
+          if (value >= range.from && value <= range.to) {
+            return range.color;
+          }
+        }
+        return ranges[0].color;
+      },
+    };
+
+    const initializeGaugeChart = (chartId, type) => {
+      const ranges =
+        type === "Heart Rate"
+          ? [
+              { lo: 40, hi: 59, color: "#3B82F6" }, // Bradycardia
+              { lo: 60, hi: 99, color: "#10B981" }, // Normal
+              { lo: 100, hi: 140, color: "#EF4444" }, // Tachycardia
+            ]
+          : type === "Systolic"
+          ? [
+              { lo: 70, hi: 89, color: "#3B82F6" }, // Hypotension
+              { lo: 90, hi: 119, color: "#10B981" }, // Normal
+              { lo: 120, hi: 139, color: "#FBBF24" }, // Prehypertension
+              { lo: 140, hi: 159, color: "#F97316" }, // Stage 1 Hypertension
+              { lo: 160, hi: 181, color: "#DC2626" }, // Stage 2 Hypertension
+            ]
+          : [
+              { lo: 40, hi: 59, color: "#3B82F6" }, // Hypotension
+              { lo: 60, hi: 79, color: "#10B981" }, // Normal
+              { lo: 80, hi: 89, color: "#FBBF24" }, // Prehypertension
+              { lo: 90, hi: 99, color: "#F97316" }, // Stage 1 Hypertension
+              { lo: 100, hi: 111, color: "#DC2626" }, // Stage 2 Hypertension
+            ];
+
+      const minValue = type === "Heart Rate" ? 40 : type === "Systolic" ? 70 : 40;
+      const maxValue = type === "Heart Rate" ? 140 : type === "Systolic" ? 181 : 111;
+      const unit = type === "Heart Rate" ? "BPM" : "mmHg";
+
+      return new JustGage({
+        id: chartId,
+        value: 0,
+        min: minValue,
+        max: maxValue,
+        title: type,
+        label: unit,
+        decimals: 0,
+        gaugeWidthScale: 0.6,
+        customSectors: {
+          percents: false,
+          ranges: ranges,
+        },
+        levelColors: ranges.map((range) => range.color),
+        counter: true,
+        relativeGaugeSize: true,
+        titleFontFamily: "Poppins, sans-serif",
+        titleFontWeight: "bold",
+        valueFontFamily: "Poppins, sans-serif",
+        labelFontFamily: "Poppins, sans-serif",
+        valueFontSize: 24,
+        titleOffsetY: 20,
+        pointer: true,
+        pointerOptions: {
+          toplength: -10,
+          bottomlength: 10,
+          bottomwidth: 5,
+          color: "#7b7b7b",
+          stroke: "#ffffff",
+          stroke_width: 2,
+        },
+        shadowOpacity: 0.2,
+        shadowSize: 5,
+        shadowVerticalOffset: 3,
+        valueMinFontSize: 16,
+      });
+    };
+
+    const initializeTrendChart = () => {
+      const ctx = document.getElementById("trendChart").getContext("2d");
+      return new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: [],
+          datasets: [
+            {
+              label: "Systolic (mmHg)",
+              data: [],
+              borderColor: "rgba(255, 99, 132, 1)",
+              backgroundColor: "rgba(255, 99, 132, 0.1)",
+              pointBackgroundColor: "rgba(255, 99, 132, 1)",
+              pointBorderColor: "#ffffff",
+              pointBorderWidth: 3,
+              pointRadius: 6,
+              pointHoverRadius: 8,
+              borderWidth: 4,
+              tension: 0.4,
+              fill: false,
+            },
+            {
+              label: "Diastolic (mmHg)",
+              data: [],
+              borderColor: "rgba(54, 162, 235, 1)",
+              backgroundColor: "rgba(54, 162, 235, 0.1)",
+              pointBackgroundColor: "rgba(54, 162, 235, 1)",
+              pointBorderColor: "#ffffff",
+              pointBorderWidth: 3,
+              pointRadius: 6,
+              pointHoverRadius: 8,
+              borderWidth: 4,
+              tension: 0.4,
+              fill: false,
+            },
+            {
+              label: "Heart Rate (BPM)",
+              data: [],
+              borderColor: "rgba(75, 192, 192, 1)",
+              backgroundColor: "rgba(75, 192, 192, 0.1)",
+              pointBackgroundColor: "rgba(75, 192, 192, 1)",
+              pointBorderColor: "#ffffff",
+              pointBorderWidth: 3,
+              pointRadius: 6,
+              pointHoverRadius: 8,
+              borderWidth: 4,
+              tension: 0.4,
+              fill: false,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: "top",
+              labels: {
+                font: {
+                  size: 14,
+                  family: "Poppins, sans-serif",
+                  weight: "bold",
+                },
+                padding: 15,
+                usePointStyle: true,
+                boxWidth: 10,
+                boxHeight: 10,
+              },
+            },
+            tooltip: {
+              mode: "index",
+              intersect: false,
+              backgroundColor: "rgba(0, 0, 0, 0.8)",
+              titleFont: {
+                size: 14,
+                weight: "bold",
+                family: "Poppins, sans-serif",
+              },
+              bodyFont: { size: 12, family: "Poppins, sans-serif" },
+              padding: 12,
+              cornerRadius: 6,
+              callbacks: {
+                label: function (context) {
+                  return `${context.dataset.label}: ${context.parsed.y}`;
+                },
+              },
+            },
+            title: {
+              display: true,
+              text: "No Data Available",
+              font: {
+                size: 16,
+                family: "Poppins, sans-serif",
+                weight: "bold",
+              },
+              color: "#6B7280",
+              align: "center",
+              padding: {
+                top: 20,
+                bottom: 20,
+              },
+            },
+          },
+          scales: {
+            x: {
+              title: {
+                display: false,
+                text: "Date and Time",
+                font: { size: 14, weight: "bold", family: "Poppins, sans-serif" },
+                color: "#333",
+              },
+              grid: {
+                display: false,
+              },
+              ticks: {
+                display: false,
+                font: { size: 12, family: "Poppins, sans-serif" },
+                color: "#333",
+                maxRotation: 45,
+                minRotation: 45,
+                maxTicksLimit: 8,
+                callback: function (value, index, values) {
+                  return this.getLabelForValue(value).split("\n");
+                },
+              },
+            },
+            y: {
+              title: {
+                display: false,
+                text: "Value",
+                font: { size: 14, weight: "bold", family: "Poppins, sans-serif" },
+                color: "#333",
+              },
+              grid: {
+                color: "rgba(0, 0, 0, 0.2)",
+                borderDash: [5, 5],
+                tickBorderDash: [5, 5],
+                drawTicks: true,
+              },
+              ticks: {
+                font: { size: 10, family: "Poppins, sans-serif" },
+                color: "#333",
+                stepSize: 40,
+                padding: 15,
+              },
+              suggestedMin: 0,
+              suggestedMax: 200,
+            },
+          },
+          elements: {
+            line: {
+              borderCapStyle: "round",
+              borderJoinStyle: "round",
+            },
+          },
+          layout: {
+            padding: {
+              bottom: 30,
+            },
+          },
+        },
+      });
+    };
+
+    const updateChart = (chart, needleValue, ranges) => {
+      if (!chart || isNaN(needleValue)) {
+        chart.refresh(0);
+        return;
+      }
+      chart.refresh(needleValue);
+    };
+
+    const updateTrendChart = (data) => {
+      if (!utils.validateData(data)) return;
+
+      state.trendData.labels.push(utils.formatTimestamp(data.timestamp));
+      state.trendData.systolic.push(data.systolic);
+      state.trendData.diastolic.push(data.diastolic);
+      state.trendData.pulse_rate.push(data.pulse_rate);
+
+      if (state.trendData.labels.length > 30) {
+        state.trendData.labels.shift();
+        state.trendData.systolic.shift();
+        state.trendData.diastolic.shift();
+        state.trendData.pulse_rate.shift();
+      }
+
+      charts.trend.data.labels = [...state.trendData.labels];
+      charts.trend.data.datasets[0].data = [...state.trendData.systolic];
+      charts.trend.data.datasets[1].data = [...state.trendData.diastolic];
+      charts.trend.data.datasets[2].data = [...state.trendData.pulse_rate];
+      charts.trend.options.plugins.title.display = state.trendData.labels.length === 0;
+      charts.trend.update();
+    };
+
+const updateDashboard = (records) => {
+  console.log("Records received:", records);
+  if (!records || records.length === 0) {
+    console.warn("No data available");
+    document.getElementById("currentDatetime").textContent = "N/A";
+    document.getElementById("pulsePressure").textContent = "N/A";
+    document.getElementById("map").textContent = "N/A";
+    document.getElementById("ratio").textContent = "N/A";
+    document.getElementById("avgBloodPressure").textContent = "N/A";
+    document.getElementById("bpStatus").textContent = "N/A";
+    document.getElementById("bpStatus").style.color = "#6B7280";
+    document.getElementById("hrStatus").textContent = "N/A";
+    document.getElementById("hrStatus").style.color = "#6B7280";
+    charts.systolic.refresh(0);
+    charts.diastolic.refresh(0);
+    charts.heartRate.refresh(0);
+    charts.trend.data.labels = [];
+    charts.trend.data.datasets[0].data = [];
+    charts.trend.data.datasets[1].data = [];
+    charts.trend.data.datasets[2].data = [];
+    charts.trend.options.plugins.title.display = true;
+    charts.trend.update();
+    utils.showOverlay("No data available for selected user");
+    setTimeout(utils.hideOverlay, 2000);
+    return;
+  }
+
+  // Use the latest data for gauges and dashboard display
+  const latestData = records[0];
+  state.latestData = latestData;
+
+  document.getElementById("currentDatetime").textContent = latestData.timestamp;
+  document.getElementById("pulsePressure").textContent = `${latestData.systolic - latestData.diastolic} mmHg`;
+  document.getElementById("map").textContent = `${Math.round((latestData.systolic + 2 * latestData.diastolic) / 3)} mmHg`;
+  document.getElementById("ratio").textContent = (latestData.systolic / latestData.diastolic).toFixed(1);
+  document.getElementById("avgBloodPressure").textContent = `${latestData.systolic}/${latestData.diastolic} mmHg`;
+
+  const bpStatus = utils.getBPStatus(latestData.systolic, latestData.diastolic);
+  const bpStatusElement = document.getElementById("bpStatus");
+  bpStatusElement.textContent = bpStatus;
+  bpStatusElement.style.color =
+    bpStatus === "Hypotension"
+      ? "#3B82F6"
+      : bpStatus === "Normal"
+      ? "#10B981"
+      : bpStatus === "Prehypertension"
+      ? "#FBBF24"
+      : bpStatus === "Stage 1 Hypertension"
+      ? "#F97316"
+      : bpStatus === "Stage 2 Hypertension"
+      ? "#DC2626"
+      : "#6B7280";
+
+  const hrStatus = utils.getHRStatus(latestData.pulse_rate);
+  document.getElementById("hrStatus").textContent = hrStatus;
+  document.getElementById("hrStatus").style.color =
+    hrStatus === "Bradycardia"
+      ? "#3B82F6"
+      : hrStatus === "Normal"
+      ? "#10B981"
+      : hrStatus === "Tachycardia"
+      ? "#EF4444"
+      : "#6B7280";
+
+  // Update gauges with latest data
+  const systolicRanges = [
+    { from: 70, to: 89, color: "#3B82F6" },
+    { from: 90, to: 119, color: "#10B981" },
+    { from: 120, to: 139, color: "#FBBF24" },
+    { from: 140, to: 159, color: "#F97316" },
+    { from: 160, to: 181, color: "#DC2626" },
+  ];
+  const diastolicRanges = [
+    { from: 40, to: 59, color: "#3B82F6" },
+    { from: 60, to: 79, color: "#10B981" },
+    { from: 80, to: 89, color: "#FBBF24" },
+    { from: 90, to: 99, color: "#F97316" },
+    { from: 100, to: 111, color: "#DC2626" },
+  ];
+  const heartRateRanges = [
+    { from: 40, to: 59, color: "#3B82F6" },
+    { from: 60, to: 99, color: "#10B981" },
+    { from: 100, to: 140, color: "#EF4444" },
+  ];
+
+  updateChart(charts.systolic, latestData.systolic, systolicRanges);
+  updateChart(charts.diastolic, latestData.diastolic, diastolicRanges);
+  updateChart(charts.heartRate, latestData.pulse_rate, heartRateRanges);
+
+  // Populate trend data with all records
+  state.trendData.labels = [];
+  state.trendData.systolic = [];
+  state.trendData.diastolic = [];
+  state.trendData.pulse_rate = [];
+
+  records.forEach((data) => {
+    if (utils.validateData(data)) {
+      state.trendData.labels.push(utils.formatTimestamp(data.timestamp));
+      state.trendData.systolic.push(data.systolic);
+      state.trendData.diastolic.push(data.diastolic);
+      state.trendData.pulse_rate.push(data.pulse_rate);
+    }
   });
 
-  function changeEntriesPerPage(perPage) {
-    const url = new URL(window.location.href);
-    url.searchParams.set("per_page", perPage);
-    url.searchParams.set("page", 1);
-    window.location.href = url.href;
-  }
+      // Update trend chart with all data
+      charts.trend.data.labels = [...state.trendData.labels];
+      charts.trend.data.datasets[0].data = [...state.trendData.systolic];
+      charts.trend.data.datasets[1].data = [...state.trendData.diastolic];
+      charts.trend.data.datasets[2].data = [...state.trendData.pulse_rate];
+      charts.trend.options.plugins.title.display = state.trendData.labels.length === 0;
+      charts.trend.update();
+    };
+
+    const fetchData = async () => {
+      const userId = "{{ user_id }}";
+      if (!userId) {
+        updateDashboard([]);
+        return;
+      }
+
+      try {
+        const response = await fetch(`/bp-monitor/api/get_blood_pressure?user_id=${userId}`);
+        const records = await response.json();
+        console.log("Fetched records:", records);
+        if (Array.isArray(records) && records.length > 0) {
+          updateDashboard(records);
+        } else {
+          updateDashboard([]);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        updateDashboard([]);
+      }
+    };
+
+  const init = () => {
+    if (Array.isArray(initialRecords) && initialRecords.length > 0) {
+      updateDashboard(initialRecords);
+    } else {
+      fetchData().catch(() => {
+        // fallback to latest data if needed
+      });
+    }
+  };
+
+    window.addEventListener("resize", () => {
+      charts.systolic.destroy();
+      charts.diastolic.destroy();
+      charts.heartRate.destroy();
+      charts.systolic = initializeGaugeChart("systolicChart", "Systolic");
+      charts.diastolic = initializeGaugeChart("diastolicChart", "Diastolic");
+      charts.heartRate = initializeGaugeChart("heartRateChart", "Heart Rate");
+      if (state.latestData) {
+        const systolicRanges = [
+          { from: 70, to: 89, color: "#3B82F6" },
+          { from: 90, to: 119, color: "#10B981" },
+          { from: 120, to: 139, color: "#FBBF24" },
+          { from: 140, to: 159, color: "#F97316" },
+          { from: 160, to: 181, color: "#DC2626" },
+        ];
+        const diastolicRanges = [
+          { from: 40, to: 59, color: "#3B82F6" },
+          { from: 60, to: 79, color: "#10B981" },
+          { from: 80, to: 89, color: "#FBBF24" },
+          { from: 90, to: 99, color: "#F97316" },
+          { from: 100, to: 111, color: "#DC2626" },
+        ];
+        const heartRateRanges = [
+          { from: 40, to: 59, color: "#3B82F6" },
+          { from: 60, to: 99, color: "#10B981" },
+          { from: 100, to: 140, color: "#EF4444" },
+        ];
+        updateChart(charts.systolic, state.latestData.systolic, systolicRanges);
+        updateChart(charts.diastolic, state.latestData.diastolic, diastolicRanges);
+        updateChart(charts.heartRate, state.latestData.pulse_rate, heartRateRanges);
+      }
+    });
+
+    const charts = {
+      systolic: initializeGaugeChart("systolicChart", "Systolic"),
+      diastolic: initializeGaugeChart("diastolicChart", "Diastolic"),
+      heartRate: initializeGaugeChart("heartRateChart", "Heart Rate"),
+      trend: initializeTrendChart(),
+    };
+
+    init();
+  });
 </script>
 {% endblock %}

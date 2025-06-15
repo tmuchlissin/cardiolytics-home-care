@@ -9,7 +9,7 @@ const char* mqtt_server = "192.168.0.111";
 const int mqtt_port = 1883;
 const char* mqtt_user = "espuser";
 const char* mqtt_password = "esp32mqtt!";
-const char* device_id = "BP0001";
+const char* device_id = "BP0001"; // This can be changed to any BPXXXX value
 String mqtt_topic = "bp_monitor/" + String(device_id);
 String command_topic = "bp_monitor/command/" + String(device_id);
 String status_topic = "bp_monitor/status/" + String(device_id);
@@ -18,7 +18,7 @@ WiFiClient espClient;
 PubSubClient client(espClient);
 int systolic = 0, diastolic = 0, pulse = 0;
 bool isConnected = false;
-bool previousConnectionStatus = false;  // track last connection state
+bool previousConnectionStatus = false;
 
 const char* ntpServer = "pool.ntp.org";
 const long gmtOffset_sec = 7 * 3600; // WIB is UTC+7
@@ -70,6 +70,8 @@ void reconnect() {
     Serial.print("Attempting MQTT connection...");
     String clientId = "ESP32Client-" + String(random(0xffff), HEX);
     client.setKeepAlive(5);
+    // Construct dynamic LWT payload using device_id
+    String lwtPayload = "{\"device_id\":\"" + String(device_id) + "\",\"status\":\"disconnected\"}";
     if (client.connect(
       clientId.c_str(),
       mqtt_user,
@@ -77,9 +79,8 @@ void reconnect() {
       status_topic.c_str(), // topic LWT
       0,                    // QoS
       false,                // retained
-      "{\"device_id\":\"BP0001\",\"status\":\"disconnected\"}" // payload LWT
+      lwtPayload.c_str()    // dynamic LWT payload
     )) {
-
       Serial.println("connected");
       client.subscribe(command_topic.c_str());
       Serial.println("Subscribed to " + command_topic);
@@ -103,28 +104,44 @@ String getCurrentTimestamp() {
 }
 
 void simulate_data() {
-  int category = random(0, 4);  // 0 = Normal, 1 = Pre, 2 = Stage 1, 3 = Stage 2
+  int bp_category = random(0, 5);  // 0 = Hypotension, 1 = Normal, 2 = Prehypertension, 3 = Stage 1 Hypertension, 4 = Stage 2 Hypertension
+  int hr_category = random(0, 3);  // 0 = Bradycardia, 1 = Normal, 2 = Tachycardia
 
-  switch (category) {
-    case 0: // Normal
-      systolic = random(100, 120);
+  switch (bp_category) {
+    case 0: // Hypotension
+      systolic = random(70, 90);
+      diastolic = random(40, 60);
+      break;
+    case 1: // Normal
+      systolic = random(90, 120);
       diastolic = random(60, 80);
       break;
-    case 1: // Prehypertension
+    case 2: // Prehypertension
       systolic = random(120, 140);
       diastolic = random(80, 90);
       break;
-    case 2: // Stage 1 Hypertension
+    case 3: // Stage 1 Hypertension
       systolic = random(140, 160);
       diastolic = random(90, 100);
       break;
-    case 3: // Stage 2 Hypertension
+    case 4: // Stage 2 Hypertension
       systolic = random(160, 181);
       diastolic = random(100, 111);
       break;
   }
 
-  pulse = random(60, 101); // Pulse normal range
+  switch (hr_category) {
+    case 0: // Bradycardia
+      pulse = random(40, 60);
+      break;
+    case 1: // Normal
+      pulse = random(60, 101);
+      break;
+    case 2: // Tachycardia
+      pulse = random(101, 140);
+      break;
+  }
+
   Serial.println("Simulated data: systolic=" + String(systolic) + ", diastolic=" + String(diastolic) + ", pulse=" + String(pulse));
 }
 
