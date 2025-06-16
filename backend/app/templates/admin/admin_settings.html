@@ -340,6 +340,11 @@
             <th
               class="px-6 py-2 text-xs font-semibold text-gray-700 uppercase border-b tracking-wider"
             >
+              Status
+            </th>
+            <th
+              class="px-6 py-2 text-xs font-semibold text-gray-700 uppercase border-b tracking-wider"
+            >
               Registered At
             </th>
             <th
@@ -372,6 +377,19 @@
               >
                 {{ dev.model }}
               </span>
+            </td>
+            <td class="px-6 py-2 whitespace-nowrap text-sm text-gray-700">
+              {% if dev.status == connected %}
+              <span
+                class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-teal-100 text-teal-600"
+                >Connected</span
+              >
+              {% else %}
+              <span
+                class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-600"
+                >Disconnected</span
+              >
+              {% endif %}
             </td>
             <td class="px-6 py-2 whitespace-nowrap text-sm text-gray-700">
               <span

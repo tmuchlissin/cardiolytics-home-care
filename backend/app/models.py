@@ -114,6 +114,8 @@ class Document(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title_file = db.Column(db.String(255), nullable=False)
     file_data = db.Column(db.LargeBinary)  
+    user_id = db.Column(db.String(10), db.ForeignKey('user.id'), nullable=False)
+    user = db.relationship('User', backref='documents')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

@@ -12,6 +12,7 @@ from flask import (
     url_for, flash, send_file, jsonify, current_app,
     abort
 )
+from flask_login import current_user
 from werkzeug.utils import secure_filename
 from PyPDF2 import PdfReader
 from dotenv import load_dotenv
@@ -26,7 +27,7 @@ from langchain_pinecone import Pinecone as LangchainPinecone
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 from app.extensions import db
-from app.models import Document
+from app.models import Document, UserRole
 
 from .config import (
     PINECONE_API_KEY, PINECONE_ENV, INDEX_NAME, NAMESPACE, GEMINI_API_KEY, CHAT_PROMPT_TEMPLATE,
@@ -157,11 +158,7 @@ def load_or_initialize_vector_store(app=None) -> LangchainPinecone | None:
     
     if vector_store:
         return vector_store
-    pc = Pinecone(
-        api_key=PINECONE_API_KEY,
-        environment=PINECONE_ENV,
-        grpc=True
-    )
+    pc = init_pinecone()
     if INDEX_NAME not in pc.list_indexes().names():
         spec = ServerlessSpec(cloud="aws", region="us-east-1")
         pc.create_index(
@@ -185,11 +182,7 @@ def reload_vector_store():
     if not docs:
         current_app.logger.info("[reload] MySQL empty, skip rebuild.")
         return False
-    pc = Pinecone(
-        api_key=PINECONE_API_KEY,
-        environment=PINECONE_ENV,
-        grpc=True
-    )
+    pc = init_pinecone()
     try:
         index_list = pc.list_indexes().names()
         if INDEX_NAME not in index_list:
@@ -255,6 +248,7 @@ def create_conversational_chain(vs: LangchainPinecone) -> ConversationalRetrieva
         template=CHAT_PROMPT_TEMPLATE,
         input_variables=["question", "context", "chat_history"]
     )
+    
     llm = ChatGoogleGenerativeAI(
         model="gemini-2.5-flash-preview-04-17",
         google_api_key=GEMINI_API_KEY,
@@ -381,6 +375,7 @@ def clean_answer(text):
     text = re.sub(r'^(BAB\s+[IVXLC]+|[0-9]+\.[0-9]*)\.\s*', '', text, flags=re.MULTILINE)
     text = re.sub(r'\n{2,}', '\n\n', text).strip()
     return text
+
 
 @cardiobot.route('/chat', methods=['POST'])
 def chat():
@@ -655,6 +650,9 @@ def view_document(file_id):
 def upload_documents():
     global vector_store, chain      
     
+    if current_user.role != UserRole.admin:
+        abort(403)  # ⛔ 
+        
     files = request.files.getlist('files[]')
     
     if not files or not all(allowed_file(f.filename) for f in files):
@@ -667,6 +665,7 @@ def upload_documents():
         db.session.add(Document(
             title_file=name,
             file_data=data,
+            user_id=current_user.id, 
             created_at=datetime.now(TIMEZONE),
             updated_at=datetime.now(TIMEZONE)
         ))
@@ -678,10 +677,7 @@ def upload_documents():
     clear_cache()
     
     total_docs = Document.query.count()
-    pc = Pinecone(
-        api_key=PINECONE_API_KEY, 
-        environment=PINECONE_ENV,
-        grpc=True)
+    pc = init_pinecone()
     
     index = pc.Index(INDEX_NAME)
     stats = index.describe_index_stats()
@@ -700,10 +696,7 @@ def upload_documents():
 
 @cardiobot.route('/documents/delete/<int:file_id>', methods=['POST'])
 def delete_document(file_id):
-    pc = Pinecone(
-        api_key=PINECONE_API_KEY, 
-        environment=PINECONE_ENV,
-        grpc=True)
+    pc = init_pinecone()
     
     index = pc.Index(INDEX_NAME)
     total_docs_before = Document.query.count()
@@ -771,11 +764,7 @@ def delete_document(file_id):
 def delete_all_documents():
     Document.query.delete()
     db.session.commit()
-    pc = Pinecone(
-        api_key=PINECONE_API_KEY,
-        environment=PINECONE_ENV,
-        grpc=True
-    )
+    pc = init_pinecone()
     index = pc.Index(INDEX_NAME)
     try:
         index.delete(delete_all=True, namespace=NAMESPACE)
