@@ -8,7 +8,7 @@
   <img src="https://img.shields.io/badge/license-MIT-blue.svg">
   <img src="https://img.shields.io/badge/python-3.10+-blue.svg">
   <img src="https://img.shields.io/badge/backend-Flask-orange.svg">
-  <img src="https://img.shields.io/badge/frontend-HTML%2FCSS%2FJinja-yellow.svg">
+  <img src="https://img.shields.io/badge/frontend-HTML%2FJinja%2FTailwindCSS-yellow.svg">
   <img src="https://img.shields.io/badge/database-MySQL-lightgrey.svg">
   <img src="https://img.shields.io/badge/message--broker-MQTT-red.svg">
   <img src="https://img.shields.io/badge/message--queue-Kafka-black.svg">
@@ -16,6 +16,7 @@
   <img src="https://img.shields.io/badge/AI-Ensemble--Learning-purple.svg">
   <img src="https://img.shields.io/badge/chatbot-Gemini%2BPinecone-brightgreen.svg">
 </p>
+
 <p align="center"><b>Integrated Cardiovascular Monitoring and Prediction System</b></p>
 
 <p align="center">
@@ -39,7 +40,7 @@ Cardiolytics is a smart and scalable web-based health monitoring system that int
 
 👥 **Role-based Access** — Separate dashboard for Patients and Admins with secure authentication.
 
-🛠 **Tech Stack** — Flask, Jinja, Tailwind CSS, MySQL, MQTT, Node-RED, and more.
+🛠 **Tech Stack** — Flask, Jinja, MySQL, MQTT, Node-RED, and more.
 
 ## 🚀 Quick Start
 
@@ -59,7 +60,7 @@ pip install -r requirements.txt          # Core Flask environment
 pip install -r requirements_el.txt       # Optional: Ensemble model dependencies
 ```
 
-### 📃️ Configure Database
+### 📓️ Configure Database
 
 ```bash
 flask db init
