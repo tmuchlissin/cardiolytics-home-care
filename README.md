@@ -1,7 +1,7 @@
 <h1 align="center">🚀 Cardiolytics Home Care</h1>
 
 <p align="center">
-  <img src="backend/app/static/img/thumbnail.png" alt="Cardiolytics Logo" width="60%">
+  <img src="backend/app/static/img/thumbnail.png" alt="Cardiolytics Logo" width="100%">
 </p>
 
 <p align="center">
@@ -23,7 +23,7 @@ Cardiolytics is a smart and scalable web-based health monitoring system that int
 ## 🖼️ System Preview
 
 <div align="center">
-  <img src="backend/app/static/img/ui.png" alt="Web Screenshot" width="80%">
+  <img src="backend/app/static/img/ui.png" alt="Web Screenshot" width="100%">
   <p><i>Example UI: Landing Page Cardiolytics</i></p>
 </div>
 
@@ -97,7 +97,7 @@ flask run
 ## 🧽 System Architecture
 
 <div align="center">
-  <img src="backend/app/static/img/workflow.png" alt="System Architecture" width="80%">
+  <img src="backend/app/static/img/workflow.png" alt="System Architecture" width="100%">
   <p><i>High-level Workflow of Cardiolytics System</i></p>
 </div>
 
