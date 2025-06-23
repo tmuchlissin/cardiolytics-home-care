@@ -1,45 +1,58 @@
-# 💓 Cardiolytics
+<h1 align="center">🚀 Cardiolytics Home Care</h1>
 
-![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Python](https://img.shields.io/badge/python-3.10+-blue.svg)
-![Flask](https://img.shields.io/badge/backend-Flask-orange.svg)
-![IoT](https://img.shields.io/badge/IoT-ESP32-green.svg)
-![AI](https://img.shields.io/badge/AI-Ensemble--Learning-purple.svg)
+<p align="center">
+  <img src="backend/app/static/img/thumbnail.png" alt="Cardiolytics Logo" width="60%">
+</p>
 
-**Integrated Cardiovascular Monitoring and Prediction System**
+<p align="center">
+  <img src="https://img.shields.io/badge/license-MIT-blue.svg">
+  <img src="https://img.shields.io/badge/python-3.10+-blue.svg">
+  <img src="https://img.shields.io/badge/backend-Flask-orange.svg">
+  <img src="https://img.shields.io/badge/IoT-ESP32-green.svg">
+  <img src="https://img.shields.io/badge/AI-Ensemble--Learning-purple.svg">
+</p>
 
-Cardiolytics is a web-based health monitoring system that integrates **IoT devices**, **ensemble machine learning models**, and a **document-grounded chatbot** to support cardiovascular disease prediction and homecare services.
+<p align="center"><b>Integrated Cardiovascular Monitoring and Prediction System</b></p>
+
+<p align="center">
+Cardiolytics is a smart and scalable web-based health monitoring system that integrates <strong>real-time IoT devices</strong>, <strong>ensemble machine learning models</strong>, and a <strong>document-grounded AI chatbot</strong> to support cardiovascular homecare and predictive health services.
+</p>
 
 ---
 
-## 🖼️ Overview
+## 🖼️ System Preview
 
-<img src="backend/app/static/ui.png" alt="Web Screenshot" width="100%">
-
-> Example UI: Landing Page Cardiolytics
+<div align="center">
+  <img src="backend/app/static/img/ui.png" alt="Web Screenshot" width="80%">
+  <p><i>Example UI: Landing Page Cardiolytics</i></p>
+</div>
 
 ---
 
-## ⚙️ Features
+## ⚙️ Key Features
 
-- ✅ Real-time blood pressure monitoring (ESP32 + EMQX + Kafka)
-- 📊 Cardiovascular disease risk prediction using hybrid ensemble ML/DL
-- 🤖 AI chatbot with document-based Q\&A (Gemini + Pinecone)
-- 🔐 Role-based access: Patient & Admin
-- 📍 Flask backend + Jinja UI + MySQL + MQTT
+✨ **Integrated Monitoring System** — End-to-end real-time health tracking with ESP32, EMQX, and Kafka.
+
+🧠 **Hybrid ML/DL Ensemble** — Risk prediction using state-of-the-art models trained on cardiovascular data.
+
+💬 **Document-aware Chatbot** — Answering patient questions using PDF-grounded Q\&A via Gemini and Pinecone.
+
+👥 **Role-based Access** — Separate dashboard for Patients and Admins with secure authentication.
+
+🛠 **Tech Stack** — Flask, Jinja, MySQL, MQTT, Node-RED, and more.
 
 ---
 
 ## 🚀 Quick Start
 
-### 1. Clone the Repository
+### 📁 Clone the Repository
 
 ```bash
 git clone https://github.com/tmuchlissin/cardiolytics_home_care.git
 cd cardiolytics_home_care
 ```
 
-### 2. Set Up Python Environment
+### 🐍 Set Up Python Environment
 
 ```bash
 python3 -m venv .venv
@@ -48,7 +61,7 @@ pip install -r requirements.txt          # Core Flask environment
 pip install -r requirements_el.txt       # Optional: Ensemble model dependencies
 ```
 
-### 3. Configure Database
+### 📃️ Configure Database
 
 ```bash
 flask db init
@@ -56,16 +69,16 @@ flask db migrate
 flask db upgrade
 ```
 
-### 4. Upload Firmware to ESP32
+### 🔌 Flash Firmware to ESP32
 
 - Open `src/esp_simulator.ino` in Arduino IDE
-- Flash to your ESP32 board
-- Ensure MQTT credentials match your `.env` file
+- Flash to ESP32 device
+- Ensure `.env` MQTT credentials are correct
 
-### 5. Set Up Node-RED Flow
+### 🔁 Set Up Node-RED Flow
 
-- Access Node-RED at: `http://localhost:1880`
-- Import flow from: `src/flows.json`
+- Go to `http://localhost:1880`
+- Import flow from `src/flows.json`
 
 ---
 
@@ -77,13 +90,16 @@ export FLASK_ENV=development
 flask run
 ```
 
-Open your browser and visit: [http://localhost:5000](http://localhost:5000)
+🌐 Visit: [http://localhost:5000](http://localhost:5000)
 
 ---
 
 ## 🧽 System Architecture
 
-<img src="backend/app/static/workflow.png" alt="System Architecture" width="100%">
+<div align="center">
+  <img src="backend/app/static/img/workflow.png" alt="System Architecture" width="80%">
+  <p><i>High-level Workflow of Cardiolytics System</i></p>
+</div>
 
 ---
 
@@ -104,4 +120,4 @@ This project is licensed under the [MIT License](LICENSE)
 
 ---
 
-> For research collaboration or demo requests, feel free to open an issue or contact me via GitHub.
+> 💬 For research collaboration or demo requests, feel free to open an issue or contact me via GitHub.
