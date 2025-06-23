@@ -1,20 +1,17 @@
 import requests
-from kafka import KafkaConsumer
 import json
 import time
 import logging
-from flask import current_app
+
+from kafka import KafkaConsumer
+from .config import (
+    KAFKA_BROKER, KAFKA_TOPIC, BLOOD_PRESSURE_ENDPOINT
+)
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Kafka settings
-KAFKA_BROKER = "localhost:9092"
-KAFKA_TOPIC = "bp_data"
-
-# BP endpoint
-BLOOD_PRESSURE_ENDPOINT = f"http://localhost:5000/bp-monitor/api/blood_pressure"
 
 def main():
     max_retries = 5

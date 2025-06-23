@@ -1,35 +1,51 @@
-import os
 import pytz
-from dotenv import load_dotenv
 import re
-from langchain_huggingface import HuggingFaceEmbeddings
 import torch
+from dotenv import load_dotenv
+from langchain_huggingface import HuggingFaceEmbeddings
+from config import Config
 
 load_dotenv()
 
 # API keys
-GROQ_API_KEY = os.getenv('GROQ_API_KEY')
-OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
-GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
-PINECONE_API_KEY = os.getenv('PINECONE_API_KEY')
-PINECONE_ENV = os.getenv('PINECONE_ENVIRONMENT')
+GROQ_API_KEY = Config.GROQ_API_KEY
+OPENAI_API_KEY = Config.OPENAI_API_KEY
+GEMINI_API_KEY = Config.GEMINI_API_KEY
+PINECONE_API_KEY = Config.PINECONE_API_KEY
+PINECONE_ENV = Config.PINECONE_ENV
 
 # Pinecone settings
-INDEX_NAME = "cardiolytics"
-NAMESPACE = "cardiobot"
-PINECONE_SPEC = {"cloud": "aws", "region": "us-east-1"}
-EMBEDDING_DIMENSION = 1024
+PINECONE_SETTINGS = {
+    "INDEX_NAME": "cardiolytics",
+    "NAMESPACE": "cardiobot",
+    "SPEC": {"cloud": "aws", "region": "us-east-1"},
+    "EMBEDDING_DIMENSION": 1024
+}
+
+INDEX_NAME = PINECONE_SETTINGS["INDEX_NAME"]
+NAMESPACE = PINECONE_SETTINGS["NAMESPACE"]
+PINECONE_SPEC = PINECONE_SETTINGS["SPEC"]
+EMBEDDING_DIMENSION = PINECONE_SETTINGS["EMBEDDING_DIMENSION"]
+
+# Embedder
 EMBEDDER = HuggingFaceEmbeddings(
     model_name="intfloat/multilingual-e5-large",
     model_kwargs={'device': 'cuda' if torch.cuda.is_available() else 'cpu'}
 )
 
-
 # File settings
-ALLOWED_EXTENSIONS = {'pdf', 'docx', 'txt'}
+FILE_SETTINGS = {
+    "ALLOWED_EXTENSIONS": {'pdf'}
+}
+ALLOWED_EXTENSIONS = FILE_SETTINGS["ALLOWED_EXTENSIONS"]
 
 # Timezone
 TIMEZONE = pytz.timezone('Asia/Jakarta')
+
+# Conversation context
+CONVERSATION_CONTEXT = {
+    "last_topic": None
+}
 
 # Chat settings
 GREETING_KEYWORDS = [
@@ -41,8 +57,8 @@ GREETING_KEYWORDS = [
 FOLLOWUP_POSITIVE = {
     "ya", "iya", "betul", "benar", "setuju", "ya dong", "iya banget", "yoi", "sip",
     "lanjut", "oke lanjut", "lanjut saja", "silakan", "ya kak", "ya benar", "benar sekali",
-    'iya bagaimana', 'ya bagaimana', "iya apa saja", "ya apa saja", "iya sebutkan apa saja", 
-    "ya sebutkan apa saja", "iya apa saja sebutkan", "ya apa saja sebutkan", "teruskan", 
+    "iya bagaimana", "ya bagaimana", "iya apa saja", "ya apa saja", "iya sebutkan apa saja",
+    "ya sebutkan apa saja", "iya apa saja sebutkan", "ya apa saja sebutkan", "teruskan",
     "boleh lanjut", "saya mau lanjut", "ya silakan", "iya lanjutkan", "oke dong",
     "setuju lanjut", "iya ayo", "ya ayo", "lanjut ya", "saya tertarik", "terus saja",
     "ya tentu", "iya tentu", "boleh dong", "ya mari", "iya mari", "lanjut bro",
@@ -52,34 +68,34 @@ FOLLOWUP_POSITIVE = {
 }
 
 FOLLOWUP_NEGATIVE = {
-    "tidak", "tidak perlu", "tidak kok", "tidak lanjut", "tidak mau", "tidak usah", "ga usah", "nggak usah",
-    "jangan", "cukup", "udah", "skip", "tidak ingin"
-    }
+    "tidak", "tidak perlu", "tidak kok", "tidak lanjut", "tidak mau", "tidak usah", "ga usah",
+    "nggak usah", "jangan", "cukup", "udah", "skip", "tidak ingin"
+}
 
 FOLLOWUP_NEUTRAL = {
-    "kurang paham", "bingung", "tidak tahu", "kurang jelas", "masih bingung", "tidak yakin", 
-    "belum jelas", "tidak ngerti", "maksudnya?", "bisa diulang?", "gimana maksudnya", 
+    "kurang paham", "bingung", "tidak tahu", "kurang jelas", "masih bingung", "tidak yakin",
+    "belum jelas", "tidak ngerti", "maksudnya?", "bisa diulang?", "gimana maksudnya",
     "ga ngerti", "nggak ngerti", "kurang ngerti", "coba jelaskan lagi", "ulangi", "jelaskan ulang",
     "saya tidak yakin", "tolong ulangi"
-    }
+}
 
 GENERAL_QUERY_PATTERN = re.compile(
-        r"""(?x)                                      
-    \b(                                          
-        apa(\s+saja|\s+aja)? |                    
-        adakah | apakah |                        
-        bisakah | bolehkah |                     
-        informasi | dokumen |                   
-        tahu | ketahui |                         
-        ada | punya |                          
-        tersedia |                               
-        kamu\s+(punya|tahu|miliki)               
+    r"""(?x)
+    \b(
+        apa(\s+saja|\s+aja)? |
+        adakah | apakah |
+        bisakah | bolehkah |
+        informasi | dokumen |
+        tahu | ketahui |
+        ada | punya |
+        tersedia |
+        kamu\s+(punya|tahu|miliki)
     )\b
-    [\s\w,]{0,30}?                               
-    \b(                                           
-        informasi | dokumen | file | data | 
+    [\s\w,]{0,30}?
+    \b(
+        informasi | dokumen | file | data | isi |
         materi | topik | pengetahuan |
-        yang\s+ada | yang\s+tersedia | 
+        yang\s+ada | yang\s+tersedia |
         bisa\s+diakses | dapat\s+dilihat |
         referensi | bacaan | daftar\s+materi |
         kumpulan\s+(file|data|topik) |
@@ -87,7 +103,7 @@ GENERAL_QUERY_PATTERN = re.compile(
     )\b
     """,
     flags=re.IGNORECASE
-    )
+)
 
 CHAT_PROMPT_TEMPLATE = """
 **INSTRUKSI:**
@@ -107,8 +123,3 @@ CHAT_PROMPT_TEMPLATE = """
 **KONTEKS:** {context}
 **RIWAYAT:** {chat_history}
 """
-
-
-CONVERSATION_CONTEXT = {
-    "last_topic": None  
-}

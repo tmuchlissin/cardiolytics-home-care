@@ -2,19 +2,21 @@ import threading
 import os
 import jsonify
 
+from dotenv import load_dotenv
+from werkzeug.security import generate_password_hash, check_password_hash
+
 from flask import (
     Blueprint, render_template, redirect, 
     url_for, flash, request, current_app
     )
 
 from flask_login import login_user, logout_user, current_user, login_required
-from werkzeug.security import generate_password_hash, check_password_hash
+from flask_mail import Message
+
 from app.extensions import db
 from app.models import User, UserRole
 from app.forms import RegistrationForm, LoginForm
-from flask_mail import Message
 from app.utils import generate_reset_token, verify_reset_token, send_email_async
-from dotenv import load_dotenv
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 load_dotenv(os.path.join(basedir, '.env'))

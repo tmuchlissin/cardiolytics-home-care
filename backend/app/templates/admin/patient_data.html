@@ -5,7 +5,6 @@
   <h1 class="text-2xl font-bold mb-4">Patient Data</h1>
 </div>
 
-
 <!-- Navbar -->
 <nav class="mb-4">
   <div class="px-4">
@@ -330,7 +329,7 @@
             </td>
             <td class="px-4 py-2 border-gray-200">
               <a
-                href="{{ url_for('admin.download_patient_pdf', patient_id=data.patient.id) }}"
+                href="{{ url_for('admin.download_patient_pdf_route', patient_id=data.patient.id) }}"
                 class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded shadow transition"
                 title="Download PDF Patient Data"
               >

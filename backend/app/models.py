@@ -1,10 +1,9 @@
-from flask_sqlalchemy import SQLAlchemy
-from app.extensions import db
-from datetime import datetime
 import enum
+
+from datetime import datetime
 from flask_login import UserMixin
-from sqlalchemy.dialects.mysql import LONGBLOB
 from sqlalchemy import LargeBinary
+from app.extensions import db
 
 class UserRole(enum.Enum):
     user = 'user'

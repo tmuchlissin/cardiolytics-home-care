@@ -1,7 +1,9 @@
+from datetime import datetime
+
 from flask import Blueprint, render_template, redirect, url_for, flash
 from flask_login import current_user, login_required
+
 from app.models import PatientProfile, PatientData, BloodPressureRecord, db
-from datetime import datetime
 from app.forms import PatientProfileForm
 
 main = Blueprint('main', __name__, url_prefix='/main')

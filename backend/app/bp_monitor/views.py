@@ -1,26 +1,24 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, jsonify, request, current_app
-from flask_login import login_required, current_user
-from app.models import db, Device, BloodPressureRecord, User
-from datetime import datetime
 import uuid
 import logging
-from pytz import timezone, UTC
-import paho.mqtt.subscribe as subscribe
 import paho.mqtt.publish as publish
 import paho.mqtt.client as mqtt
 import json
-from threading import Thread
+
+from pytz import timezone
+from flask import Blueprint, render_template, flash, jsonify, request
+from flask_login import login_required, current_user
+from app.models import db, Device, BloodPressureRecord, User
+from datetime import datetime
+
+from .config import (
+    MQTT_BROKER, MQTT_PORT,
+    MQTT_USERNAME, MQTT_PASSWORD
+)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 bp_monitor = Blueprint('bp_monitor', __name__, url_prefix='/bp-monitor')
-
-MQTT_BROKER = "192.168.0.111"
-# MQTT_BROKER = "192.168.1.200"
-MQTT_PORT = 1883
-MQTT_USERNAME = "espuser"
-MQTT_PASSWORD = "esp32mqtt!"
 
 last_status_cache = {}
 
@@ -138,14 +136,21 @@ def receive_blood_pressure():
     data = request.get_json()
     logger.info(f"Received blood pressure data: {data}")
     device_id = data.get('device_id')
+
+    if not all(k in data for k in ['systolic', 'diastolic', 'pulse']):
+        logger.warning(f"Ignored non-BP data: {data}")
+        return jsonify({'status': 'ignored', 'message': 'Not BP data'}), 200
+
     device = Device.query.get(device_id)
     if not device or device.status != 'connected':
         logger.error(f"Device {device_id} not connected or not found")
         return jsonify({'status': 'error', 'message': 'Device not connected'}), 403
+
     user = User.query.filter_by(device_id=device_id).first()
     if not user:
         logger.error(f"User not found for device {device_id}")
         return jsonify({'status': 'error', 'message': 'User not found'}), 404
+
     try:
         bp_data = BloodPressureRecord(
             id=str(uuid.uuid4()),
@@ -163,6 +168,7 @@ def receive_blood_pressure():
         logger.error(f"Error storing blood pressure data: {e}")
         db.session.rollback()
         return jsonify({'status': 'error', 'message': 'Failed to store data'}), 500
+
 
 @bp_monitor.route('/api/update_status', methods=['POST'])
 def update_status():

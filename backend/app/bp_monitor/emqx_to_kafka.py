@@ -1,23 +1,18 @@
 import paho.mqtt.client as mqtt
-from kafka import KafkaProducer
 import json
 import time
 import logging
+
+from kafka import KafkaProducer
+from .config import (
+    KAFKA_BROKER, KAFKA_TOPIC, MQTT_BROKER, MQTT_TOPIC, MQTT_PORT,
+    MQTT_USERNAME, MQTT_PASSWORD
+)
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# MQTT settings
-MQTT_BROKER = "192.168.0.111"
-# MQTT_BROKER = "192.168.1.200"
-MQTT_PORT = 1883
-MQTT_TOPIC = "bp_monitor/#"  # Wildcard to subscribe to all bp_monitor/BPXXXX topics
-MQTT_USERNAME = "espuser"
-MQTT_PASSWORD = "esp32mqtt!"
-
-KAFKA_BROKER = "localhost:9092"
-KAFKA_TOPIC = "bp_data"
 
 try:
     producer = KafkaProducer(
