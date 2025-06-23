@@ -20,7 +20,7 @@
 <p align="center"><b>Integrated Cardiovascular Monitoring and Prediction System</b></p>
 
 <p align="center">
-Cardiolytics is a smart and scalable web-based health monitoring system that integrates <strong>real-time IoT devices</strong>, <strong>ensemble machine learning models</strong>, and a <strong>document-grounded AI chatbot</strong> to support cardiovascular homecare and predictive health services.
+Cardiolytics is a smart and scalable web-based health monitoring system that integrates <strong>real-time IoT devices</strong>, <strong>ensemble learning models</strong>, and a <strong>document-grounded AI chatbot</strong> to support cardiovascular homecare and predictive health services.
 </p>
 
 ## 🖼️ System Preview
