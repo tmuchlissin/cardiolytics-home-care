@@ -39,7 +39,7 @@ Cardiolytics is a smart and scalable web-based health monitoring system that int
 
 👥 **Role-based Access** — Separate dashboard for Patients and Admins with secure authentication.
 
-🛠 **Tech Stack** — Flask, Jinja, MySQL, MQTT, Node-RED, and more.
+🛠 **Tech Stack** — Flask, Jinja, Tailwind CSS, MySQL, MQTT, Node-RED, and more.
 
 ## 🚀 Quick Start
 
