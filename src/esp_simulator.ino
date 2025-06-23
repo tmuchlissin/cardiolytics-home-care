@@ -3,13 +3,20 @@
 #include <ArduinoJson.h>
 #include <time.h>
 
-const char* ssid = "Default User";
-const char* password = "0192837465";
-const char* mqtt_server = "192.168.0.111";
+// WiFi credentials
+const char* ssid = "YOUR_WIFI_SSID";
+const char* password = "YOUR_WIFI_PASSWORD";
+
+// MQTT broker credentials
+const char* mqtt_server = "YOUR_MQTT_BROKER_IP";
 const int mqtt_port = 1883;
-const char* mqtt_user = "espuser";
-const char* mqtt_password = "esp32mqtt!";
-const char* device_id = "BP0001"; // This can be changed to any BPXXXX value
+const char* mqtt_user = "YOUR_MQTT_USERNAME";
+const char* mqtt_password = "YOUR_MQTT_PASSWORD";
+
+// Device ID
+const char* device_id = "BPXXXX"; // e.g., BP0001
+
+// MQTT topics
 String mqtt_topic = "bp_monitor/" + String(device_id);
 String command_topic = "bp_monitor/command/" + String(device_id);
 String status_topic = "bp_monitor/status/" + String(device_id);
