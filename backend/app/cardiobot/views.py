@@ -44,7 +44,6 @@ class ChatState:
         self.chat_cache: Dict[str, Dict] = {}
         self.last_bot_question: str = ""
         self.conversation_context: Dict[str, Optional[str]] = {
-            "last_topic": None,
             "last_question": None
         }
 
@@ -84,7 +83,7 @@ def create_conversational_chain(vector_store: LangchainPinecone) -> Conversation
         input_variables=["question", "context", "chat_history"]
     )
     llm = ChatGoogleGenerativeAI(
-        model="gemini-2.5-flash-preview-04-17",
+        model="gemini-2.5-flash-lite-preview-06-17",
         google_api_key=GEMINI_API_KEY,
         temperature=0.1
     )
@@ -164,15 +163,13 @@ def is_doc_relevant_hybrid(
     return word_overlap_score >= min_word_overlap and cosine_sim >= min_cosine_similarity
 
 def classify_followup_response(message: str) -> str:
-    """Classify user response as positive, negative, neutral, or unknown."""
+    """Classify user response as positive, negative, or unknown."""
     normalized = message.lower().strip()
     tokens = re.findall(r'\b\w+\b', normalized)
     if any(kw in tokens for kw in FOLLOWUP_POSITIVE):
         return "positive"
     if any(kw in tokens for kw in FOLLOWUP_NEGATIVE):
         return "negative"
-    if any(kw in tokens for kw in FOLLOWUP_NEUTRAL):
-        return "neutral"
     return "unknown"
 
 def estimate_batch_size(batch_docs: List[LangDocument], batch_ids: List[str], embeddings) -> int:
@@ -213,7 +210,13 @@ def reload_vector_store() -> bool:
         except Exception as e:
             current_app.logger.warning(f"[RELOAD] Failed to extract text from {d.title_file}: {e}")
             continue
-        for i, chunk in enumerate(splitter.split_text(text)):
+        chunks = splitter.split_text(text)
+        current_app.logger.info(f"[SPLITTER] {d.title_file} → {len(chunks)} chunks")
+        for j, c in enumerate(chunks[:3]):
+            preview = c[:150].replace('\n', ' ')
+            current_app.logger.info(f"[CHUNK {j+1}] {preview}...")
+
+        for i, chunk in enumerate(chunks):
             docs_for_index.append(LangDocument(
                 page_content=chunk,
                 metadata={"source": d.title_file, "vector_id": f"{d.id}-{i}"}
@@ -246,8 +249,7 @@ def is_general_document_query(text: str) -> bool:
     return bool(GENERAL_QUERY_PATTERN.search(text.lower().strip()))
 
 def reconstruct_with_context(
-    user_input: str, history: List[Dict], last_topic: Optional[str],
-    last_question: Optional[str], max_short: int = 3
+    user_input: str, history: List[Dict], last_question: Optional[str], max_short: int = 3
 ) -> str:
     """Reconstruct user input with context for short queries."""
     ui = user_input.strip().lower()
@@ -258,37 +260,17 @@ def reconstruct_with_context(
     current_app.logger.info(f"[RECONSTRUCT] Core sentence: {core!r}")
     tokens = core.split()
 
-    if len(tokens) <= max_short:
+    if len(tokens) <= max_short and any(kw in ui for kw in FOLLOWUP_NEUTRAL):
+        if last_question:
+            return f"jelaskan lebih lanjut tentang {last_question.lower().rstrip('?')}"
+    elif len(tokens) <= max_short:
         if last_question and is_similar_topic(core, last_question, EMBEDDER):
             question_core = re.split(r'[.?!]\s*', last_question.lower())[-1].rstrip('?')
             return f"{core} {question_core}?"
-        elif last_topic:
-            topic_core = last_topic.lower().rstrip(' ?.!')
-            return f"{core} {topic_core}?"
     for entry in reversed(history):
         if not entry.get("followup") and entry.get("user"):
             return f"{entry['user'].strip().lower()} {core}"
     return core
-
-def extract_topic_from_docs(question: str, docs: List, embedder, threshold: float = 0.7) -> Optional[str]:
-    """Extract topic from relevant documents."""
-    try:
-        q_vec = embedder.embed_query(question)
-        combined_texts = [
-            f"{getattr(d, 'title_file', d.metadata.get('title', ''))}\n{d.page_content}" for d in docs
-        ]
-        doc_vecs = embedder.embed_documents(combined_texts)
-        sims = cosine_similarity([q_vec], doc_vecs)[0]
-        if float(np.max(sims)) < threshold:
-            return None
-        best_idx = int(np.argmax(sims))
-        best_doc = docs[best_idx]
-        raw_title = getattr(best_doc, 'title_file', best_doc.metadata.get("title", ""))
-        topic = re.sub(r"^(pedoman|panduan)\s*", "", raw_title.strip(), flags=re.IGNORECASE)
-        return topic.strip()
-    except Exception as e:
-        current_app.logger.warning(f"[TOPIC EXTRACTION] Failed: {e}")
-        return None
 
 def is_similar_topic(new_text: str, last_text: str, embedder, threshold: float = 0.6) -> bool:
     """Check if two texts are on similar topics."""
@@ -310,10 +292,12 @@ def clean_answer(text: str) -> str:
     return re.sub(r'\n{2,}', '\n\n', text).strip()
 
 def clear_chat_cache():
-    """Clear chat cache and reset context."""
+    """Clear chat cache and reset all conversation state."""
     chat_state.chat_cache.clear()
-    chat_state.conversation_context.update({"last_topic": None, "last_question": None})
-    current_app.logger.info("✅ [DEBUG] Chat cache cleared and context reset")
+    chat_state.conversation_context.update({"last_question": None})
+    chat_state.conversation_history = []
+    chat_state.last_bot_question = ""
+    current_app.logger.info("✅ [DEBUG] Chat cache, history, and context fully cleared")
 
 @cardiobot.route('/clear_cache', methods=['POST'])
 def clear_cache():
@@ -336,16 +320,32 @@ def chat():
     user_input = re.sub(r"\s+", " ", raw).lower()
     core = re.split(r'[.?!]\s*', user_input)[-1]
     current_app.logger.info(f"[CHAT] Received message: {user_input!r}")
-    
+
+    if not hasattr(chat_state, 'conversation_history') or not chat_state.conversation_history:
+        chat_state.conversation_history = []
+        chat_state.last_bot_question = ""
+        chat_state.conversation_context = {"last_question": None}
+        chat_state.chat_cache = {}
+
+    cache_key = f"{user_input}:{chat_state.conversation_context.get('last_question')}"
+    current_app.logger.debug(f"[CHAT] Generated cache key: {cache_key!r}")
+
+    if cache_key in chat_state.chat_cache:
+        response = chat_state.chat_cache[cache_key].copy()
+        response["response_time"] = log_response_time(start_time, "[CHAT] ")
+        current_app.logger.info(f"[CHAT] Cache HIT for key {cache_key!r}")
+        return jsonify(response)
+
     if fuzzy_match_keyword(user_input, GREETING_KEYWORDS):
         response = {
-            "answer": "Halo! Saya adalah Cardiobot, siap membantu dengan pertanyaan seputar kardiovaskular.",
+            "answer": "Halo! Saya adalah Cardiobot, siap membantu dengan informasi seputar kardiovaskular. 😊",
             "sources": [],
             "response_time": log_response_time(start_time, "[CHAT] ")
         }
         chat_state.chat_cache[user_input] = response
         chat_state.conversation_history.append({"user": raw, "bot": response["answer"], "followup": False, "category": "greeting"})
         current_app.logger.info(f"[CHAT] Greeting detected: {user_input!r}")
+        current_app.logger.info(f"[CHAT] Response: {response["answer"]!r}")
         return jsonify(response)
 
     docs = Document.query.all()
@@ -359,17 +359,12 @@ def chat():
         chat_state.chat_cache[user_input] = response
         chat_state.conversation_history.append({"user": raw, "bot": response["answer"], "followup": False, "category": "no_docs"})
         current_app.logger.info(f"[CHAT] No documents available in database.")
+        current_app.logger.info(f"[CHAT] Response: {response["answer"]!r}")
         return jsonify(response)
 
     if not chat_state.vector_store or not chat_state.chain:
         response_time = log_response_time(start_time, "[CHAT] ")
         return jsonify({"error": "Bot not ready.", "response_time": response_time}), 400
-
-    if user_input in chat_state.chat_cache:
-        response = chat_state.chat_cache[user_input].copy()
-        response["response_time"] = log_response_time(start_time, "[CHAT] ")
-        current_app.logger.info(f"[CHAT] Cache HIT for key {user_input!r}")
-        return jsonify(response)
 
     if is_general_document_query(user_input):
         current_app.logger.info(f"[CHAT] Detected general document query: {user_input!r}")
@@ -386,14 +381,45 @@ def chat():
         }
         chat_state.chat_cache[user_input] = response
         chat_state.conversation_history.append({"user": raw, "bot": summary, "followup": False, "category": "general"})
+        current_app.logger.info(f"[CHAT] Response: {response["answer"]!r}")
         return jsonify(response)
 
     try:
-        is_followup = bool(chat_state.last_bot_question) or len(core.split()) <= 3
-        category = classify_followup_response(user_input)
-        last_topic = chat_state.conversation_context.get("last_topic")
-        last_question = chat_state.conversation_context.get("last_question")
-        current_app.logger.info(f"[CHAT] Followup: {is_followup}, Category: {category}, Last Topic: {last_topic}, Last Question: {last_question}")
+        is_initial_question = not chat_state.conversation_history and not chat_state.conversation_context.get("last_question")
+
+        is_vague = False
+        if is_initial_question:
+            question_tokens = len(user_input.split())
+            current_app.logger.info(f"[CHAT] Question tokens: {question_tokens}, Raw input: {raw!r}")
+            is_vague = question_tokens < 3  
+
+            if is_vague:
+                response = {
+                    "answer": "Maaf, saya tidak menemukan informasi yang relevan. Silakan ajukan pengobatan pertanyaan lebih spesifikasi! ✍️😄",
+                    "sources": [],
+                    "based_on_docs": True,
+                    "response_time": log_response_time(start_time, "[CHAT] ")
+                }
+                chat_state.chat_cache[cache_key] = response
+                chat_state.conversation_history.append({"user": raw, "bot": response["answer"], "followup": False, "category": "no_info"})
+
+                chat_state.conversation_context["last_question"] = user_input
+                current_app.logger.info(f"[CHAT] Initial question not specific (vague): {user_input!r}")
+                current_app.logger.info(f"[CHAT] Response: {response['answer']!r}")
+                return jsonify(response)
+
+        category = "unknown"
+        is_followup = bool(chat_state.last_bot_question) or (len(core.split()) <= 3 and len(chat_state.conversation_history) > 0)
+        if not chat_state.last_bot_question and not chat_state.conversation_context.get("last_question"):
+            is_followup = False
+
+        try:
+            category = classify_followup_response(user_input)
+        except Exception as e:
+            current_app.logger.error(f"[ERROR] Failed to classify followup: {e}")
+            category = "unknown"
+
+        current_app.logger.info(f"[CHAT] Followup: {is_followup}, Category: {category}, Last Question: {chat_state.conversation_context.get('last_question')}, Conversation History Length: {len(chat_state.conversation_history)}, Is Vague: {is_vague}")
 
         if is_followup and category == "negative":
             response = {
@@ -401,72 +427,107 @@ def chat():
                 "sources": [],
                 "response_time": log_response_time(start_time, "[CHAT] ")
             }
-            chat_state.chat_cache[user_input] = response
+            chat_state.chat_cache[cache_key] = response
             chat_state.conversation_history.append({"user": raw, "bot": response["answer"], "followup": True, "category": category})
             chat_state.last_bot_question = ""
+            chat_state.conversation_context["last_question"] = user_input
             current_app.logger.info(f"[CHAT] Negative followup response: {user_input!r}")
-            return jsonify(response)
-
-        if is_followup and category == "neutral":
-            response = {
-                "answer": "Baik, saya akan coba jelaskan lagi. Apa yang masih belum jelas? 🤔",
-                "sources": [],
-                "response_time": log_response_time(start_time, "[CHAT] ")
-            }
-            chat_state.chat_cache[user_input] = response
-            chat_state.conversation_history.append({"user": raw, "bot": response["answer"], "followup": True, "category": category})
-            chat_state.last_bot_question = ""
-            current_app.logger.info(f"[CHAT] Neutral followup response: {user_input!r}")
+            current_app.logger.info(f"[CHAT] Response: {response['answer']!r}")
             return jsonify(response)
 
         if is_followup and category == "positive":
-            follow_q = re.sub(r"(?i)^apakah anda ingin tahu\s*lebih\s*lanjut\s*tentang\s*", "", chat_state.last_bot_question).strip().rstrip('?').lower()
-            user_input = follow_q
+            follow_q = re.sub(r"(?i)^apakah anda ingin tahu lebih lanjut tentang\s*", "", chat_state.last_bot_question).strip().rstrip('?').lower()
+            user_input = f"informasi tentang {follow_q}"
             current_app.logger.info(f"[FOLLOWUP POSITIVE] Query reconstructed: {user_input!r}")
 
-        elif is_followup and category == "unknown" and (last_topic or last_question):
-            if last_question and is_similar_topic(core, last_question, EMBEDDER):
-                user_input = reconstruct_with_context(user_input, chat_state.conversation_history, last_topic, last_question)
-                current_app.logger.info(f"[FOLLOWUP UNKNOWN] Reconstructed with last question: {user_input!r}")
-            elif last_topic and is_similar_topic(core, last_topic, EMBEDDER):
-                user_input = reconstruct_with_context(user_input, chat_state.conversation_history, last_topic, last_question)
-                current_app.logger.info(f"[FOLLOWUP UNKNOWN] Reconstructed with last topic: {user_input!r}")
+        elif is_followup and category == "unknown" and (chat_state.last_bot_question or chat_state.conversation_context.get("last_question")):
+            last_ref = chat_state.conversation_context.get("last_question")
+            follow_q = re.sub(r"(?i)^apakah anda ingin tahu lebih lanjut tentang\s*", "", last_ref).strip().rstrip('?').lower()
+            if is_similar_topic(core, follow_q, EMBEDDER):
+                user_input = reconstruct_with_context(user_input, chat_state.conversation_history, last_ref)
+                current_app.logger.info(f"[FOLLOWUP UNKNOWN] Reconstructed with last_ref: {user_input!r}")
             else:
                 is_followup = False
                 current_app.logger.info(f"[FOLLOWUP UNKNOWN] No reconstruction, treated as new query")
 
         res = chat_state.chain.invoke({"question": user_input})
         docs = res.get("source_documents", [])
+        current_app.logger.info(f"[CHAT] Source documents count: {len(docs)}")
         answer = clean_answer(res["answer"])
-        current_app.logger.info(f"[CHAT] Raw LLM answer: {answer!r}")
 
-        topic = extract_topic_from_docs(user_input, docs, EMBEDDER)
-        if topic:
-            chat_state.conversation_context["last_topic"] = topic.lower()
-            current_app.logger.info(f"[CHAT] Extracted topic: {topic}")
+        is_specific = True
+        max_similarity = 0.0
+        if is_initial_question:
+            doc_contents = [d.page_content for d in docs]
+            if doc_contents:
+                try:
+                    question_emb = EMBEDDER.embed_query(user_input)
+                    doc_embs = EMBEDDER.embed_documents(doc_contents)
+                    similarities = cosine_similarity([question_emb], doc_embs)[0]
+                    max_similarity = float(np.max(similarities))
+                    current_app.logger.info(f"[CHAT] Initial question max similarity: {max_similarity:.4f}")
+                except Exception as e:
+                    current_app.logger.warning(f"[CHAT] Similarity calculation failed: {e}")
+                    max_similarity = 0.0
+            is_specific = max_similarity >= 0.80 and len(docs) >= 1
+            current_app.logger.info(f"[CHAT] Initial question relevance check: {len(docs)} docs, Max Similarity: {max_similarity:.4f}, Is Specific: {is_specific}")
+
+            if not is_specific:
+                response = {
+                    "answer": "Maaf, saya tidak menemukan informasi yang relevan. Silakan ajukan pertanyaan lebih spesifik! ✍️😊",
+                    "sources": [],
+                    "based_on_docs": True,
+                    "response_time": log_response_time(start_time, "[CHAT] ")
+                }
+                chat_state.chat_cache[cache_key] = response
+                chat_state.conversation_history.append({"user": raw, "bot": response["answer"], "followup": False, "category": "no_info"})
+
+                chat_state.conversation_context["last_question"] = user_input
+                current_app.logger.info(f"[CHAT] Initial question not specific: {user_input!r}")
+                current_app.logger.info(f"[CHAT] Response: {response['answer']!r}")
+                return jsonify(response)
 
         chat_state.conversation_context["last_question"] = user_input
 
         doc_contents = [d.page_content for d in docs]
         hallucinated = not is_based_on_docs(answer, doc_contents)
-        no_info_response = "maaf" in answer.lower() and "tidak ditemukan" in answer.lower()
-        current_app.logger.info(f"[CHAT] Hallucinated: {hallucinated}, No info response: {no_info_response}")
+        no_info_response = (
+            "maaf" in answer.lower() and 
+            "tidak ditemukan" in answer.lower() and 
+            not re.search(r"(silakan|jika ada|beritahu|ingin tahu lebih lanjut|ajukan pertanyaan)", answer.lower()) and
+            len(answer.split()) < 15 and
+            len(docs) == 0
+        ) or "[NO_INFO_TRIGGER]" in answer
 
-        if hallucinated or no_info_response or not any(is_doc_relevant_hybrid(user_input, doc, EMBEDDER) for doc in doc_contents):
+        if hallucinated or no_info_response:
             answer = "Maaf, saya tidak menemukan informasi yang relevan. Silakan ajukan pertanyaan lebih spesifik! ✍️😊"
             snippets = []
             chat_state.last_bot_question = ""
-            current_app.logger.info(f"[CHAT] Answer rejected: {'hallucinated' if hallucinated else 'no info or irrelevant'}")
+            current_app.logger.info(f"[CHAT] Answer rejected: {'hallucinated' if hallucinated else 'no info'}")
+            current_app.logger.info(f"[CHAT] Raw LLM answer: {answer!r}")
         else:
+            current_app.logger.info(f"[CHAT] Raw LLM answer: {answer!r}")
+            if "[no_snippets]" in answer.lower():
+                answer = answer.replace("[NO_SNIPPETS]", "").strip()
+                snippets = []
+            else:
+                valid_docs = docs if docs else []
+                current_app.logger.info(f"[CHAT] Valid docs count: {len(valid_docs)}")
+                if valid_docs:
+                    snippets = [
+                        {"file": d.metadata.get("source", "Unknown"), "text": s}
+                        for d in valid_docs
+                        for s in (extract_sentences(answer, d.page_content) or [d.page_content[:200]])
+                    ]
+                    if not snippets:
+                        snippets = [{"file": d.metadata.get("source", "Unknown"), "text": d.page_content[:200]} for d in valid_docs[:1]]
+                        current_app.logger.info(f"[CHAT] Fallback snippets applied due to empty extraction")
+                else:
+                    snippets = []
+                current_app.logger.info(f"[CHAT] Valid snippets generated: {len(snippets)}")
+
             parts = answer.rsplit("\n\n", 1)
             chat_state.last_bot_question = parts[1].strip() if len(parts) == 2 and "?" in parts[1] else ""
-            valid_docs = [d for d in docs if is_doc_relevant_hybrid(user_input, d.page_content, EMBEDDER)]
-            snippets = [
-                {"file": d.metadata.get("source", "Unknown"), "text": s}
-                for d in valid_docs
-                for s in (extract_sentences(answer, d.page_content) or [d.page_content[:200]])
-            ]
-            current_app.logger.info(f"[CHAT] Valid snippets generated: {len(snippets)}")
 
         response = {
             "answer": answer,
@@ -474,7 +535,7 @@ def chat():
             "based_on_docs": not hallucinated,
             "response_time": log_response_time(start_time, "[CHAT] ")
         }
-        chat_state.chat_cache[user_input] = response
+        chat_state.chat_cache[cache_key] = response
         chat_state.conversation_history.append({
             "user": raw,
             "bot": answer,
@@ -482,19 +543,17 @@ def chat():
             "category": category,
             "based_on_docs": not hallucinated
         })
-        current_app.logger.info(f"[CHAT] Generated answer: {answer!r}")
-        current_app.logger.info(f"[CHAT] Source snippets ({len(snippets)}): {json.dumps(snippets, ensure_ascii=False)}")
-        current_app.logger.info(f"[CHAT] Cache MISS: stored response under key {user_input!r}")
+        current_app.logger.info(f"[CHAT] Cache MISS: stored response under key {cache_key!r}")
         current_app.logger.info(f"[CHAT] Current cache keys: {list(chat_state.chat_cache.keys())}")
         current_app.logger.info(f"[CHAT] Based on docs: {not hallucinated}")
-        current_app.logger.info(f"[CHAT] Response time: {response['response_time']:.3f} seconds")
+
         return jsonify(response)
 
     except Exception as e:
         current_app.logger.error(f"[ERROR] Chat error: {e}", exc_info=True)
         response_time = log_response_time(start_time, "[CHAT] ")
         return jsonify({"error": "Server error.", "response_time": response_time}), 500
-
+    
 @cardiobot.route('/live-chat', defaults={'file_id': None})
 @cardiobot.route('/live-chat/<int:file_id>')
 def live_chat(file_id):
@@ -543,17 +602,19 @@ def view_document(file_id):
 def upload_documents():
     """Upload and index documents."""
     start_time = time.time()
+
     if current_user.role != UserRole == 'admin':
         abort(403)
-    
+
     files = request.files.getlist('files[]')
     if not files or not all(allowed_file(f.filename) for f in files):
         flash("Invalid or no files provided.", "error")
+        current_app.logger.info(f"[UPLOAD FAILED] Invalid non-PDF file")
         log_response_time(start_time, "[UPLOAD] ")
         return redirect(url_for('admin.settings', tab='docs'))
 
     for file in files:
-        name = secure_filename(file.filename).lower()
+        name = secure_filename(os.path.basename(file.filename)).lower()
         db.session.add(Document(
             title_file=name,
             file_data=file.read(),
@@ -563,17 +624,24 @@ def upload_documents():
         ))
     db.session.commit()
 
-    success = reload_vector_store()
-    if success:
-        chat_state.chain = create_conversational_chain(chat_state.vector_store)
-
-    clear_chat_cache()
-    
     pc = get_pinecone_client()
     stats = pc.Index(INDEX_NAME).describe_index_stats()
     total_docs = Document.query.count()
     remaining_vectors = stats.get('namespaces', {}).get(NAMESPACE, {}).get('vector_count', 0)
-    
+
+    success = reload_vector_store()
+    if success:
+        chat_state.chain = create_conversational_chain(chat_state.vector_store)
+        current_app.logger.info(
+            f"[UPLOAD SUCCESS] Indexed {total_docs} documents with {remaining_vectors} vectors by user ID {current_user.id}"
+        )
+    else:
+        current_app.logger.warning(
+            f"[UPLOAD FAILED] Vector store reload failed after uploading {len(files)} files by user ID {current_user.id}"
+        )
+
+    clear_chat_cache()
+
     flash(f"✅ Indexed {total_docs} documents, {remaining_vectors} vectors.", "success")
     log_response_time(start_time, "[UPLOAD] ")
     return redirect(url_for('admin.settings', tab='docs'))
@@ -587,7 +655,7 @@ def delete_document(file_id):
 
     pc = get_pinecone_client()
     index = pc.Index(INDEX_NAME)
-    
+
     doc = Document.query.get_or_404(file_id)
     filename = doc.title_file.lower()
     total_docs_before = Document.query.count()

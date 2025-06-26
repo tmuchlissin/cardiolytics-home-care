@@ -2,6 +2,7 @@
 .venv_el
 .env
 **/migrations/
+**/migrations_dev/
 **/__pycache__/
 **/catboost_info
 test/
