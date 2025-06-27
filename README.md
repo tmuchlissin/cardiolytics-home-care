@@ -32,13 +32,13 @@ Cardiolytics is a smart and scalable web-based health monitoring system that int
 
 ## ⚙️ Key Features
 
-✨ **Integrated Monitoring System** — End-to-end real-time health tracking with ESP32, EMQX, and Kafka.
+✨ **Integrated Monitoring System** — Comprehensive blood pressure monitoring using ESP32 (with simulated data), EMQX, and Kafka.
 
-🧠 **Hybrid ML/DL Ensemble** — Risk prediction using state-of-the-art models trained on cardiovascular data.
+🧠 **Hybrid Ensemble Model** — Cardiovascular risk prediction powered by advanced ensemble models.
 
-💬 **Document-aware Chatbot** — Answering patient questions using PDF-grounded Q\&A via Gemini and Pinecone.
+💬 **Document-aware Chatbot** — Intelligent Q&A chatbot leveraging PDF documents with Gemini and Pinecone integration.
 
-👥 **Role-based Access** — Separate dashboard for Patients and Admins with secure authentication.
+👥 **Role-based Access** — Secure, role-specific access for Patients and Admins with authentication support.
 
 🛠 **Tech Stack** — Flask, Jinja, MySQL, MQTT, Node-RED, and more.
 
