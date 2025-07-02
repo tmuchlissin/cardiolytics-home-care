@@ -1,0 +1,11 @@
+Flask==3.1.1
+Flask-Login
+Flask-Mail
+Flask-Migrate
+Flask-SQLAlchemy
+Flask-WTF
+gunicorn
+paho-mqtt
+kafka-python
+python-dotenv
+requests
