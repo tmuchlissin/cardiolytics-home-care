@@ -32,7 +32,7 @@ def create_app():
     app.register_blueprint(auth)
     app.register_blueprint(main)
     app.register_blueprint(admin)
-    app.register_blueprint(bp_monitor)
+    # app.register_blueprint(bp_monitor)
     # app.register_blueprint(cvd_predict)
     # app.register_blueprint(cardiobot)
 
