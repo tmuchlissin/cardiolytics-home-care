@@ -8,6 +8,10 @@ from app.forms import PatientProfileForm
 
 main = Blueprint('main', __name__, url_prefix='/main')
 
+@main.route('/health')
+def health():
+    return "OK", 200
+
 @main.route('/home')
 @login_required
 def home():
