@@ -9,3 +9,4 @@ paho-mqtt
 kafka-python
 python-dotenv
 requests
+jsonify==0.5
