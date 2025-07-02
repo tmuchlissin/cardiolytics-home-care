@@ -15,19 +15,19 @@ PINECONE_API_KEY = Config.PINECONE_API_KEY
 PINECONE_ENV = Config.PINECONE_ENV
 
 # Pinecone settings
-# PINECONE_SETTINGS = {
-#     "INDEX_NAME": "cardiolytics",
-#     "NAMESPACE": "cardiobot",
-#     "SPEC": {"cloud": "aws", "region": "us-east-1"},
-#     "EMBEDDING_DIMENSION": 1024
-# }
-
 PINECONE_SETTINGS = {
-    "INDEX_NAME": "cardiolitics",
+    "INDEX_NAME": "cardiolytics",
     "NAMESPACE": "cardiobot",
     "SPEC": {"cloud": "aws", "region": "us-east-1"},
     "EMBEDDING_DIMENSION": 1024
 }
+
+# PINECONE_SETTINGS = {
+#     "INDEX_NAME": "cardiolitics",
+#     "NAMESPACE": "cardiobot",
+#     "SPEC": {"cloud": "aws", "region": "us-east-1"},
+#     "EMBEDDING_DIMENSION": 1024
+# }
 
 
 INDEX_NAME = PINECONE_SETTINGS["INDEX_NAME"]

@@ -224,17 +224,30 @@ def edit_user(user_id):
 @login_required
 def delete_user(user_id):
     user = User.query.get(user_id)
-    
+
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
     search_query = request.args.get('search', '')
-    
+
     if user:
+        if user.profile:
+            db.session.delete(user.profile)
+
+        if user.patient_data:
+            for pdata in user.patient_data:
+                db.session.delete(pdata)
+
+        if user.documents:
+            for doc in user.documents:
+                db.session.delete(doc)
+
         db.session.delete(user)
         db.session.commit()
+
         flash("✅ User successfully deleted!", "success")
-    
+
     return redirect(url_for("admin.user_management", page=page, per_page=per_page, search=search_query))
+
 
 ###########################################################
 ####################### PATIENT DATA ######################

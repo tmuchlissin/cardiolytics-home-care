@@ -4,7 +4,7 @@ import time
 import logging
 
 from kafka import KafkaProducer
-from .config import (
+from config import (
     KAFKA_BROKER, KAFKA_TOPIC, MQTT_BROKER, MQTT_TOPIC, MQTT_PORT,
     MQTT_USERNAME, MQTT_PASSWORD
 )

@@ -4,7 +4,7 @@ import time
 import logging
 
 from kafka import KafkaConsumer
-from .config import (
+from config import (
     KAFKA_BROKER, KAFKA_TOPIC, BLOOD_PRESSURE_ENDPOINT
 )
 
