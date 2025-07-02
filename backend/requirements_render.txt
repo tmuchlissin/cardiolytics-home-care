@@ -14,3 +14,4 @@ reportlab==4.4.2
 pytz==2024.1
 pandas==2.3.0
 RapidFuzz==3.13.0
+PyPDF2==3.0.1
