@@ -3,8 +3,8 @@ from app.views import main
 from app.admin.views import admin
 from app.bp_monitor.views import bp_monitor, setup_mqtt_status_listener
 from app.cvd_predict.views import cvd_predict
-from app.cardiobot.views import cardiobot
-from app.cardiobot.views import initialize
+# from app.cardiobot.views import cardiobot
+# from app.cardiobot.views import initialize
 from app.extensions import db, migrate,  csrf, login_manager, mail
 from app.models import User
 
